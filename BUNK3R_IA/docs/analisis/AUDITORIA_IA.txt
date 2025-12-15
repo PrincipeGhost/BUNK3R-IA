@@ -1,0 +1,146 @@
+⚠️ AUDITORÍA INCOMPLETA - NECESITO QUE COMPLETES LO QUE FALTA
+
+El reporte anterior omitió información crítica. Necesito que completes ESPECÍFICAMENTE las siguientes secciones:
+
+---
+
+## 1. LISTA COMPLETA DE LAS 311 RUTAS
+
+Para CADA una de las 311 rutas mencionadas, proporciona:
+
+| # | Ruta/Endpoint | Método | ¿Tiene enlace visible en navegación? | URL para acceder | Clasificación |
+|---|---------------|--------|--------------------------------------|------------------|---------------|
+| 1 | /ejemplo | GET | SÍ/NO | https://tudominio.com/ejemplo | Mantener/Eliminar/Hacer visible |
+
+Agrupa por categoría:
+- Rutas de páginas (que renderizan HTML)
+- Rutas de API (que devuelven JSON)
+- Rutas de admin
+- Rutas de autenticación
+
+ESPECIALMENTE marca las que:
+- Existen pero NO tienen botón/enlace para llegar a ellas
+- Están definidas pero parecen abandonadas o sin uso
+- Son accesibles sin autenticación cuando no deberían
+
+---
+
+## 2. BOTONES Y ELEMENTOS INTERACTIVOS - LISTA COMPLETA
+
+Revisa CADA archivo JS y HTML. Para cada botón/elemento clickeable:
+
+| Archivo | Línea | Elemento | ID/Clase | ¿Tiene handler? | ¿Handler existe? | ¿Funciona? | Feedback |
+|---------|-------|----------|----------|-----------------|------------------|------------|----------|
+| app.js | 125 | button | #btnEnviar | SÍ/NO | SÍ/NO | SÍ/NO/? | loading/success/error/ninguno |
+
+Marca específicamente los BOTONES MUERTOS que:
+- No tienen onclick ni addEventListener
+- Tienen handler pero la función no existe
+- La función existe pero no hace nada útil
+
+---
+
+## 3. CÓDIGO MUERTO - LISTA COMPLETA
+
+### 3.1 Funciones nunca llamadas
+| Archivo | Línea | Nombre función | Razón por la que es código muerto |
+|---------|-------|----------------|-----------------------------------|
+
+### 3.2 Variables declaradas pero no usadas
+| Archivo | Línea | Nombre variable | Razón |
+|---------|-------|-----------------|-------|
+
+### 3.3 Imports no utilizados
+| Archivo | Línea | Import | Razón |
+|---------|-------|--------|-------|
+
+### 3.4 Componentes/Templates que existen pero no se renderizan
+| Archivo | Descripción | Por qué no se usa |
+|---------|-------------|-------------------|
+
+---
+
+## 4. ANÁLISIS DE BASE DE DATOS
+
+Revisa el esquema completo:
+
+### 4.1 Tablas
+| Tabla | Campos | ¿Tiene índices? | ¿Foreign keys? | Problemas detectados |
+|-------|--------|-----------------|----------------|---------------------|
+
+### 4.2 Consultas problemáticas
+| Archivo | Línea | Query | Problema (N+1, sin índice, etc) |
+|---------|-------|-------|--------------------------------|
+
+---
+
+## 5. AUDITORÍA 2FA COMPLETA
+
+- ¿Se puede hacer bypass del 2FA? ¿Cómo?
+- ¿Los códigos expiran correctamente?
+- ¿Se valida rate limiting en verificación?
+- ¿Los códigos de recuperación son seguros?
+- Lista CADA vulnerabilidad encontrada con ubicación exacta
+
+---
+
+## 6. SESIONES Y COOKIES
+
+| Cookie/Sesión | HttpOnly | Secure | SameSite | Expira | Problema |
+|---------------|----------|--------|----------|--------|----------|
+
+- ¿Se invalidan al logout?
+- ¿Se regenera session ID después del login?
+
+---
+
+## 7. SEGURIDAD DE UPLOADS
+
+- ¿Qué endpoints permiten subir archivos?
+- ¿Validan tipo de archivo?
+- ¿Validan tamaño?
+- ¿Dónde se almacenan?
+- ¿Son accesibles públicamente?
+
+---
+
+## 8. ACCESIBILIDAD (A11Y)
+
+Lista problemas específicos:
+| Archivo | Línea | Elemento | Problema | Solución |
+|---------|-------|----------|----------|----------|
+
+---
+
+## 9. DEPENDENCIAS CON VULNERABILIDADES
+
+| Dependencia | Versión actual | CVE conocidos | Severidad | Versión segura |
+|-------------|----------------|---------------|-----------|----------------|
+
+---
+
+## FORMATO OBLIGATORIO
+
+USA SIEMPRE este formato para hallazgos:
+
+| Severidad | Archivo:Línea | Problema | Código | Solución |
+|-----------|---------------|----------|--------|----------|
+| CRÍTICO | app.py:1234 | Descripción | `código afectado` | Cómo arreglarlo |
+
+---
+
+## MÉTRICAS FINALES
+
+- Páginas ocultas encontradas: X (lista las URLs)
+- Botones muertos encontrados: X
+- Funciones muertas: X
+- Variables sin usar: X
+- Imports sin usar: X
+- Vulnerabilidades 2FA: X
+- Problemas de accesibilidad: X
+- Dependencias vulnerables: X
+- Tiempo estimado para arreglar todo: X horas
+
+---
+
+NO RESUMAS. LISTA TODO. SIN EXCEPCIONES.

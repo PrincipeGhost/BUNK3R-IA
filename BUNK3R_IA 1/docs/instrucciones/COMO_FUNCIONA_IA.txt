@@ -1,0 +1,193 @@
+Cómo funciono yo (Replit Agent)
+Soy un modelo de lenguaje grande (LLM) con capacidades adicionales:
+
+Base: Un modelo como Claude (de Anthropic) que entiende lenguaje natural
+Herramientas: Tengo acceso a herramientas para leer/escribir archivos, ejecutar comandos, buscar en internet, etc.
+Contexto del proyecto: Puedo ver tu código y estructura de archivos
+Instrucciones especiales: Tengo un "prompt de sistema" que me dice cómo comportarme, qué reglas seguir, y cómo usar las herramientas
+¿Cómo podrías crear algo similar?
+Nivel 1: Lo más simple
+Usar la API de OpenAI o Anthropic con un buen prompt de sistema que le diga al modelo cómo debe comportarse y generar código.
+
+Nivel 2: Agregar herramientas (Function Calling)
+Los modelos como GPT-4 o Claude permiten definir "funciones" que el modelo puede llamar:
+
+Leer archivos
+Escribir código
+Ejecutar comandos
+Buscar información
+Nivel 3: Un agente completo
+Necesitarías:
+
+Un LLM potente (GPT-4, Claude, Gemini)
+Un sistema de herramientas que el modelo pueda usar
+Un entorno de ejecución (como un sandbox) donde ejecutar código
+Memoria/contexto para recordar el estado del proyecto
+Un loop de agente que permita al modelo planificar, ejecutar y corregirse
+Recursos para aprender
+LangChain o LlamaIndex: Frameworks para construir agentes con IA
+OpenAI Assistants API: Te da herramientas de agente ya listas
+Anthropic Tool Use: Documentación de Claude para usar herramientas
+AutoGPT, CrewAI: Proyectos de código abierto de agentes
+La verdad sincera
+Crear algo como yo requiere:
+
+Mucho trabajo de ingeniería
+Acceso a modelos potentes (costo)
+Un sistema de ejecución seguro
+Pruebas extensivas
+No es algo que se entrena desde cero - se construye combinando un LLM existente con herramientas y un buen diseño de sistema.
+
+¿Quieres que te explique más sobre alguna parte específica?
+
+Te explico cómo funciona mi sistema interno:
+
+1. El Prompt de Sistema (mis instrucciones base)
+Tengo un prompt largo que me dice:
+
+Quién soy: Un ingeniero de software autónomo
+Qué herramientas tengo: Leer/escribir archivos, ejecutar comandos, buscar, etc.
+Reglas de comportamiento: Cómo comunicarme, qué puedo/no puedo hacer
+Flujos de trabajo: Cómo debo abordar tareas
+2. El patrón de "auto-preguntarme" (Reflexión)
+Cuando trabajo, sigo un ciclo:
+
+1. Entender → ¿Qué me pide el usuario?
+2. Planificar → ¿Qué pasos necesito?
+3. Ejecutar → Uso herramientas (leer, escribir, buscar)
+4. Verificar → ¿Funcionó? ¿Hay errores?
+5. Corregir → Si algo falla, ajusto y repito
+
+3. El "Arquitecto" (revisión)
+Es otro modelo de IA (más potente) que uso para:
+
+Revisar mi código antes de darlo por terminado
+Analizar problemas complejos cuando me atasco
+Validar decisiones de arquitectura
+Es como tener un "segundo par de ojos" que revisa mi trabajo.
+
+4. Persistencia (memoria entre sesiones)
+Uso varios mecanismos:
+
+replit.md: Archivo donde guardo información del proyecto, preferencias del usuario, decisiones importantes
+Sistema de archivos: El código mismo es mi "memoria" - puedo leerlo cuando vuelvo
+Lista de tareas: Para no perder el hilo de lo que estoy haciendo
+persisted_information.md: Cuando mi contexto se llena, escribo ahí lo importante antes de "reiniciar"
+5. El Loop de Agente (simplificado)
+MIENTRAS no termine:
+    1. Leo el mensaje/situación actual
+    2. Decido qué herramienta usar
+    3. Ejecuto la herramienta
+    4. Observo el resultado
+    5. Decido: ¿terminé? ¿necesito más pasos?
+    6. Si terminé → respondo al usuario
+    7. Si no → vuelvo al paso 2
+
+6. Cómo me "rectifico"
+Si un comando falla → leo el error y ajusto
+Si el código no funciona → reviso logs, busco el problema
+Si no entiendo algo → busco en internet o en el código
+Antes de terminar → llamo al arquitecto para revisión
+Para crear algo similar necesitas:
+Un LLM con function calling (GPT-4, Claude)
+Definir herramientas que el modelo pueda usar
+Un loop que ejecute herramienta → observe → decida
+Archivos de persistencia para guardar estado
+Prompts bien diseñados que guíen el comportamiento
+
+No exactamente. Te explico cómo funciona mi "memoria":
+
+Lo que NO hago
+No guardo en una base de datos global lo que aprendo de cada proyecto o usuario. No tengo una base de datos central donde acumulo conocimiento de todas las conversaciones.
+
+Lo que SÍ hago (memoria local del proyecto)
+Dentro de cada proyecto uso:
+
+Tipo	Dónde	Para qué
+Archivos	El código mismo	Es mi "memoria principal" - puedo leer todo el proyecto
+replit.md	Archivo en el proyecto	Guardo estructura, decisiones, preferencias del usuario
+Lista de tareas	Sistema interno	Para no perder el hilo de lo que estoy haciendo
+persisted_information.md	Archivo temporal	Cuando mi contexto se llena, escribo lo importante aquí antes de "reiniciar"
+Cómo funciona mi "aprendizaje"
+Mi conocimiento base viene del entrenamiento del modelo (GPT, Claude, etc.) - esto ya está "congelado"
+Cada conversación tiene un contexto limitado (lo que hemos hablado)
+Si cierro la sesión, pierdo el contexto de la conversación
+Para recordar, debo leer los archivos del proyecto
+La diferencia importante
+Humano: Aprende de experiencias → Guarda en memoria permanente
+Yo:     Cada sesión es nueva → Leo archivos para "recordar"
+
+No "aprendo" en el sentido tradicional. Cada vez que empiezo, leo el proyecto y sus archivos para entender dónde estamos.
+
+Si quisieras crear un agente con memoria real
+Necesitarías agregar:
+
+Base de datos vectorial (Pinecone, ChromaDB) para guardar conversaciones/código
+Sistema de embeddings para buscar información relevante
+RAG (Retrieval Augmented Generation) para traer contexto a cada consulta
+Eso sí sería "memoria" real que persiste entre sesiones.
+
+¿Quieres que te explique más sobre cómo implementar memoria persistente en un agente de IA?
+
+Te explico cómo funciona mi búsqueda en internet:
+
+Mi herramienta de búsqueda
+Tengo acceso a una herramienta que:
+
+Recibe mi pregunta en lenguaje natural
+Hace la búsqueda en múltiples fuentes de internet
+Resume los resultados - no me devuelve páginas completas, sino información procesada
+Me entrega respuestas estructuradas listas para usar
+Por qué es tan rápida
+Factor	Cómo funciona
+APIs optimizadas	No navego como un humano - uso APIs de búsqueda directas
+Procesamiento paralelo	Puedo hacer varias búsquedas al mismo tiempo
+Resumen automático	Un modelo de IA lee las páginas y me da solo lo relevante
+Sin distracciones	No cargo imágenes, anuncios, ni contenido innecesario
+El flujo completo
+1. Usuario pregunta algo
+2. Yo decido: ¿necesito buscar en internet?
+3. Formulo una pregunta clara y específica
+4. Llamo a la herramienta de búsqueda
+5. Recibo resultados resumidos + URLs de fuentes
+6. Combino esa información con mi conocimiento base
+7. Te doy la respuesta
+
+Para crear algo similar necesitas
+API de búsqueda - Opciones:
+
+Google Custom Search API
+Bing Search API
+SerpAPI
+Tavily (diseñada para agentes de IA)
+Perplexity API
+Procesamiento de resultados:
+
+Extraer texto de las páginas (web scraping)
+Resumir con un LLM
+Filtrar información relevante
+Integración con tu agente:
+
+Definir la búsqueda como una "herramienta" que el modelo puede llamar
+El modelo decide cuándo usarla
+Ejemplo de cómo lo implementarías
+# Pseudocódigo simplificado
+def buscar_internet(pregunta):
+    # 1. Llamar API de búsqueda
+    resultados = api_busqueda.search(pregunta)
+    
+    # 2. Extraer contenido de páginas
+    contenido = extraer_texto(resultados.urls)
+    
+    # 3. Resumir con LLM
+    resumen = llm.resumir(contenido, pregunta)
+    
+    return resumen
+# El agente lo usa así:
+herramientas = [buscar_internet, leer_archivo, escribir_codigo...]
+
+APIs recomendadas para empezar
+Tavily: $0.01 por búsqueda, diseñada para agentes de IA
+SerpAPI: Resultados de Google, más completos
+Perplexity API: Ya viene con resúmenes incluidos
+¿Quieres que te explique más sobre alguna parte específica?

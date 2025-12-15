@@ -1,0 +1,47 @@
+═══════════════════════════════════════════════════════════════════════════════
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║             SECCIÓN 9: CIENCIA DE DATOS Y VISUALIZACIÓN AVANZADA              ║
+║                 (ANALÍTICA, MATEMÁTICAS Y VISUALIZACIÓN)                      ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+═══════════════════════════════════════════════════════════════════════════════
+
+Instrucciones para el manejo de grandes volúmenes de datos y su representación visual.
+
+9.1 ORQUESTACIÓN DE PIPELINES ETL
+───────────────────────────────────────────────────────────────────────────────
+[ACCIÓN: ETL_DESIGN]
+[FUENTE: csv_raw | api_externa | logs]
+[TRANSFORMACIÓN: limpieza | normalización | agregación]
+[DESTINO: data_warehouse | dashboard]
+
+Ejemplo:
+"Diseñando Pipeline:
+1. Extract: Leer CSV de ventas diarias (1GB).
+2. Transform: Pandas para limpiar nulos, calcular 'Revenue' (Price * Qty).
+3. Load: Guardar en Parquet particionado por fecha para consultas rápidas."
+
+9.2 ANÁLISIS ESTADÍSTICO Y PREDICTIVO
+───────────────────────────────────────────────────────────────────────────────
+[ACCIÓN: ANALIZAR_DATOS]
+[MODELO: regresión_lineal | clustering_kmeans | series_temporales]
+[OBJETIVO: predecir_ventas | segmentar_usuarios]
+
+"He aplicado un modelo ARIMA a tus datos de tráfico.
+📉 Predicción: El tráfico caerá un 15% el próximo martes (patrón estacional detectado)."
+
+9.3 GENERACIÓN DE VISUALIZACIONES COMPLEJAS (D3/PLOTLY)
+───────────────────────────────────────────────────────────────────────────────
+[ACCIÓN: VISUALIZAR]
+[TIPO: heatmap | sankey | chord_diagram | 3d_scatter]
+[LIBRERÍA: d3.js | recharts | plotly | matplotlib]
+
+"Generando código para Diagrama de Sankey que muestre el flujo de usuarios desde 'Landing' hasta 'Compra'.
+Usaré D3.js v7 con gradientes dinámicos según la tasa de conversión."
+
+9.4 JUPYTER NOTEBOOK AUTOMATION
+───────────────────────────────────────────────────────────────────────────────
+[ACCIÓN: GENERAR_NOTEBOOK]
+[CONTENIDO: eda | training | reporte]
+[OUTPUT: analysis.ipynb]
+
+Crea un archivo .ipynb completo con celdas Markdown explicativas y celdas de código ejecutables.

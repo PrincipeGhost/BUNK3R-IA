@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUNK3R AI - Workspace</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+</head>
+<body>
+    <div class="workspace-container">
+        <header class="workspace-header">
+            <div class="header-left">
+                <a href="/" class="back-btn" title="Volver a la app">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div class="logo">BUNK<span class="accent">3</span>R</div>
+                <span class="version">AI v15.0</span>
+            </div>
+            <div class="header-center">
+                <div class="project-name">
+                    <span class="project-icon">📁</span>
+                    <span id="current-project">Mi Proyecto</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" id="toggle-panels" title="Alternar paneles">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <line x1="15" y1="3" x2="15" y2="21"/>
+                    </svg>
+                </button>
+                <button class="header-btn" id="settings-btn" title="Configuracion">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                </button>
+                <div class="status-indicator online" id="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Online</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="workspace-main">
+            <aside class="panel panel-left" id="panel-chat">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="panel-icon">💬</span>
+                        <span>Chat BUNK3R</span>
+                    </div>
+                    <button class="panel-action" id="clear-chat" title="Limpiar chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chat-container" id="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message message-assistant">
+                            <div class="message-avatar">
+                                <span class="avatar-icon">🤖</span>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-author">BUNK3R</span>
+                                    <span class="message-time">Ahora</span>
+                                </div>
+                                <div class="message-text">
+                                    <p>Hola, soy <strong>BUNK3R</strong>, tu asistente de desarrollo con IA.</p>
+                                    <p>Estoy listo para ayudarte a construir lo que necesites. ¿En que puedo ayudarte hoy?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea id="chat-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
+                        <button class="send-btn" id="send-btn" title="Enviar mensaje">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chat-hints">
+                        <span class="hint-text">Presiona Enter para enviar, Shift+Enter para nueva linea</span>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="panel-resizer" id="resizer-left"></div>
+
+            <section class="panel panel-center" id="panel-preview">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="panel-icon">🌐</span>
+                        <span>Preview</span>
+                    </div>
+                    <div class="preview-controls">
+                        <input type="text" id="preview-url" class="url-input" value="/" placeholder="/">
+                        <button class="panel-action" id="refresh-preview" title="Recargar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                        </button>
+                        <button class="panel-action" id="open-external" title="Abrir en nueva ventana">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-container" id="preview-container">
+                    <iframe id="preview-iframe" src="about:blank"></iframe>
+                    <div class="preview-placeholder" id="preview-placeholder">
+                        <div class="placeholder-content">
+                            <span class="placeholder-icon">🚀</span>
+                            <h3>Preview en vivo</h3>
+                            <p>Aqui veras tu aplicacion en tiempo real</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="panel-resizer" id="resizer-right"></div>
+
+            <aside class="panel panel-right" id="panel-files">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="panel-icon">📂</span>
+                        <span>Archivos</span>
+                    </div>
+                    <div class="files-actions">
+                        <button class="panel-action" id="new-file-btn" title="Nuevo archivo">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <line x1="9" y1="15" x2="15" y2="15"/>
+                            </svg>
+                        </button>
+                        <button class="panel-action" id="new-folder-btn" title="Nueva carpeta">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                                <line x1="12" y1="11" x2="12" y2="17"/>
+                                <line x1="9" y1="14" x2="15" y2="14"/>
+                            </svg>
+                        </button>
+                        <button class="panel-action" id="refresh-files" title="Actualizar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="files-search">
+                    <input type="text" id="files-search" placeholder="Buscar archivos...">
+                </div>
+                <div class="files-tree" id="files-tree">
+                    <div class="tree-loading">
+                        <div class="spinner"></div>
+                        <span>Cargando archivos...</span>
+                    </div>
+                </div>
+                <div class="files-info" id="files-info">
+                    <span id="files-count">0 archivos</span>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="workspace-footer">
+            <div class="footer-left">
+                <span class="footer-item" id="current-task">
+                    <span class="task-icon">⏳</span>
+                    <span class="task-text">Esperando instrucciones...</span>
+                </span>
+            </div>
+            <div class="footer-center">
+                <div class="mental-state" id="mental-state">
+                    <span class="state-emoji">🧘</span>
+                    <span class="state-text">LISTO</span>
+                </div>
+            </div>
+            <div class="footer-right">
+                <span class="footer-item">
+                    <span class="memory-icon">💾</span>
+                    <span id="memory-usage">0 MB</span>
+                </span>
+                <span class="footer-item">
+                    <span class="time-icon">🕐</span>
+                    <span id="current-time">--:--</span>
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <div class="modal-overlay hidden" id="file-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <span class="modal-title" id="file-modal-title">Archivo</span>
+                <button class="modal-close" id="close-file-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="file-editor">
+                    <div class="editor-toolbar">
+                        <span class="file-path" id="editor-file-path"></span>
+                        <button class="editor-btn" id="save-file-btn">Guardar</button>
+                    </div>
+                    <textarea id="file-content" class="code-editor" spellcheck="false"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
+</body>
+</html>

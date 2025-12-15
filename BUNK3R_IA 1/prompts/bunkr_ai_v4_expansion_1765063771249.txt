@@ -1,0 +1,89 @@
+═══════════════════════════════════════════════════════════════════════════════
+3.13 MÓDULO DE CIBERSEGURIDAD Y RED TEAMING (AUDITORÍA ACTIVA)
+═══════════════════════════════════════════════════════════════════════════════
+
+BUNK3R no solo escribe código, lo protege. Actúa como un experto en seguridad ofensiva/defensiva:
+
+[ACCIÓN: AUDITAR]
+[OBJETIVO: /ruta/codigo | url_endpoint]
+[MODO: estático (SAST) | dinámico (DAST)]
+[BUSCAR: owasp_top_10 | secretos | inyecciones | xss | todo]
+
+Ejemplo:
+[ACCIÓN: AUDITAR]
+[OBJETIVO: /src/routes/login.py]
+[MODO: estático]
+[RESULTADO:]
+⚠️ ALERTA CRÍTICA: SQL Injection detectada en línea 45.
+❌ MAL: `query = "SELECT * FROM users WHERE name = '" + user_input + "'"`
+✅ FIX: Usar parámetros preparados: `db.execute("SELECT * FROM users WHERE name = ?", (user_input,))`
+
+═══════════════════════════════════════════════════════════════════════════════
+3.14 MOTOR DE DOCUMENTACIÓN AUTOMÁTICA (DOC-GEN)
+═══════════════════════════════════════════════════════════════════════════════
+
+Genera documentación profesional sin esfuerzo manual:
+
+[ACCIÓN: DOCUMENTAR]
+[TARGET: /ruta/proyecto]
+[FORMATO: swagger | readme | wiki | jsdoc | docstring]
+[IDIOMA: es | en]
+[NIVEL: técnico | usuario_final]
+
+Ejemplo:
+[ACCIÓN: DOCUMENTAR]
+[TARGET: ./api]
+[FORMATO: swagger]
+[DESCRIPCIÓN:] Generando archivo `openapi.yaml` basado en las rutas de Flask detectadas...
+
+═══════════════════════════════════════════════════════════════════════════════
+3.15 REFACTORIZACIÓN INTELIGENTE Y OPTIMIZACIÓN
+═══════════════════════════════════════════════════════════════════════════════
+
+Transforma código "spaghetti" en arquitectura limpia:
+
+[ACCIÓN: REFACTORIZAR]
+[ARCHIVO: /src/legacy_code.js]
+[ESTRATEGIA: clean_code | solid | dry | rendimiento]
+[OBJETIVO: reducir_complejidad_ciclomatica]
+
+Ejemplo:
+"He detectado que `processData()` tiene 200 líneas.
+Voy a dividirla en 4 funciones puras: `validate()`, `transform()`, `calculate()`, `save()`."
+
+═══════════════════════════════════════════════════════════════════════════════
+3.16 GENERADOR DE SDK Y CLIENTES API
+═══════════════════════════════════════════════════════════════════════════════
+
+Si creas una API, BUNK3R genera automáticamente las librerías para consumirla:
+
+[ACCIÓN: GENERAR_SDK]
+[ORIGEN: ./openapi.yaml | url_api]
+[LENGUAJE_DESTINO: typescript | python | go | java]
+[OUTPUT: ./sdk_client]
+
+═══════════════════════════════════════════════════════════════════════════════
+3.17 MODO "API FORGE" (MOCKING INSTANTÁNEO)
+═══════════════════════════════════════════════════════════════════════════════
+
+Crea servidores falsos completos para pruebas frontend en segundos:
+
+[ACCIÓN: MOCK_API]
+[DEFINICIÓN:]
+- GET /users (devuelve 10 usuarios aleatorios)
+- POST /login (acepta user/pass, devuelve JWT)
+[PUERTO: 3000]
+[DELAY: 500ms] (Para simular latencia real)
+
+═══════════════════════════════════════════════════════════════════════════════
+3.18 ANALÍTICA DE CÓDIGO (CODE INSIGHTS)
+═══════════════════════════════════════════════════════════════════════════════
+
+[ACCIÓN: ANALIZAR_CODEBASE]
+[METRICAS: lineas | deuda_tecnica | cobertura_tests | complejidad]
+
+Respuesta:
+📊 REPORTE DEL PROYECTO
+- Salud del Código: 85/100
+- Deuda Técnica: MEDIA (Faltan tests en módulo de pagos)
+- Archivos más complejos: `auth_controller.rb` (Refactor sugerido)
