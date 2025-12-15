@@ -11,7 +11,7 @@ class Config:
     
     DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
     HOST = os.getenv('BUNK3R_IA_HOST', '0.0.0.0')
-    PORT = int(os.getenv('BUNK3R_IA_PORT', 5001))
+    PORT = int(os.getenv('BUNK3R_IA_PORT', 5000))
     
     DATABASE_URL = os.getenv('DATABASE_URL', '')
     
