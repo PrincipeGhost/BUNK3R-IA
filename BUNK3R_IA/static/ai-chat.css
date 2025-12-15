@@ -460,6 +460,50 @@ body {
     color: var(--gold-primary);
 }
 
+.panel-resizer {
+    width: 6px;
+    background: var(--border-subtle);
+    cursor: col-resize;
+    transition: background var(--transition-fast);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.panel-resizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 40px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.panel-resizer:hover {
+    background: var(--gold-primary);
+}
+
+.panel-resizer:hover::before {
+    opacity: 0.5;
+}
+
+.panel-resizer.resizing {
+    background: var(--gold-primary);
+}
+
+body.resizing {
+    cursor: col-resize !important;
+    user-select: none;
+}
+
+body.resizing * {
+    cursor: col-resize !important;
+}
+
 .ai-panel-preview {
     flex: 1;
     min-width: 400px;

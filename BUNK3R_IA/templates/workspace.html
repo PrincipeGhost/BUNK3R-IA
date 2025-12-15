@@ -108,6 +108,8 @@
                 </div>
             </div>
             
+            <div class="panel-resizer" id="resizer-left"></div>
+            
             <div class="ai-panel ai-panel-preview">
                 <div class="ai-panel-header">
                     <div class="ai-file-tabs">
@@ -199,6 +201,8 @@
                 </div>
             </div>
             
+            <div class="panel-resizer" id="resizer-right"></div>
+            
             <div class="ai-panel ai-panel-files">
                 <div class="ai-files-header">
                     <span class="ai-files-title">Archivos</span>
@@ -282,6 +286,59 @@
             if (typeof AIChat !== 'undefined') {
                 AIChat.init();
             }
+            
+            const resizerLeft = document.getElementById('resizer-left');
+            const resizerRight = document.getElementById('resizer-right');
+            const panelChat = document.querySelector('.ai-panel-chat');
+            const panelPreview = document.querySelector('.ai-panel-preview');
+            const panelFiles = document.querySelector('.ai-panel-files');
+            const container = document.querySelector('.ai-workspace-container');
+            
+            let isResizing = false;
+            let currentResizer = null;
+            
+            function initResize(e, resizer) {
+                isResizing = true;
+                currentResizer = resizer;
+                document.body.classList.add('resizing');
+                resizer.classList.add('resizing');
+                
+                document.addEventListener('mousemove', handleResize);
+                document.addEventListener('mouseup', stopResize);
+                e.preventDefault();
+            }
+            
+            function handleResize(e) {
+                if (!isResizing) return;
+                
+                const containerRect = container.getBoundingClientRect();
+                const containerWidth = containerRect.width;
+                const mouseX = e.clientX - containerRect.left;
+                
+                if (currentResizer === resizerLeft) {
+                    const newChatWidth = Math.max(200, Math.min(mouseX, containerWidth * 0.5));
+                    panelChat.style.width = newChatWidth + 'px';
+                    panelChat.style.flex = 'none';
+                } else if (currentResizer === resizerRight) {
+                    const newFilesWidth = Math.max(150, Math.min(containerWidth - mouseX, containerWidth * 0.4));
+                    panelFiles.style.width = newFilesWidth + 'px';
+                    panelFiles.style.flex = 'none';
+                }
+            }
+            
+            function stopResize() {
+                isResizing = false;
+                document.body.classList.remove('resizing');
+                if (currentResizer) {
+                    currentResizer.classList.remove('resizing');
+                }
+                currentResizer = null;
+                document.removeEventListener('mousemove', handleResize);
+                document.removeEventListener('mouseup', stopResize);
+            }
+            
+            resizerLeft.addEventListener('mousedown', (e) => initResize(e, resizerLeft));
+            resizerRight.addEventListener('mousedown', (e) => initResize(e, resizerRight));
         });
     </script>
 </body>
