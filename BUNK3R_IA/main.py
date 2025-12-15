@@ -15,7 +15,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from BUNK3R_IA.config import get_config
 from BUNK3R_IA.api.routes import ai_bp, set_db_manager
 
@@ -27,7 +27,10 @@ logger = logging.getLogger(__name__)
 
 def create_app(config_class=None):
     """Factory para crear la aplicación Flask"""
-    app = Flask(__name__)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    app = Flask(__name__, 
+                template_folder=os.path.join(base_dir, 'templates'),
+                static_folder=os.path.join(base_dir, 'static'))
     
     if config_class is None:
         config_class = get_config()
@@ -36,8 +39,19 @@ def create_app(config_class=None):
     
     app.register_blueprint(ai_bp)
     
+    @app.after_request
+    def add_header(response):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    
     @app.route('/')
     def index():
+        return render_template('workspace.html')
+    
+    @app.route('/api/info')
+    def api_info():
         return jsonify({
             'service': 'BUNK3R_IA',
             'version': '1.0.0',
