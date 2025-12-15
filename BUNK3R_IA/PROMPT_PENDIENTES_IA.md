@@ -506,3 +506,374 @@ BUNK3R_IA/
 3. **Prioridad Media**: 34.B.1 Memoria Vectorial (ChromaDB)
 4. **Prioridad Media**: 34.D.4 Security Scanner
 5. **Prioridad Baja**: 34.F Progress Streaming
+
+---
+
+## SECCION 35: PREVIEW EN VIVO (ESTILO REPLIT)
+
+### Objetivo Principal
+Hacer que cuando el usuario escriba un prompt, la IA genere codigo HTML/CSS/JS y se muestre en vivo en el iframe del preview, exactamente como funciona Replit Agent.
+
+---
+
+### 35.1 - Arquitectura del Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         FLUJO COMPLETO                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  Usuario escribe prompt                                              │
+│         │                                                            │
+│         ▼                                                            │
+│  Frontend (ai-chat.js) ──POST──► /api/ai-constructor/generate       │
+│         │                              │                             │
+│         │                              ▼                             │
+│         │                    OpenAI genera codigo                    │
+│         │                              │                             │
+│         │                              ▼                             │
+│         │                    Backend guarda HTML en                  │
+│         │                    generated_projects/{session_id}/        │
+│         │                              │                             │
+│         │                              ▼                             │
+│         │◄─────────── Retorna { preview_url, files }                │
+│         │                                                            │
+│         ▼                                                            │
+│  Frontend actualiza:                                                 │
+│    - iframe.src = /preview/{session_id}                             │
+│    - URL bar = preview.bunk3r.dev/{session_id}                      │
+│    - Chat = "Proyecto generado!"                                    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 35.2 - Backend: Generacion de Codigo [4h]
+
+#### Endpoint: POST `/api/ai-constructor/generate`
+
+**Archivo**: `BUNK3R_IA/api/ai_constructor.py`
+
+```python
+@bp.route('/generate', methods=['POST'])
+def generate_project():
+    data = request.json
+    prompt = data.get('prompt')
+    session_id = data.get('session_id') or str(uuid.uuid4())[:8]
+    
+    # 1. Llamar a OpenAI para generar codigo
+    html_code = generate_with_openai(prompt)
+    
+    # 2. Guardar en carpeta de sesion
+    save_project(session_id, html_code)
+    
+    # 3. Retornar URL del preview
+    return jsonify({
+        'success': True,
+        'session_id': session_id,
+        'preview_url': f'/preview/{session_id}',
+        'files': ['index.html']
+    })
+```
+
+**Prompt del Sistema para OpenAI**:
+```
+Eres BUNK3R IA, un experto desarrollador web. 
+Genera codigo HTML completo basado en la descripcion del usuario.
+
+REGLAS ESTRICTAS:
+1. Genera UN SOLO archivo HTML completo y funcional
+2. Incluye TODO el CSS dentro de <style> tags en el <head>
+3. Incluye TODO el JavaScript dentro de <script> tags antes de </body>
+4. El diseno debe ser moderno, profesional y responsive
+5. Usa colores oscuros (tema dark) por defecto
+6. NO uses librerias externas (no CDN, no imports externos)
+7. El codigo debe funcionar SIN conexion a internet
+
+Responde UNICAMENTE con el codigo HTML. Sin explicaciones, sin markdown, sin comentarios fuera del codigo.
+```
+
+---
+
+### 35.3 - Backend: Servir Preview [2h]
+
+#### Endpoint: GET `/preview/<session_id>`
+
+**Archivo**: `BUNK3R_IA/api/preview.py`
+
+```python
+from flask import Blueprint, Response
+import os
+
+bp = Blueprint('preview', __name__)
+
+PROJECTS_DIR = 'BUNK3R_IA/generated_projects'
+
+@bp.route('/preview/<session_id>')
+def serve_preview(session_id):
+    # Sanitizar session_id para evitar path traversal
+    safe_session = ''.join(c for c in session_id if c.isalnum())
+    
+    file_path = os.path.join(PROJECTS_DIR, safe_session, 'index.html')
+    
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            html_content = f.read()
+        
+        # Inyectar script para capturar logs
+        html_with_console = inject_console_capture(html_content)
+        
+        return Response(html_with_console, mimetype='text/html')
+    else:
+        return Response('<h1>Proyecto no encontrado</h1>', status=404)
+```
+
+**Estructura de Archivos**:
+```
+BUNK3R_IA/
+├── generated_projects/
+│   ├── abc123/
+│   │   └── index.html
+│   ├── def456/
+│   │   └── index.html
+│   └── ...
+```
+
+---
+
+### 35.4 - Frontend: Conexion Chat → Preview [3h]
+
+**Archivo**: `BUNK3R_IA/static/ai-chat.js`
+
+```javascript
+class AIChat {
+    constructor() {
+        this.sessionId = this.generateSessionId();
+        this.previewHistory = [];
+        this.historyIndex = -1;
+    }
+    
+    generateSessionId() {
+        return Math.random().toString(36).substring(2, 10);
+    }
+    
+    async sendMessage(prompt) {
+        // 1. Mostrar mensaje del usuario
+        this.addUserMessage(prompt);
+        
+        // 2. Mostrar indicador de carga
+        this.showTypingIndicator();
+        
+        // 3. Enviar al backend
+        const response = await fetch('/api/ai-constructor/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                prompt: prompt,
+                session_id: this.sessionId
+            })
+        });
+        
+        const data = await response.json();
+        
+        // 4. Ocultar indicador de carga
+        this.hideTypingIndicator();
+        
+        if (data.success) {
+            // 5. Actualizar preview
+            this.updatePreview(data.preview_url);
+            
+            // 6. Actualizar URL bar
+            this.updateBrowserUrl(data.preview_url);
+            
+            // 7. Agregar al historial
+            this.previewHistory.push(data.preview_url);
+            this.historyIndex = this.previewHistory.length - 1;
+            
+            // 8. Mostrar mensaje de exito
+            this.addAIMessage('He generado tu proyecto. Puedes verlo en el preview.');
+        } else {
+            this.addAIMessage('Hubo un error generando el proyecto. Intenta de nuevo.');
+        }
+    }
+    
+    updatePreview(url) {
+        const iframe = document.getElementById('ai-preview-iframe');
+        const previewEmpty = document.getElementById('ai-preview-empty');
+        
+        previewEmpty.classList.add('hidden');
+        iframe.classList.remove('hidden');
+        iframe.src = url;
+    }
+    
+    updateBrowserUrl(url) {
+        const urlInput = document.getElementById('browser-url');
+        urlInput.value = 'preview.bunk3r.dev' + url;
+    }
+}
+```
+
+---
+
+### 35.5 - Consola: Captura de Logs [2h]
+
+**Script inyectado en cada preview**:
+```javascript
+<script>
+(function() {
+    // Capturar errores globales
+    window.onerror = function(msg, url, line, col, error) {
+        parent.postMessage({
+            type: 'bunk3r-console',
+            level: 'error',
+            message: msg + ' (linea ' + line + ')'
+        }, '*');
+        return false;
+    };
+    
+    // Capturar console.log
+    const originalLog = console.log;
+    console.log = function(...args) {
+        parent.postMessage({
+            type: 'bunk3r-console',
+            level: 'log',
+            message: args.map(a => String(a)).join(' ')
+        }, '*');
+        originalLog.apply(console, args);
+    };
+    
+    // Capturar console.error
+    const originalError = console.error;
+    console.error = function(...args) {
+        parent.postMessage({
+            type: 'bunk3r-console',
+            level: 'error',
+            message: args.map(a => String(a)).join(' ')
+        }, '*');
+        originalError.apply(console, args);
+    };
+    
+    // Capturar console.warn
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+        parent.postMessage({
+            type: 'bunk3r-console',
+            level: 'warn',
+            message: args.map(a => String(a)).join(' ')
+        }, '*');
+        originalWarn.apply(console, args);
+    };
+})();
+</script>
+```
+
+**En el frontend principal** (workspace.html):
+```javascript
+// Escuchar mensajes del iframe
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'bunk3r-console') {
+        addConsoleLog(event.data.level, event.data.message);
+    }
+});
+
+function addConsoleLog(level, message) {
+    const consoleOutput = document.getElementById('ai-console-output');
+    const line = document.createElement('div');
+    line.className = 'console-line ' + level;
+    line.textContent = message;
+    consoleOutput.appendChild(line);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+```
+
+---
+
+### 35.6 - Barra de Navegador [1h]
+
+**Funcionalidades**:
+```javascript
+// Boton Atras
+document.getElementById('browser-back').addEventListener('click', function() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        updatePreview(previewHistory[historyIndex]);
+    }
+});
+
+// Boton Adelante
+document.getElementById('browser-forward').addEventListener('click', function() {
+    if (historyIndex < previewHistory.length - 1) {
+        historyIndex++;
+        updatePreview(previewHistory[historyIndex]);
+    }
+});
+
+// Boton Refresh
+document.getElementById('browser-refresh').addEventListener('click', function() {
+    const iframe = document.getElementById('ai-preview-iframe');
+    iframe.src = iframe.src; // Recargar
+});
+
+// Abrir en nueva ventana
+document.getElementById('browser-open-external').addEventListener('click', function() {
+    const iframe = document.getElementById('ai-preview-iframe');
+    if (iframe.src) {
+        window.open(iframe.src, '_blank');
+    }
+});
+```
+
+---
+
+### 35.7 - Archivos a Crear/Modificar
+
+| Archivo | Accion | Descripcion |
+|---------|--------|-------------|
+| `BUNK3R_IA/api/preview.py` | CREAR | Endpoint para servir previews |
+| `BUNK3R_IA/api/ai_constructor.py` | MODIFICAR | Agregar endpoint /generate |
+| `BUNK3R_IA/main.py` | MODIFICAR | Registrar blueprint preview |
+| `BUNK3R_IA/static/ai-chat.js` | MODIFICAR | Conectar chat con preview |
+| `BUNK3R_IA/templates/workspace.html` | YA HECHO | UI ya actualizada |
+| `BUNK3R_IA/generated_projects/` | CREAR | Carpeta para proyectos |
+
+---
+
+### 35.8 - Dependencias
+
+```python
+# requirements.txt - agregar
+openai>=1.0.0
+```
+
+**Variables de entorno**:
+```
+OPENAI_API_KEY=sk-...  # Ya configurada
+```
+
+---
+
+### 35.9 - Estimacion de Tiempo
+
+| Tarea | Tiempo |
+|-------|--------|
+| 35.2 Backend generacion | 4h |
+| 35.3 Backend servir preview | 2h |
+| 35.4 Frontend conexion | 3h |
+| 35.5 Consola logs | 2h |
+| 35.6 Barra navegador | 1h |
+| Testing e integracion | 2h |
+| **TOTAL** | **14h** |
+
+---
+
+### 35.10 - Orden de Implementacion
+
+1. Crear `generated_projects/` carpeta
+2. Crear `api/preview.py` con endpoint basico
+3. Modificar `api/ai_constructor.py` con generacion OpenAI
+4. Registrar rutas en `main.py`
+5. Actualizar `ai-chat.js` para conectar todo
+6. Agregar captura de logs para consola
+7. Implementar historial de navegacion
+8. Testing completo
