@@ -1485,3 +1485,164 @@ def ai_llm_list_phases():
     except Exception as e:
         logger.error(f"List phases error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai/chat/stream', methods=['GET'])
+def ai_chat_stream():
+    """
+    Stream chat responses using Server-Sent Events (SSE)
+    Implements 34.15 - Sistema de streaming de respuestas
+    
+    Query params:
+        - user_id: User identifier
+        - message: The message to send
+        - provider: Preferred AI provider (optional)
+    """
+    from flask import Response, stream_with_context
+    
+    try:
+        from BUNK3R_IA.core.streaming_service import get_streaming_service
+        
+        user_id = request.args.get('user_id', 'anonymous')
+        message = request.args.get('message', '').strip()
+        preferred_provider = request.args.get('provider')
+        
+        if not message:
+            def error_stream():
+                yield 'data: {"type": "error", "data": "Message is required"}\n\n'
+            return Response(
+                stream_with_context(error_stream()),
+                mimetype='text/event-stream',
+                headers={
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'X-Accel-Buffering': 'no',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            )
+        
+        streaming_service = get_streaming_service()
+        
+        def generate():
+            try:
+                for event in streaming_service.stream_chat(
+                    user_id=user_id,
+                    message=message,
+                    preferred_provider=preferred_provider
+                ):
+                    yield event.to_sse()
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                yield f'data: {{"type": "error", "data": "{str(e)}"}}\n\n'
+        
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no',
+                'Access-Control-Allow-Origin': '*'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Stream init error: {e}")
+        def error_stream():
+            yield f'data: {{"type": "error", "data": "{str(e)}"}}\n\n'
+        return Response(
+            stream_with_context(error_stream()),
+            mimetype='text/event-stream'
+        )
+
+
+@ai_bp.route('/ai/chat/stream', methods=['POST'])
+def ai_chat_stream_post():
+    """
+    Stream chat responses using Server-Sent Events (SSE) - POST version
+    Implements 34.15 - Sistema de streaming de respuestas
+    """
+    from flask import Response, stream_with_context
+    
+    try:
+        from BUNK3R_IA.core.streaming_service import get_streaming_service
+        
+        data = request.json or {}
+        user_id = data.get('user_id', 'anonymous')
+        message = data.get('message', '').strip()
+        preferred_provider = data.get('provider')
+        system_prompt = data.get('system_prompt')
+        
+        if not message:
+            return jsonify({'success': False, 'error': 'Message is required'}), 400
+        
+        streaming_service = get_streaming_service()
+        
+        def generate():
+            try:
+                for event in streaming_service.stream_chat(
+                    user_id=user_id,
+                    message=message,
+                    system_prompt=system_prompt,
+                    preferred_provider=preferred_provider
+                ):
+                    yield event.to_sse()
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                yield f'data: {{"type": "error", "data": "{str(e)}"}}\n\n'
+        
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no',
+                'Access-Control-Allow-Origin': '*'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Stream POST init error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai/streaming/providers', methods=['GET'])
+def ai_streaming_providers():
+    """Get list of available streaming providers (34.15)"""
+    try:
+        from BUNK3R_IA.core.streaming_service import get_streaming_service
+        
+        service = get_streaming_service()
+        providers = service.get_available_providers()
+        
+        return jsonify({
+            'success': True,
+            'providers': providers,
+            'count': len(providers),
+            'streaming_enabled': len(providers) > 0
+        })
+    except Exception as e:
+        logger.error(f"Streaming providers error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai/streaming/clear', methods=['POST'])
+def ai_streaming_clear():
+    """Clear streaming conversation history (34.15)"""
+    try:
+        from BUNK3R_IA.core.streaming_service import get_streaming_service
+        
+        data = request.json or {}
+        user_id = data.get('user_id', 'anonymous')
+        
+        service = get_streaming_service()
+        service.clear_conversation(user_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Conversation cleared'
+        })
+    except Exception as e:
+        logger.error(f"Streaming clear error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

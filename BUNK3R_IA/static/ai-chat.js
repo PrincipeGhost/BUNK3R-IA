@@ -9,7 +9,6 @@ const AIChat = {
     currentPhase: 0,
     esperandoConfirmacion: false,
     esperandoClarificacion: false,
-    previewSessionId: null,
     
     devLog(...args) {
         if (window.App?.isDevMode || window.App?.isDemoMode) {
@@ -197,7 +196,7 @@ const AIChat = {
         const refreshBtn = document.getElementById('ai-preview-refresh');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
-                this.refreshLivePreview();
+                this.updatePreview();
             });
         }
     },
@@ -712,17 +711,27 @@ const AIChat = {
         
         this.appendMessage('user', message);
         
-        const quickPreviewKeywords = ['crea', 'genera', 'hazme', 'construye', 'landing', 'pagina', 'web', 'formulario', 'portfolio', 'dashboard'];
-        const isQuickPreviewRequest = quickPreviewKeywords.some(kw => message.toLowerCase().includes(kw));
+        const isCodeRequest = this.isCodeGenerationRequest(message);
         
-        if (isQuickPreviewRequest && !this.currentSession) {
-            await this.generateLivePreview(message);
+        if (isCodeRequest) {
+            await this.sendConstructorMessage(message);
+        } else if (this.streamingEnabled) {
+            await this.sendStreamingMessage(message);
         } else {
             await this.sendConstructorMessage(message);
         }
-        
-        this.isLoading = false;
-        if (send) send.disabled = false;
+    },
+    
+    isCodeGenerationRequest(message) {
+        const codeKeywords = [
+            'crea', 'genera', 'construye', 'haz', 'diseña',
+            'create', 'generate', 'build', 'make', 'design',
+            'landing', 'página', 'page', 'form', 'formulario',
+            'html', 'css', 'javascript', 'website', 'sitio',
+            'app', 'aplicación', 'proyecto', 'project'
+        ];
+        const lowerMessage = message.toLowerCase();
+        return codeKeywords.some(kw => lowerMessage.includes(kw));
     },
     
     async sendConstructorMessage(message) {
@@ -758,6 +767,10 @@ const AIChat = {
             this.appendMessage('assistant', 'Error de conexion. Verifica tu internet e intenta de nuevo.');
             console.error('AI Constructor error:', error);
         }
+        
+        this.isLoading = false;
+        const send = this.getSendButton();
+        if (send) send.disabled = false;
     },
     
     handleConstructorResponse(data) {
@@ -889,7 +902,6 @@ const AIChat = {
         
         this.messages = [];
         this.files = {};
-        this.previewSessionId = null;
         localStorage.removeItem('bunkr_ai_project');
         
         await this.resetSession();
@@ -931,79 +943,6 @@ const AIChat = {
         }
         
         this.switchTab('preview');
-    },
-    
-    async generateLivePreview(prompt) {
-        this.showTyping();
-        
-        try {
-            const response = await fetch('/api/ai-constructor/generate', {
-                method: 'POST',
-                headers: this.getApiHeaders(),
-                body: JSON.stringify({
-                    prompt: prompt,
-                    session_id: this.previewSessionId
-                })
-            });
-            
-            const data = await response.json();
-            this.hideTyping();
-            
-            if (data.success) {
-                this.previewSessionId = data.session_id;
-                this.appendMessage('assistant', data.message || 'Proyecto generado. Mira el preview.');
-                
-                this.appendCodeAction('create', 'index.html');
-                
-                this.showLivePreview(data.preview_url);
-                
-                this.switchTab('preview');
-                
-                return data;
-            } else {
-                this.appendMessage('assistant', data.error || 'Error al generar. Intenta de nuevo.');
-                return null;
-            }
-        } catch (error) {
-            this.hideTyping();
-            this.appendMessage('assistant', 'Error de conexion. Verifica tu internet.');
-            console.error('Live preview error:', error);
-            return null;
-        }
-    },
-    
-    showLivePreview(previewUrl) {
-        const iframe = document.getElementById('ai-preview-iframe');
-        const emptyState = document.getElementById('ai-preview-empty');
-        const urlBar = document.getElementById('ai-preview-url');
-        
-        if (!iframe) {
-            console.warn('AIChat: iframe not found');
-            return;
-        }
-        
-        if (emptyState) emptyState.classList.add('hidden');
-        iframe.classList.remove('hidden');
-        
-        iframe.removeAttribute('srcdoc');
-        iframe.src = previewUrl;
-        
-        if (urlBar) {
-            const fullUrl = window.location.origin + previewUrl;
-            urlBar.value = fullUrl;
-            urlBar.title = fullUrl;
-        }
-        
-        this.devLog('Live preview loaded:', previewUrl);
-    },
-    
-    refreshLivePreview() {
-        if (this.previewSessionId) {
-            const previewUrl = `/preview/${this.previewSessionId}`;
-            this.showLivePreview(previewUrl);
-        } else {
-            this.updatePreview();
-        }
     }
 };
 
@@ -1011,8 +950,21 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         AIChat.init();
         AIChat.hookNavigation();
+        AIChat.initStreamingCleanup();
     }, 500);
 });
+
+AIChat.initStreamingCleanup = function() {
+    window.addEventListener('beforeunload', () => {
+        this.closeEventSource();
+    });
+    
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && this.currentEventSource) {
+            this.devLog('Page hidden, keeping connection alive');
+        }
+    });
+};
 
 AIChat.hookNavigation = function() {
     document.querySelectorAll('.bottom-nav-item[data-nav="ai-chat"]').forEach(btn => {
@@ -1036,4 +988,159 @@ AIChat.hookNavigation = function() {
             }
         });
     }
+};
+
+AIChat.streamingEnabled = true;
+AIChat.currentEventSource = null;
+
+AIChat.sendStreamingMessage = async function(message) {
+    if (!this.streamingEnabled) {
+        return this.sendConstructorMessage(message);
+    }
+    
+    let container = this.getMessagesContainer();
+    if (!container) {
+        container = document.getElementById('ai-chat-messages');
+        if (!container) {
+            this.devLog('Streaming: No message container, falling back to constructor');
+            return this.sendConstructorMessage(message);
+        }
+    }
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'ai-message ai-message-assistant ai-streaming';
+    msgDiv.id = 'ai-streaming-response';
+    msgDiv.innerHTML = `
+        <div class="ai-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+                <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-1v1a4 4 0 0 1-8 0v-1H7a3 3 0 0 1-3-3v-2a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"></path>
+            </svg>
+        </div>
+        <div class="ai-bubble ai-streaming-content">
+            <span class="ai-cursor"></span>
+        </div>
+    `;
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+    
+    const contentEl = msgDiv.querySelector('.ai-streaming-content');
+    let fullContent = '';
+    
+    try {
+        const userId = 'anonymous';
+        const url = `/api/ai/chat/stream?user_id=${encodeURIComponent(userId)}&message=${encodeURIComponent(message)}`;
+        
+        this.currentEventSource = new EventSource(url);
+        
+        this.currentEventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                switch(data.type) {
+                    case 'start':
+                        this.devLog('Streaming started:', data.metadata);
+                        const indicator = this.getProviderIndicator();
+                        if (indicator && data.metadata?.provider) {
+                            indicator.innerHTML = `<span class="provider-label">${data.metadata.provider}</span>`;
+                        }
+                        break;
+                        
+                    case 'token':
+                        fullContent += data.data;
+                        contentEl.innerHTML = this.formatMessage(fullContent) + '<span class="ai-cursor"></span>';
+                        container.scrollTop = container.scrollHeight;
+                        break;
+                        
+                    case 'complete':
+                        contentEl.innerHTML = this.formatMessage(fullContent);
+                        msgDiv.classList.remove('ai-streaming');
+                        msgDiv.id = '';
+                        this.messages.push({ role: 'assistant', content: fullContent });
+                        this.closeEventSource();
+                        this.finishStreamingUI();
+                        break;
+                        
+                    case 'error':
+                        contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(data.data)}</span>`;
+                        msgDiv.classList.remove('ai-streaming');
+                        this.closeEventSource();
+                        this.finishStreamingUI();
+                        break;
+                        
+                    case 'metadata':
+                        this.devLog('Streaming metadata:', data);
+                        break;
+                }
+            } catch (e) {
+                console.error('Error parsing SSE:', e);
+            }
+        };
+        
+        this.currentEventSource.onerror = (error) => {
+            console.error('SSE error:', error);
+            if (fullContent) {
+                contentEl.innerHTML = this.formatMessage(fullContent);
+                this.messages.push({ role: 'assistant', content: fullContent });
+            } else {
+                contentEl.innerHTML = '<span class="ai-error">Error de conexion</span>';
+            }
+            msgDiv.classList.remove('ai-streaming');
+            this.closeEventSource();
+            this.finishStreamingUI();
+        };
+        
+    } catch (error) {
+        console.error('Streaming error:', error);
+        contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(error.message)}</span>`;
+        msgDiv.classList.remove('ai-streaming');
+        this.isLoading = false;
+        const send = this.getSendButton();
+        if (send) send.disabled = false;
+    }
+};
+
+AIChat.closeEventSource = function() {
+    if (this.currentEventSource) {
+        this.currentEventSource.close();
+        this.currentEventSource = null;
+    }
+};
+
+AIChat.finishStreamingUI = function() {
+    this.isLoading = false;
+    
+    const send = this.getSendButton();
+    if (send) send.disabled = false;
+    
+    const input = this.getInput();
+    if (input) {
+        input.disabled = false;
+        input.focus();
+    }
+    
+    const indicator = this.getProviderIndicator();
+    if (indicator) {
+        indicator.innerHTML = '';
+    }
+    
+    this.devLog('Streaming finished, UI reset');
+};
+
+AIChat.toggleStreaming = function(enabled) {
+    this.streamingEnabled = enabled;
+    this.devLog('Streaming', enabled ? 'enabled' : 'disabled');
+};
+
+AIChat.sendQuickStreamMessage = async function(message) {
+    const input = this.getInput();
+    const send = this.getSendButton();
+    
+    if (this.isLoading) return;
+    
+    this.isLoading = true;
+    if (input) input.value = '';
+    if (send) send.disabled = true;
+    
+    this.appendMessage('user', message);
+    await this.sendStreamingMessage(message);
 };
