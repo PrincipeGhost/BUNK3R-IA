@@ -2,15 +2,73 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BUNK3R IA - Constructor Inteligente</title>
     <link rel="stylesheet" href="/static/ai-chat.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23F0B90B' width='100' height='100' rx='20'/%3E%3Cpath d='M50 20 L75 35 V65 L50 80 L25 65 V35 Z' fill='%230a0d10'/%3E%3C/svg%3E">
 </head>
 <body>
+    <header class="mobile-header">
+        <div class="mobile-header-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mobile-logo">
+                <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
+            </svg>
+            <span class="mobile-title">BUNK3R IA</span>
+        </div>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </header>
+
+    <nav class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <span>Menu</span>
+                <button class="mobile-menu-close" id="mobile-menu-close">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-items">
+                <button class="mobile-menu-item active" data-panel="chat">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Chat IA</span>
+                </button>
+                <button class="mobile-menu-item" data-panel="preview">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <span>Preview</span>
+                </button>
+                <button class="mobile-menu-item" data-panel="files">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Archivos</span>
+                </button>
+                <button class="mobile-menu-item" data-panel="console">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4 17 10 11 4 5"/>
+                        <line x1="12" y1="19" x2="20" y2="19"/>
+                    </svg>
+                    <span>Consola</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <main class="workspace-main">
         <div class="ai-workspace-container">
-            <div class="ai-panel ai-panel-chat">
+            <div class="ai-panel ai-panel-chat active-panel" id="panel-chat">
                 <div class="ai-chat-sidebar-header">
                     <div class="ai-chat-sidebar-logo">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -54,7 +112,7 @@
                     <textarea 
                         class="ai-chat-input" 
                         id="ai-chat-input" 
-                        placeholder="Make, test, iterate..."
+                        placeholder="Describe lo que quieres crear..."
                         rows="1"
                     ></textarea>
                     <div class="ai-chat-toolbar">
@@ -64,36 +122,9 @@
                                     <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
                                 </svg>
                                 <span>Build</span>
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="6 9 12 15 18 9"/>
-                                </svg>
-                            </button>
-                            <button class="toolbar-btn icon-btn">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <polyline points="17 8 12 3 7 8"/>
-                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                </svg>
-                            </button>
-                            <button class="toolbar-btn icon-btn">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                                </svg>
                             </button>
                         </div>
                         <div class="toolbar-right">
-                            <button class="toolbar-btn icon-btn">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                    <polyline points="22,6 12,13 2,6"/>
-                                </svg>
-                            </button>
-                            <button class="toolbar-btn icon-btn">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                                </svg>
-                            </button>
                             <button class="toolbar-btn icon-btn send-arrow" id="ai-chat-send-arrow">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="12" y1="19" x2="12" y2="5"/>
@@ -107,7 +138,7 @@
             
             <div class="panel-resizer" id="resizer-left"></div>
             
-            <div class="ai-panel ai-panel-preview">
+            <div class="ai-panel ai-panel-preview" id="panel-preview">
                 <div class="ai-tabs-header">
                     <div class="ai-tab-buttons">
                         <button class="ai-tab-btn active" data-file="preview">
@@ -126,7 +157,22 @@
                             Console
                         </button>
                     </div>
-                    <div class="ai-tab-actions"><button class="ai-preview-btn" id="ai-preview-refresh" title="Actualizar vista"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><button class="ai-preview-btn" id="ai-preview-fullscreen" title="Pantalla completa"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
+                    <div class="ai-tab-actions">
+                        <button class="ai-preview-btn" id="ai-preview-refresh" title="Actualizar vista">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                        </button>
+                        <button class="ai-preview-btn" id="ai-preview-fullscreen" title="Pantalla completa">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+                                <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+                                <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+                                <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="ai-browser-bar">
                     <div class="browser-nav-buttons">
@@ -194,7 +240,7 @@
             
             <div class="panel-resizer" id="resizer-right"></div>
             
-            <div class="ai-panel ai-panel-files">
+            <div class="ai-panel ai-panel-files" id="panel-files">
                 <div class="ai-files-header">
                     <span class="ai-files-title">Archivos</span>
                     <button class="ai-files-add-btn" title="Nuevo archivo">
@@ -230,6 +276,64 @@
             const browserRefresh = document.getElementById('browser-refresh');
             
             const sendArrowBtn = document.getElementById('ai-chat-send-arrow');
+            
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuClose = document.getElementById('mobile-menu-close');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
+            
+            function openMobileMenu() {
+                mobileMenu.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeMobileMenu() {
+                mobileMenu.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            
+            function switchPanel(panelName) {
+                const panels = document.querySelectorAll('.ai-panel');
+                panels.forEach(panel => panel.classList.remove('active-panel'));
+                
+                const targetPanel = document.getElementById('panel-' + panelName);
+                if (targetPanel) {
+                    targetPanel.classList.add('active-panel');
+                }
+                
+                mobileMenuItems.forEach(item => {
+                    item.classList.toggle('active', item.dataset.panel === panelName);
+                });
+                
+                if (panelName === 'console') {
+                    const previewPanel = document.getElementById('panel-preview');
+                    previewPanel.classList.add('active-panel');
+                    const consolePanelEl = document.getElementById('ai-console');
+                    const previewEmptyEl = document.getElementById('ai-preview-empty');
+                    const previewIframeEl = document.getElementById('ai-preview-iframe');
+                    
+                    if (consolePanelEl) consolePanelEl.classList.remove('hidden');
+                    if (previewEmptyEl) previewEmptyEl.classList.add('hidden');
+                    if (previewIframeEl) previewIframeEl.classList.add('hidden');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    const consoleTab = document.querySelector('.ai-tab-btn[data-file="console"]');
+                    if (consoleTab) consoleTab.classList.add('active');
+                }
+                
+                closeMobileMenu();
+            }
+            
+            hamburgerBtn.addEventListener('click', openMobileMenu);
+            mobileMenuClose.addEventListener('click', closeMobileMenu);
+            mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            
+            mobileMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    switchPanel(this.dataset.panel);
+                });
+            });
             
             function updateSendButtons() {
                 const hasText = chatInput.value.trim().length > 0;
@@ -330,6 +434,7 @@
             let currentResizer = null;
             
             function initResize(e, resizer) {
+                if (window.innerWidth <= 768) return;
                 isResizing = true;
                 currentResizer = resizer;
                 document.body.classList.add('resizing');

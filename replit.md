@@ -75,7 +75,24 @@ Sistema para usar Google Antigravity como motor principal de IA:
 - **Documentación**: Ver `GRAVITY-CONNECT.md` para setup completo
 - **Fallback**: Si Antigravity no disponible, usa DeepSeek/Groq/Gemini
 
+## Render Deployment
+Files configured for Render deployment:
+- `requirements.txt` - Python dependencies (root level)
+- `render.yaml` - Render configuration
+- `Procfile` - Gunicorn start command
+- `runtime.txt` - Python version (3.11.4)
+
+Start command: `gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"`
+
 ## Recent Changes
+- 2025-12-17: Added mobile responsive design
+  - Hamburger menu for mobile navigation
+  - Chat panel is default view on mobile
+  - Switch between Chat, Preview, Files, and Console panels
+  - Optimized touch targets and font sizes
+- 2025-12-17: Added Render deployment configuration
+  - Created requirements.txt, render.yaml, Procfile, runtime.txt
+  - Updated README with deployment instructions
 - 2025-12-17: Updated GRAVITY-CONNECT v2.0
   - Cambiado ngrok por Cloudflare Tunnel (gratis, sin cuenta)
   - Implementado OCR con Tesseract + OpenCV para extracción de respuestas
