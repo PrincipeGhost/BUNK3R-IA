@@ -108,6 +108,26 @@
             <div class="panel-resizer" id="resizer-left"></div>
             
             <div class="ai-panel ai-panel-preview">
+                <div class="ai-tabs-header">
+                    <div class="ai-tab-buttons">
+                        <button class="ai-tab-btn active" data-file="preview">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                            Preview
+                        </button>
+                        <button class="ai-tab-btn" data-file="console">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 17 10 11 4 5"/>
+                                <line x1="12" y1="19" x2="20" y2="19"/>
+                            </svg>
+                            Console
+                        </button>
+                    </div>
+                    <div class="ai-tab-actions"><button class="ai-preview-btn" id="ai-preview-refresh" title="Actualizar vista"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><button class="ai-preview-btn" id="ai-preview-fullscreen" title="Pantalla completa"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
+                </div>
                 <div class="ai-browser-bar">
                     <div class="browser-nav-buttons">
                         <button class="browser-nav-btn" id="browser-back" title="Atras">
@@ -136,50 +156,13 @@
                         </svg>
                         <input type="text" class="browser-url-input" id="browser-url" value="preview.bunk3r.dev/" readonly>
                     </div>
-                    <div class="browser-actions">
-                        <button class="browser-action-btn" id="browser-open-external" title="Abrir en nueva ventana">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                <polyline points="15 3 21 3 21 9"/>
-                                <line x1="10" y1="14" x2="21" y2="3"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="ai-panel-header">
-                    <div class="ai-file-tabs">
-                        <button class="ai-file-tab active" data-file="preview">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                                <line x1="8" y1="21" x2="16" y2="21"/>
-                                <line x1="12" y1="17" x2="12" y2="21"/>
-                            </svg>
-                            Preview
-                        </button>
-                        <button class="ai-file-tab" data-file="console">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="4 17 10 11 4 5"/>
-                                <line x1="12" y1="19" x2="20" y2="19"/>
-                            </svg>
-                            Console
-                        </button>
-                    </div>
-                    <div class="ai-preview-actions">
-                        <button class="ai-preview-btn" id="ai-preview-refresh" title="Actualizar vista">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M23 4v6h-6"/>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                            </svg>
-                        </button>
-                        <button class="ai-preview-btn" id="ai-preview-fullscreen" title="Pantalla completa">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
-                                <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
-                                <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
-                                <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
-                            </svg>
-                        </button>
-                    </div>
+                    <button class="browser-action-btn" id="browser-open-external" title="Abrir en nueva ventana">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </button>
                 </div>
                 <div class="ai-preview-content">
                     <div class="ai-preview-empty" id="ai-preview-empty">
@@ -239,7 +222,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const chatInput = document.getElementById('ai-chat-input');
             const sendBtn = document.getElementById('ai-chat-send');
-            const tabs = document.querySelectorAll('.ai-file-tab');
+            const tabs = document.querySelectorAll('.ai-tab-btn');
             const previewEmpty = document.getElementById('ai-preview-empty');
             const previewIframe = document.getElementById('ai-preview-iframe');
             const consolePanel = document.getElementById('ai-console');

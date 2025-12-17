@@ -600,13 +600,7 @@ body {
 }
 
 .ai-panel-header {
-    padding: 10px 16px;
-    background: #1a1f26;
-    border-bottom: 1px solid rgba(240, 185, 11, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 48px;
+    display: none;
 }
 
 .ai-panel-title {
@@ -1666,4 +1660,170 @@ body {
     color: #F0B90B;
     text-transform: uppercase;
     font-weight: 500;
+}
+
+.ai-tabs-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 !important;
+    background: #0d1117 !important;
+    border-bottom: 1px solid #30363d !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+}
+
+.ai-tab-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    align-items: center !important;
+    height: 100% !important;
+}
+
+.ai-tab-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 16px !important;
+    height: 100% !important;
+    background: #161b22 !important;
+    border: none !important;
+    border-right: 1px solid #30363d !important;
+    color: #8b949e !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    position: relative !important;
+    white-space: nowrap !important;
+}
+
+.ai-tab-btn:hover {
+    background: #1f2937 !important;
+    color: #c9d1d9 !important;
+}
+
+.ai-tab-btn.active {
+    color: #f0f6fc !important;
+    background: #0d1117 !important;
+}
+
+.ai-tab-btn.active::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 2px !important;
+    background: #F0B90B !important;
+}
+
+.ai-tab-btn.active svg {
+    color: #F0B90B !important;
+}
+
+.ai-tab-btn svg {
+    flex-shrink: 0 !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.ai-tab-actions {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 0 12px !important;
+    height: 100% !important;
+    background: #0d1117 !important;
+}
+
+.ai-browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #12161C;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.browser-nav-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.browser-nav-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.browser-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #EAECEF;
+}
+
+.browser-url-bar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.browser-url-bar svg {
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.browser-url-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #EAECEF;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    outline: none;
+}
+
+.browser-url-input::placeholder {
+    color: #4a5568;
+}
+
+.browser-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.browser-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.browser-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #EAECEF;
 }
