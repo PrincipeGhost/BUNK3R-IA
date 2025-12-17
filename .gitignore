@@ -50,3 +50,11 @@ replit.nix
 .DS_Store
 *.zip
 .uv/
+
+# Generated content
+BUNK3R_IA/generated_projects/
+ai_generated/
+.ai_checkpoints/
+
+# Attached assets (opcional para deploy)
+attached_assets/

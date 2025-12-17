@@ -102,3 +102,42 @@ response = ai_service.chat("user_123", "Hola, crea una página web")
 - Hugging Face
 
 El sistema incluye fallback automático entre proveedores.
+
+## Deploy en Render
+
+### Archivos de Configuración
+
+El proyecto incluye los siguientes archivos para deploy:
+
+- `requirements.txt` - Dependencias Python (en raíz)
+- `render.yaml` - Configuración de Render
+- `Procfile` - Comando de inicio para Gunicorn
+- `runtime.txt` - Versión de Python
+
+### Pasos para Deploy
+
+1. **Subir a GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <tu-repositorio>
+   git push -u origin main
+   ```
+
+2. **En Render Dashboard**
+   - Crear nuevo Web Service
+   - Conectar repositorio de GitHub
+   - Render detectará automáticamente la configuración
+
+3. **Variables de Entorno en Render**
+   Configurar las siguientes variables:
+   - `DEEPSEEK_API_KEY` - Tu API key de DeepSeek (u otro proveedor)
+   - `DATABASE_URL` - URL de PostgreSQL (opcional)
+   - `FLASK_ENV` - `production`
+
+### Comando de Inicio
+
+```bash
+gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"
+```

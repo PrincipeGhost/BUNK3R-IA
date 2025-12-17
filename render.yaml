@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: bunk3r-ia
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: FLASK_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
