@@ -9,6 +9,7 @@ const AIChat = {
     currentPhase: 0,
     esperandoConfirmacion: false,
     esperandoClarificacion: false,
+    previewSessionId: null,
     
     devLog(...args) {
         if (window.App?.isDevMode || window.App?.isDemoMode) {
@@ -196,7 +197,7 @@ const AIChat = {
         const refreshBtn = document.getElementById('ai-preview-refresh');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
-                this.updatePreview();
+                this.refreshLivePreview();
             });
         }
     },
@@ -711,7 +712,17 @@ const AIChat = {
         
         this.appendMessage('user', message);
         
-        await this.sendConstructorMessage(message);
+        const quickPreviewKeywords = ['crea', 'genera', 'hazme', 'construye', 'landing', 'pagina', 'web', 'formulario', 'portfolio', 'dashboard'];
+        const isQuickPreviewRequest = quickPreviewKeywords.some(kw => message.toLowerCase().includes(kw));
+        
+        if (isQuickPreviewRequest && !this.currentSession) {
+            await this.generateLivePreview(message);
+        } else {
+            await this.sendConstructorMessage(message);
+        }
+        
+        this.isLoading = false;
+        if (send) send.disabled = false;
     },
     
     async sendConstructorMessage(message) {
@@ -747,10 +758,6 @@ const AIChat = {
             this.appendMessage('assistant', 'Error de conexion. Verifica tu internet e intenta de nuevo.');
             console.error('AI Constructor error:', error);
         }
-        
-        this.isLoading = false;
-        const send = this.getSendButton();
-        if (send) send.disabled = false;
     },
     
     handleConstructorResponse(data) {
@@ -882,6 +889,7 @@ const AIChat = {
         
         this.messages = [];
         this.files = {};
+        this.previewSessionId = null;
         localStorage.removeItem('bunkr_ai_project');
         
         await this.resetSession();
@@ -923,6 +931,79 @@ const AIChat = {
         }
         
         this.switchTab('preview');
+    },
+    
+    async generateLivePreview(prompt) {
+        this.showTyping();
+        
+        try {
+            const response = await fetch('/api/ai-constructor/generate', {
+                method: 'POST',
+                headers: this.getApiHeaders(),
+                body: JSON.stringify({
+                    prompt: prompt,
+                    session_id: this.previewSessionId
+                })
+            });
+            
+            const data = await response.json();
+            this.hideTyping();
+            
+            if (data.success) {
+                this.previewSessionId = data.session_id;
+                this.appendMessage('assistant', data.message || 'Proyecto generado. Mira el preview.');
+                
+                this.appendCodeAction('create', 'index.html');
+                
+                this.showLivePreview(data.preview_url);
+                
+                this.switchTab('preview');
+                
+                return data;
+            } else {
+                this.appendMessage('assistant', data.error || 'Error al generar. Intenta de nuevo.');
+                return null;
+            }
+        } catch (error) {
+            this.hideTyping();
+            this.appendMessage('assistant', 'Error de conexion. Verifica tu internet.');
+            console.error('Live preview error:', error);
+            return null;
+        }
+    },
+    
+    showLivePreview(previewUrl) {
+        const iframe = document.getElementById('ai-preview-iframe');
+        const emptyState = document.getElementById('ai-preview-empty');
+        const urlBar = document.getElementById('ai-preview-url');
+        
+        if (!iframe) {
+            console.warn('AIChat: iframe not found');
+            return;
+        }
+        
+        if (emptyState) emptyState.classList.add('hidden');
+        iframe.classList.remove('hidden');
+        
+        iframe.removeAttribute('srcdoc');
+        iframe.src = previewUrl;
+        
+        if (urlBar) {
+            const fullUrl = window.location.origin + previewUrl;
+            urlBar.value = fullUrl;
+            urlBar.title = fullUrl;
+        }
+        
+        this.devLog('Live preview loaded:', previewUrl);
+    },
+    
+    refreshLivePreview() {
+        if (this.previewSessionId) {
+            const previewUrl = `/preview/${this.previewSessionId}`;
+            this.showLivePreview(previewUrl);
+        } else {
+            this.updatePreview();
+        }
     }
 };
 
