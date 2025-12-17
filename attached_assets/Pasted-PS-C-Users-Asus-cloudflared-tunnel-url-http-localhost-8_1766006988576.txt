@@ -1,0 +1,32 @@
+PS C:\Users\Asus> cloudflared tunnel --url http://localhost:8888
+cloudflared : El término 'cloudflared' no se reconoce como nombre de un cmdlet, función, archivo de script o programa 
+correcta e inténtelo de nuevo.
+En línea: 1 Carácter: 1
++ cloudflared tunnel --url http://localhost:8888
++ ~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (cloudflared:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\Asus> & "$env:ProgramFiles\Cloudflared\cloudflared.exe" tunnel --url http://localhost:8888
+& : El término 'C:\Program Files\Cloudflared\cloudflared.exe' no se reconoce como nombre de un cmdlet, función, archivo de 
+que dicha ruta es correcta e inténtelo de nuevo.
+En línea: 1 Carácter: 3
++ & "$env:ProgramFiles\Cloudflared\cloudflared.exe" tunnel --url http:/ ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Program File...cloudflared.exe:String) [], CommandNotFoundException       
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\Asus> & "$env:LOCALAPPDATA\Programs\Cloudflare\cloudflared.exe" tunnel --url http://localhost:8888
+& : El término 'C:\Users\Asus\AppData\Local\Programs\Cloudflare\cloudflared.exe' no se reconoce como nombre de un cmdlet, 
+PS C:\Users\Asus> & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8888
+& : El término 'C:\Program Files (x86)\cloudflared\cloudflared.exe' no se reconoce como nombre de un cmdlet, función, 
+compruebe que dicha ruta es correcta e inténtelo de nuevo.
+En línea: 1 Carácter: 3
++ & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url h ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Program File...cloudflared.exe:String) [], CommandNotFoundException       
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\Asus> where.exe cloudflared
+INFORMACIÓN: no se pudo encontrar ningún archivo para los patrones dados.
+PS C:\Users\Asus> 
