@@ -12,11 +12,17 @@ BUNK3R_IA/
 ├── api/
 │   └── routes.py        # All API routes
 ├── core/
-│   ├── ai_service.py    # Multi-provider AI service
-│   ├── ai_constructor.py# 8-phase constructor
-│   ├── ai_core_engine.py# Decision engine
-│   ├── ai_toolkit.py    # File and command tools
-│   └── ai_flow_logger.py# Logging system
+│   ├── ai_service.py        # Multi-provider AI service
+│   ├── ai_constructor.py    # 8-phase constructor
+│   ├── ai_core_engine.py    # Decision engine
+│   ├── ai_toolkit.py        # File and command tools
+│   ├── ai_flow_logger.py    # Logging system
+│   ├── llm_phase_integrator.py  # LLM integration for 8 phases
+│   ├── smart_retry.py       # Intelligent retry system
+│   ├── output_verifier.py   # Code verification
+│   ├── clarification_manager.py # Clarification questions
+│   ├── plan_presenter.py    # Plan presentation
+│   └── pre_execution_validator.py # Pre-execution validation
 ├── templates/
 │   └── workspace.html   # Main workspace UI (3 panels)
 ├── static/
@@ -43,6 +49,10 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - GET `/api/ai/history` - Chat history
 - POST `/api/ai-constructor/process` - 8-phase constructor
 - POST `/api/ai-toolkit/*` - File operations
+- POST `/api/ai-llm/phase` - Execute specific LLM phase
+- POST `/api/ai-llm/pipeline` - Run full 8-phase pipeline
+- POST `/api/ai-llm/execute-plan` - Execute approved plan
+- GET `/api/ai-llm/phases` - List available phases
 
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection (uses Replit DB)
@@ -51,12 +61,16 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - `GEMINI_API_KEY` - Google Gemini API key
 
 ## Recent Changes
+- 2025-12-17: Implemented LLMPhaseIntegrator (Section 34.7)
+  - Created `/api/ai-llm/phase` endpoint for individual phase execution
+  - Created `/api/ai-llm/pipeline` endpoint for full 8-phase pipeline
+  - Created `/api/ai-llm/execute-plan` endpoint for plan execution
+  - Integrated SmartRetry for robust LLM calls with fallback
+  - Phase-specific prompts for Intent, Research, Clarification, etc.
+  - Updated documentation with corrected component status
 - 2025-12-17: Implemented Live Preview System (Section 35)
   - Created `/api/ai-constructor/generate` endpoint for OpenAI HTML generation
   - Added `/preview/<session_id>` route to serve generated previews
   - Implemented `live_preview.py` with fallback system and project management
-  - Updated frontend with `generateLivePreview()` and `showLivePreview()` methods
-  - Added automatic detection of generation requests in chat
 - 2025-12-15: Created workspace.html with 3-panel layout
-- 2025-12-15: Cleaned up duplicate files
 - 2025-12-15: Initial Replit setup, configured port 5000
