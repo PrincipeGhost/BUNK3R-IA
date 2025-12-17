@@ -1,0 +1,93 @@
+PS C:\Users\Asus> pip install flask flask-cors pyautogui pyperclip pillow keyboard pytesseract opencv-python mss pygetwindow
+PS C:\Users\Asus> python -m pip install flask flask-cors pyautogui pyperclip pillow keyboard pytesseract opencv-python mss pygetwindow
+Requirement already satisfied: flask in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (3.1.2)
+Collecting flask-cors
+  Downloading flask_cors-6.0.2-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: pyautogui in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.9.54)
+Requirement already satisfied: pyperclip in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (1.11.0)  
+Requirement already satisfied: pillow in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (12.0.0)     
+Requirement already satisfied: keyboard in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.13.5)   
+Requirement already satisfied: pytesseract in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.3.13)
+Collecting opencv-python
+  Using cached opencv_python-4.12.0.88-cp37-abi3-win_amd64.whl.metadata (19 kB)
+Collecting mss
+  Downloading mss-10.1.0-py3-none-any.whl.metadata (6.7 kB)
+Requirement already satisfied: pygetwindow in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.0.9)
+Requirement already satisfied: blinker>=1.9.0 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (1.9.0)Requirement already satisfied: click>=8.1.3 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (8.3.0)
+Requirement already satisfied: itsdangerous>=2.2.0 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (2.2.0)
+Requirement already satisfied: jinja2>=3.1.2 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (3.1.6) 
+Requirement already satisfied: markupsafe>=2.1.1 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (3.0.3)
+Requirement already satisfied: werkzeug>=3.1.0 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (3.1.3)
+Requirement already satisfied: pymsgbox in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) (2.0.1)
+Requirement already satisfied: pytweening>=1.0.4 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) 
+(1.2.0)
+Requirement already satisfied: pyscreeze>=0.1.21 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) 
+(1.0.1)
+Requirement already satisfied: mouseinfo in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) (0.1.3) 
+Requirement already satisfied: packaging>=21.3 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pytesseract) 
+(25.0)
+Collecting numpy<2.3.0,>=2 (from opencv-python)
+  Using cached numpy-2.2.6.tar.gz (20.3 MB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Installing backend dependencies ... done
+  Preparing metadata (pyproject.toml) ... error
+  error: subprocess-exited-with-error
+
+  × Preparing metadata (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [21 lines of output]
+      + C:\Users\Asus\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26\vendored-meson\meson\meson.py setup C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26 C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26\.mesonpy-gxwbdlqb -Dbuildtype=release -Db_ndebug=if-release -Db_vscrt=md --native-file=C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26\.mesonpy-gxwbdlqb\meson-python-native-file.ini
+      The Meson build system
+      Version: 1.5.2
+      Source dir: C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26
+      Build dir: C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26\.mesonpy-gxwbdlqb
+      Build type: native build
+      Project name: NumPy
+      Project version: 2.2.6
+      WARNING: Failed to activate VS environment: Could not find C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe        
+     
+      ..\meson.build:1:0: ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang'], ['clang-cl'], ['pgcc']]
+      The following exception(s) were encountered:
+      Running `icl ""` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+      Running `cl /?` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+      Running `cc --version` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+      Running `gcc --version` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+      Running `clang --version` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+      Running `clang-cl /?` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+      Running `pgcc --version` gave "[WinError 2] El sistema no puede encontrar el archivo especificado"
+     
+      A full log can be found at C:\Users\Asus\AppData\Local\Temp\pip-install-7z5beib0\numpy_734b0a0e43ad4e72ac7c958165840b26\.mesonpy-gxwbdlqb\meson-logs\meson-log.txt
+      [end of output]
+
+PS C:\Users\Asus> python -m pip install flask flask-cors pyautogui pyperclip pillow keyboard mss pygetwindow
+Requirement already satisfied: flask in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (3.1.2)
+Collecting flask-cors
+  Using cached flask_cors-6.0.2-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: pyautogui in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.9.54)
+Requirement already satisfied: pyperclip in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (1.11.0)
+Requirement already satisfied: pillow in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (12.0.0)   
+Requirement already satisfied: keyboard in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.13.5) 
+Collecting mss
+  Using cached mss-10.1.0-py3-none-any.whl.metadata (6.7 kB)
+Requirement already satisfied: pygetwindow in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (0.0.9)
+Requirement already satisfied: blinker>=1.9.0 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (1.9.0)Requirement already satisfied: click>=8.1.3 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (8.3.0)  
+Requirement already satisfied: itsdangerous>=2.2.0 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (2.2.0)
+Requirement already satisfied: jinja2>=3.1.2 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (3.1.6) 
+Requirement already satisfied: markupsafe>=2.1.1 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (3.0.3)
+Requirement already satisfied: werkzeug>=3.1.0 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from flask) (3.1.3)
+Requirement already satisfied: pymsgbox in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) (2.0.1)
+Requirement already satisfied: pytweening>=1.0.4 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) 
+(1.2.0)
+Requirement already satisfied: pyscreeze>=0.1.21 in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) 
+(1.0.1)
+Requirement already satisfied: mouseinfo in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pyautogui) (0.1.3) 
+Requirement already satisfied: pyrect in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from pygetwindow) (0.2.0)
+Requirement already satisfied: colorama in c:\users\asus\appdata\local\python\pythoncore-3.14-64\lib\site-packages (from click>=8.1.3->flask) (0.4.6)
+Downloading flask_cors-6.0.2-py3-none-any.whl (13 kB)
+Downloading mss-10.1.0-py3-none-any.whl (24 kB)
+Installing collected packages: mss, flask-cors
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/2 [mss]  WARNING: The script mss.exe is installed in 'C:\Users\Asus\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+Successfully installed flask-cors-6.0.2 mss-10.1.0
+PS C:\Users\Asus> 
