@@ -411,8 +411,8 @@ body {
 
 .ai-panel-chat {
     flex: 0 0 280px;
-    min-width: 260px;
-    max-width: 320px;
+    min-width: 280px;
+    max-width: 400px;
     border-right: 1px solid rgba(240, 185, 11, 0.15);
     background: linear-gradient(180deg, #0d1117 0%, #0a0d10 100%);
     display: flex;
@@ -803,7 +803,7 @@ body {
     align-items: center;
     margin-top: 12px;
     padding: 0;
-    gap: 8px;
+    gap: 4px;
     flex-wrap: nowrap;
 }
 
@@ -811,7 +811,7 @@ body {
 .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     flex-shrink: 0;
 }
 
@@ -819,13 +819,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px 14px;
+    gap: 4px;
+    padding: 8px 10px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     color: #a0aec0;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -843,7 +843,7 @@ body {
     border: none;
     color: #0B0E11;
     font-weight: 600;
-    padding: 10px 16px;
+    padding: 8px 12px;
     min-width: auto;
 }
 
@@ -853,23 +853,24 @@ body {
 }
 
 .toolbar-btn.icon-btn {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     padding: 0;
 }
 
 .toolbar-btn.send-arrow {
-    background: rgba(240, 185, 11, 0.15);
-    border-color: rgba(240, 185, 11, 0.3);
-    color: #F0B90B;
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
+    background: linear-gradient(135deg, #F0B90B 0%, #C99D07 100%);
+    border: none;
+    color: #0B0E11;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
 }
 
 .toolbar-btn.send-arrow:hover {
-    background: rgba(240, 185, 11, 0.25);
+    box-shadow: 0 4px 12px rgba(240, 185, 11, 0.4);
+    transform: scale(1.05);
 }
 
 #ai-chat-screen .ai-chat-input-wrapper {
