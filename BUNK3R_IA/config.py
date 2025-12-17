@@ -21,6 +21,10 @@ class Config:
     HF_TOKEN = os.getenv('HF_TOKEN', '')
     CEREBRAS_API_KEY = os.getenv('CEREBRAS_API_KEY', '')
     
+    ANTIGRAVITY_BRIDGE_URL = os.getenv('ANTIGRAVITY_BRIDGE_URL', '')
+    ANTIGRAVITY_TIMEOUT = int(os.getenv('ANTIGRAVITY_TIMEOUT', 180))
+    ANTIGRAVITY_FALLBACK_ENABLED = os.getenv('ANTIGRAVITY_FALLBACK', 'true').lower() == 'true'
+    
     PROJECT_ROOT = os.getenv('BUNK3R_IA_PROJECT_ROOT', os.getcwd())
     AI_GENERATED_DIR = os.path.join(PROJECT_ROOT, 'ai_generated')
     CHECKPOINTS_DIR = os.path.join(PROJECT_ROOT, '.ai_checkpoints')

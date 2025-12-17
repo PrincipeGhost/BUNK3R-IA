@@ -339,6 +339,22 @@ class DeepSeekProvider(AIProvider):
             return {"success": False, "error": str(e), "provider": self.name}
 
 
+class AntigravityBridgeProvider:
+    """Antigravity via Bridge - Uses Google Antigravity on user's PC"""
+    
+    def __init__(self):
+        from .antigravity_client import AntigravityProvider
+        self._provider = AntigravityProvider()
+        self.name = "antigravity"
+        self.available = self._provider.available
+    
+    def is_available(self) -> bool:
+        return self._provider.is_available()
+    
+    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+        return self._provider.chat(messages, system_prompt)
+
+
 class AIService:
     """
     Multi-provider AI service with automatic fallback
@@ -412,6 +428,17 @@ Soy BUNK3R AI. Razonemos juntos para construir cosas increíbles."""
     
     def _initialize_providers(self):
         """Initialize all available AI providers - ordered by reliability"""
+        
+        # Priority 0: Antigravity Bridge (free, unlimited, user's PC)
+        antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', '')
+        if antigravity_url:
+            try:
+                antigravity_provider = AntigravityBridgeProvider()
+                if antigravity_provider.available:
+                    self.providers.append(antigravity_provider)
+                    logger.info("Antigravity Bridge provider initialized (Priority 0 - Primary)")
+            except Exception as e:
+                logger.warning(f"Could not initialize Antigravity provider: {e}")
         
         # Priority 1: Groq (fast, reliable, Llama 3.3 70B)
         groq_key = os.environ.get('GROQ_API_KEY', '')
