@@ -66,8 +66,21 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - `DEEPSEEK_API_KEY` - DeepSeek API key
 - `GROQ_API_KEY` - Groq API key
 - `GEMINI_API_KEY` - Google Gemini API key
+- `ANTIGRAVITY_BRIDGE_URL` - URL del bridge de Antigravity (Cloudflare Tunnel)
+
+## Antigravity Integration (GRAVITY-CONNECT)
+Sistema para usar Google Antigravity como motor principal de IA:
+- **Bridge**: Script Python en PC del usuario con OCR (Tesseract + OpenCV)
+- **Túnel**: Cloudflare Quick Tunnel (gratis, sin cuenta requerida)
+- **Documentación**: Ver `GRAVITY-CONNECT.md` para setup completo
+- **Fallback**: Si Antigravity no disponible, usa DeepSeek/Groq/Gemini
 
 ## Recent Changes
+- 2025-12-17: Updated GRAVITY-CONNECT v2.0
+  - Cambiado ngrok por Cloudflare Tunnel (gratis, sin cuenta)
+  - Implementado OCR con Tesseract + OpenCV para extracción de respuestas
+  - Calibración automática de ventana
+  - Método fallback clipboard si OCR no disponible
 - 2025-12-17: Implemented Web Search Service (Section 34.A.1)
   - Created WebSearchService with Serper API integration
   - Added SearchCache with 24h TTL for result caching
