@@ -51,6 +51,12 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - `GEMINI_API_KEY` - Google Gemini API key
 
 ## Recent Changes
+- 2025-12-17: Implemented Live Preview System (Section 35)
+  - Created `/api/ai-constructor/generate` endpoint for OpenAI HTML generation
+  - Added `/preview/<session_id>` route to serve generated previews
+  - Implemented `live_preview.py` with fallback system and project management
+  - Updated frontend with `generateLivePreview()` and `showLivePreview()` methods
+  - Added automatic detection of generation requests in chat
 - 2025-12-15: Created workspace.html with 3-panel layout
 - 2025-12-15: Cleaned up duplicate files
 - 2025-12-15: Initial Replit setup, configured port 5000
