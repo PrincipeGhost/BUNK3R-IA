@@ -346,13 +346,19 @@ class AntigravityBridgeProvider:
         from .antigravity_client import AntigravityProvider
         self._provider = AntigravityProvider()
         self.name = "antigravity"
-        self.available = self._provider.available
+    
+    @property
+    def available(self) -> bool:
+        return self._provider.available
     
     def is_available(self) -> bool:
         return self._provider.is_available()
     
     def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
         return self._provider.chat(messages, system_prompt)
+    
+    def refresh(self):
+        self._provider.refresh_availability()
 
 
 class AIService:

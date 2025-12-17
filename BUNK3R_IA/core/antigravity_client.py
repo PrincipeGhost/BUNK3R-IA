@@ -4,65 +4,109 @@ Conecta BUNK3R_IA con Google Antigravity corriendo en la PC del usuario via Clou
 """
 import os
 import logging
-import asyncio
+import time
 from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
+
+HTTPX_AVAILABLE = False
+REQUESTS_AVAILABLE = False
 
 try:
     import httpx
     HTTPX_AVAILABLE = True
 except ImportError:
-    HTTPX_AVAILABLE = False
-    logger.warning("httpx not installed. Using requests as fallback.")
+    pass
 
 try:
     import requests
     REQUESTS_AVAILABLE = True
 except ImportError:
-    REQUESTS_AVAILABLE = False
+    pass
+
+if not HTTPX_AVAILABLE and not REQUESTS_AVAILABLE:
+    logger.error("Neither httpx nor requests is available. AntigravityClient will not work.")
 
 
 class AntigravityClient:
     """
     Cliente para comunicarse con el Antigravity Bridge
-    Soporta tanto operaciones síncronas como asíncronas
+    Usa httpx si está disponible, requests como fallback
     """
+    
+    HEALTH_CACHE_TTL = 30
     
     def __init__(self, bridge_url: str = None):
         self.bridge_url = bridge_url or os.getenv("ANTIGRAVITY_BRIDGE_URL", "")
-        self.timeout = 180
-        self._async_client = None
+        self.timeout = int(os.getenv("ANTIGRAVITY_TIMEOUT", "180"))
+        self._last_health_check = 0
+        self._last_health_result = False
     
     @property
     def is_configured(self) -> bool:
-        return bool(self.bridge_url)
+        return bool(self.bridge_url) and (HTTPX_AVAILABLE or REQUESTS_AVAILABLE)
     
     def _get_url(self, endpoint: str) -> str:
         base = self.bridge_url.rstrip('/')
         return f"{base}/{endpoint.lstrip('/')}"
     
-    def health_check(self) -> bool:
+    def _http_get(self, url: str, timeout: int = 10) -> Optional[Dict]:
+        try:
+            if HTTPX_AVAILABLE:
+                with httpx.Client(timeout=timeout) as client:
+                    response = client.get(url)
+                    response.raise_for_status()
+                    return response.json()
+            elif REQUESTS_AVAILABLE:
+                response = requests.get(url, timeout=timeout)
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            logger.debug(f"HTTP GET failed: {e}")
+            return None
+        return None
+    
+    def _http_post(self, url: str, json_data: Dict, timeout: int = None) -> Optional[Dict]:
+        timeout = timeout or self.timeout
+        try:
+            if HTTPX_AVAILABLE:
+                with httpx.Client(timeout=timeout) as client:
+                    response = client.post(url, json=json_data)
+                    response.raise_for_status()
+                    return response.json()
+            elif REQUESTS_AVAILABLE:
+                response = requests.post(url, json=json_data, timeout=timeout)
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            logger.debug(f"HTTP POST failed: {e}")
+            return None
+        return None
+    
+    def health_check(self, force: bool = False) -> bool:
         if not self.is_configured:
             return False
         
+        now = time.time()
+        if not force and (now - self._last_health_check) < self.HEALTH_CACHE_TTL:
+            return self._last_health_result
+        
         try:
-            if REQUESTS_AVAILABLE:
-                response = requests.get(
-                    self._get_url("/health"),
-                    timeout=10
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    return data.get("status") == "ok"
-            return False
+            data = self._http_get(self._get_url("/health"), timeout=10)
+            if data and data.get("status") == "ok":
+                self._last_health_check = now
+                self._last_health_result = True
+                return True
         except Exception as e:
             logger.warning(f"Antigravity health check failed: {e}")
-            return False
+        
+        self._last_health_check = now
+        self._last_health_result = False
+        return False
     
     def query(self, prompt: str, context: Optional[Dict] = None, use_ocr: bool = True) -> Dict[str, Any]:
         if not self.is_configured:
-            return {"error": "ANTIGRAVITY_BRIDGE_URL not configured", "status": "error"}
+            return {"success": False, "error": "Bridge not configured", "provider": "antigravity"}
         
         payload = {
             "prompt": prompt,
@@ -71,163 +115,143 @@ class AntigravityClient:
         }
         
         try:
-            if REQUESTS_AVAILABLE:
-                response = requests.post(
-                    self._get_url("/query"),
-                    json=payload,
-                    timeout=self.timeout
-                )
-                response.raise_for_status()
-                return response.json()
+            result = self._http_post(self._get_url("/query"), payload)
+            
+            if result is None:
+                self._last_health_result = False
+                return {
+                    "success": False, 
+                    "error": "Could not connect to Antigravity Bridge",
+                    "provider": "antigravity"
+                }
+            
+            if result.get("status") == "success":
+                return {
+                    "success": True,
+                    "response": result.get("response", ""),
+                    "code_blocks": result.get("code_blocks", []),
+                    "method": result.get("method", "unknown"),
+                    "provider": "antigravity"
+                }
+            elif result.get("status") == "busy":
+                return {
+                    "success": False,
+                    "error": "Antigravity is busy processing another request",
+                    "provider": "antigravity"
+                }
+            elif result.get("status") == "timeout":
+                return {
+                    "success": False,
+                    "error": "Antigravity took too long to respond",
+                    "provider": "antigravity"
+                }
             else:
-                return {"error": "No HTTP client available", "status": "error"}
-        except requests.exceptions.Timeout:
-            return {"error": "Timeout waiting for Antigravity response", "status": "timeout"}
-        except requests.exceptions.RequestException as e:
-            return {"error": str(e), "status": "error"}
+                error_msg = result.get("error", "Unknown error")
+                return {
+                    "success": False,
+                    "error": f"Bridge error: {error_msg}",
+                    "provider": "antigravity"
+                }
+                
         except Exception as e:
             logger.error(f"Antigravity query error: {e}")
-            return {"error": str(e), "status": "error"}
+            self._last_health_result = False
+            return {
+                "success": False,
+                "error": "Connection to Antigravity Bridge failed",
+                "provider": "antigravity"
+            }
     
     def get_status(self) -> Dict[str, Any]:
         if not self.is_configured:
-            return {"error": "URL not configured", "available": False}
+            return {"available": False, "reason": "Not configured"}
         
-        try:
-            if REQUESTS_AVAILABLE:
-                response = requests.get(
-                    self._get_url("/status"),
-                    timeout=10
-                )
-                data = response.json()
-                data["available"] = True
-                return data
-            return {"error": "No HTTP client available", "available": False}
-        except Exception as e:
-            return {"error": str(e), "available": False}
+        data = self._http_get(self._get_url("/status"), timeout=10)
+        if data:
+            data["available"] = True
+            return data
+        return {"available": False, "reason": "Could not connect"}
     
-    def calibrate(self) -> Dict[str, Any]:
-        if not self.is_configured:
-            return {"error": "URL not configured", "status": "error"}
-        
-        try:
-            if REQUESTS_AVAILABLE:
-                response = requests.post(
-                    self._get_url("/calibrate"),
-                    timeout=30
-                )
-                return response.json()
-            return {"error": "No HTTP client available", "status": "error"}
-        except Exception as e:
-            return {"error": str(e), "status": "error"}
-    
-    async def async_health_check(self) -> bool:
-        if not self.is_configured or not HTTPX_AVAILABLE:
-            return self.health_check()
-        
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.get(self._get_url("/health"))
-                if response.status_code == 200:
-                    data = response.json()
-                    return data.get("status") == "ok"
-            return False
-        except Exception as e:
-            logger.warning(f"Async Antigravity health check failed: {e}")
-            return False
-    
-    async def async_query(self, prompt: str, context: Optional[Dict] = None, use_ocr: bool = True) -> Dict[str, Any]:
-        if not self.is_configured:
-            return {"error": "ANTIGRAVITY_BRIDGE_URL not configured", "status": "error"}
-        
-        if not HTTPX_AVAILABLE:
-            return self.query(prompt, context, use_ocr)
-        
-        payload = {
-            "prompt": prompt,
-            "use_ocr": use_ocr,
-            "context": context or {}
-        }
-        
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.post(
-                    self._get_url("/query"),
-                    json=payload
-                )
-                response.raise_for_status()
-                return response.json()
-        except httpx.TimeoutException:
-            return {"error": "Timeout waiting for Antigravity response", "status": "timeout"}
-        except Exception as e:
-            logger.error(f"Async Antigravity query error: {e}")
-            return {"error": str(e), "status": "error"}
+    def invalidate_health_cache(self):
+        self._last_health_check = 0
+        self._last_health_result = False
 
 
 class AntigravityProvider:
     """
     Proveedor de IA compatible con AIService que usa Antigravity via Bridge
+    Sigue el mismo patrón que los otros providers de AIService
     """
+    
+    MAX_CONVERSATION_TURNS = 10
     
     def __init__(self, bridge_url: str = None):
         self.client = AntigravityClient(bridge_url)
         self.name = "antigravity"
-        self.available = self.client.is_configured
+    
+    @property
+    def available(self) -> bool:
+        return self.client.is_configured
     
     def is_available(self) -> bool:
-        if not self.available:
+        if not self.client.is_configured:
             return False
         return self.client.health_check()
     
     def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
         if not self.client.is_configured:
-            return {"success": False, "error": "Antigravity Bridge URL not configured", "provider": self.name}
+            return {
+                "success": False, 
+                "error": "Antigravity Bridge not configured. Set ANTIGRAVITY_BRIDGE_URL.", 
+                "provider": self.name
+            }
         
         prompt_parts = []
         
         if system_prompt:
-            prompt_parts.append(f"[SISTEMA]\n{system_prompt}\n")
+            prompt_parts.append(f"[Sistema]\n{system_prompt}")
         
-        for msg in messages[-5:]:
+        conversation_turns = messages[-self.MAX_CONVERSATION_TURNS:]
+        
+        for msg in conversation_turns:
             role = msg.get("role", "user")
             content = msg.get("content", "")
             if role == "user":
-                prompt_parts.append(f"[USUARIO]\n{content}")
+                prompt_parts.append(f"[Usuario]\n{content}")
             elif role == "assistant":
-                prompt_parts.append(f"[ASISTENTE]\n{content}")
+                prompt_parts.append(f"[Asistente]\n{content}")
+            elif role == "system":
+                prompt_parts.append(f"[Sistema]\n{content}")
         
         full_prompt = "\n\n".join(prompt_parts)
         
-        try:
-            result = self.client.query(full_prompt)
+        result = self.client.query(full_prompt)
+        
+        if result.get("success"):
+            response_text = result.get("response", "")
             
-            if result.get("status") == "success":
-                response_text = result.get("response", "")
-                
-                code_blocks = result.get("code_blocks", [])
-                if code_blocks:
-                    for block in code_blocks:
-                        lang = block.get("language", "")
-                        code = block.get("code", "")
-                        if code and f"```{lang}" not in response_text:
-                            response_text += f"\n\n```{lang}\n{code}\n```"
-                
-                return {
-                    "success": True, 
-                    "response": response_text, 
-                    "provider": self.name,
-                    "method": result.get("method", "unknown")
-                }
-            else:
-                error = result.get("error", "Unknown error from Antigravity Bridge")
-                return {"success": False, "error": error, "provider": self.name}
-                
-        except Exception as e:
-            logger.error(f"Antigravity provider error: {e}")
-            return {"success": False, "error": str(e), "provider": self.name}
+            code_blocks = result.get("code_blocks", [])
+            if code_blocks:
+                for block in code_blocks:
+                    lang = block.get("language", "")
+                    code = block.get("code", "")
+                    if code and f"```{lang}" not in response_text:
+                        response_text += f"\n\n```{lang}\n{code}\n```"
+            
+            return {
+                "success": True, 
+                "response": response_text, 
+                "provider": self.name
+            }
+        else:
+            return {
+                "success": False, 
+                "error": result.get("error", "Unknown error"), 
+                "provider": self.name
+            }
     
     def check_bridge_status(self) -> Dict[str, Any]:
         return self.client.get_status()
     
-    def calibrate_bridge(self) -> Dict[str, Any]:
-        return self.client.calibrate()
+    def refresh_availability(self):
+        self.client.invalidate_health_cache()
