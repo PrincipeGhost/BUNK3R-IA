@@ -243,10 +243,8 @@
             function sendMessage() {
                 const message = chatInput.value.trim();
                 if (message) {
-                    if (typeof AIChat !== 'undefined' && AIChat.sendMessage) {
-                        AIChat.sendMessage(message);
-                    } else {
-                        sendBtn.click();
+                    if (typeof AIChat !== 'undefined' && typeof AIChat.sendCodeRequest === 'function') {
+                        AIChat.sendCodeRequest();
                     }
                 }
             }
@@ -316,12 +314,6 @@
                     sendMessage();
                 });
             }
-            
-            sendBtn.addEventListener('click', function(e) {
-                if (chatInput.value.trim()) {
-                    sendMessage();
-                }
-            });
             
             if (typeof AIChat !== 'undefined') {
                 AIChat.init();
