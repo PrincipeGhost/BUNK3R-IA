@@ -231,14 +231,16 @@ BUNK3R_IA/
 
 ## SECCION 34.A-H: COMPONENTES AVANZADOS
 
-### 34.A - Busqueda en Vivo [PENDIENTE] [10h]
+### 34.A - Busqueda en Vivo [EN PROGRESO] [10h]
 
-#### 34.A.1 - Web Search (Serper API) [4h]
-- [ ] Integracion Serper API
-- [ ] Cache de resultados 24h
-- [ ] Filtros por tipo (docs, tutorials, stackoverflow)
-- [ ] Extraccion de snippets relevantes
-- [ ] Rate limiting
+#### 34.A.1 - Web Search (Serper API) [COMPLETADO] [17 Dic 2025]
+- [x] Integracion Serper API (WebSearchService)
+- [x] Cache de resultados 24h (SearchCache con TTL)
+- [x] Filtros por tipo (docs, tutorials, stackoverflow, github)
+- [x] Extraccion de snippets relevantes
+- [x] Rate limiting (RateLimiter)
+- [x] API endpoints: /api/ai-search/*
+- [x] Tests automatizados (43 tests)
 
 #### 34.A.2 - Web Scraping (Playwright) [6h]
 - [ ] Instalacion Playwright

@@ -68,6 +68,13 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - `GEMINI_API_KEY` - Google Gemini API key
 
 ## Recent Changes
+- 2025-12-17: Implemented Web Search Service (Section 34.A.1)
+  - Created WebSearchService with Serper API integration
+  - Added SearchCache with 24h TTL for result caching
+  - Added RateLimiter for API call control
+  - Implemented ContentFilter (documentation, tutorial, stackoverflow, github)
+  - Created 6 API endpoints: /api/ai-search/*
+  - Added 43 automated tests for web search functionality
 - 2025-12-17: Implemented comprehensive test suite (Section 34.8)
   - 140 automated tests with pytest, pytest-cov, pytest-mock
   - Tests for IntentParser, SmartRetrySystem (96%), OutputVerifier (84%), LLMPhaseIntegrator

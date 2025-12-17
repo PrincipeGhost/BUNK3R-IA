@@ -18,6 +18,9 @@ from .pre_execution_validator import PreExecutionValidator, pre_execution_valida
 # Integración LLM (34.7)
 from .llm_phase_integrator import LLMPhaseIntegrator, llm_integrator, execute_phase, run_pipeline, ConstructorPhase, PhaseResult
 
+# Búsqueda Web (34.A.1)
+from .web_search_service import WebSearchService, web_search_service, SearchType, ContentFilter, SearchResult, SearchResponse
+
 __all__ = [
     # Servicios principales
     'AIService',
@@ -63,4 +66,12 @@ __all__ = [
     'run_pipeline',
     'ConstructorPhase',
     'PhaseResult',
+    
+    # Búsqueda Web (34.A.1)
+    'WebSearchService',
+    'web_search_service',
+    'SearchType',
+    'ContentFilter',
+    'SearchResult',
+    'SearchResponse',
 ]

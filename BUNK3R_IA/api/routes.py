@@ -1646,3 +1646,166 @@ def ai_streaming_clear():
     except Exception as e:
         logger.error(f"Streaming clear error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-search/query', methods=['POST'])
+def ai_search_query():
+    """Realizar búsqueda web (34.A.1)"""
+    try:
+        from BUNK3R_IA.core.web_search_service import web_search_service, SearchType, ContentFilter
+        
+        data = request.json or {}
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({'success': False, 'error': 'Query is required'}), 400
+        
+        search_type_str = data.get('search_type', 'search')
+        search_type = SearchType(search_type_str) if search_type_str in [st.value for st in SearchType] else SearchType.GENERAL
+        
+        filter_strs = data.get('filters', ['all'])
+        filters = []
+        for f in filter_strs:
+            try:
+                filters.append(ContentFilter(f))
+            except ValueError:
+                filters.append(ContentFilter.ALL)
+        
+        num_results = min(data.get('num_results', 10), 100)
+        use_cache = data.get('use_cache', True)
+        
+        response = web_search_service.search_sync(
+            query=query,
+            search_type=search_type,
+            filters=filters,
+            num_results=num_results,
+            use_cache=use_cache
+        )
+        
+        return jsonify({
+            'success': True,
+            **response.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Web search error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-search/code-examples', methods=['POST'])
+def ai_search_code_examples():
+    """Buscar ejemplos de código (34.A.1)"""
+    try:
+        from BUNK3R_IA.core.web_search_service import web_search_service, ContentFilter
+        
+        data = request.json or {}
+        technology = data.get('technology', '').strip()
+        task = data.get('task', '').strip()
+        language = data.get('language', 'python')
+        
+        if not technology or not task:
+            return jsonify({'success': False, 'error': 'Technology and task are required'}), 400
+        
+        query = f"{technology} {task} {language} example code"
+        response = web_search_service.search_sync(
+            query=query,
+            filters=[ContentFilter.GITHUB, ContentFilter.STACKOVERFLOW]
+        )
+        
+        return jsonify({
+            'success': True,
+            **response.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Code examples search error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-search/documentation', methods=['POST'])
+def ai_search_documentation():
+    """Buscar documentación (34.A.1)"""
+    try:
+        from BUNK3R_IA.core.web_search_service import web_search_service, ContentFilter
+        
+        data = request.json or {}
+        library = data.get('library', '').strip()
+        topic = data.get('topic', '').strip()
+        
+        if not library:
+            return jsonify({'success': False, 'error': 'Library is required'}), 400
+        
+        query = f"{library} {topic} documentation"
+        response = web_search_service.search_sync(
+            query=query,
+            filters=[ContentFilter.DOCUMENTATION, ContentFilter.OFFICIAL]
+        )
+        
+        return jsonify({
+            'success': True,
+            **response.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Documentation search error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-search/error-solution', methods=['POST'])
+def ai_search_error_solution():
+    """Buscar solución para errores (34.A.1)"""
+    try:
+        from BUNK3R_IA.core.web_search_service import web_search_service, ContentFilter
+        
+        data = request.json or {}
+        error_message = data.get('error_message', '').strip()
+        technology = data.get('technology', '')
+        
+        if not error_message:
+            return jsonify({'success': False, 'error': 'Error message is required'}), 400
+        
+        error_clean = error_message[:200]
+        query = f"{technology} {error_clean}"
+        response = web_search_service.search_sync(
+            query=query,
+            filters=[ContentFilter.STACKOVERFLOW]
+        )
+        
+        return jsonify({
+            'success': True,
+            **response.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Error solution search error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-search/stats', methods=['GET'])
+def ai_search_stats():
+    """Obtener estadísticas del servicio de búsqueda (34.A.1)"""
+    try:
+        from BUNK3R_IA.core.web_search_service import web_search_service
+        
+        stats = web_search_service.get_stats()
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    except Exception as e:
+        logger.error(f"Search stats error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-search/cache/clear', methods=['POST'])
+def ai_search_cache_clear():
+    """Limpiar cache de búsquedas (34.A.1)"""
+    try:
+        from BUNK3R_IA.core.web_search_service import web_search_service
+        
+        web_search_service.clear_cache()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Search cache cleared'
+        })
+    except Exception as e:
+        logger.error(f"Cache clear error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
