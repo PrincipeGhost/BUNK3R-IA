@@ -28,6 +28,13 @@ BUNK3R_IA/
 ├── static/
 │   ├── ai-chat.js       # Frontend JavaScript
 │   └── ai-chat.css      # Frontend styles
+├── tests/               # Automated tests (140 tests)
+│   ├── conftest.py      # Test fixtures and mocks
+│   ├── test_intent_parser.py
+│   ├── test_smart_retry.py
+│   ├── test_output_verifier.py
+│   ├── test_llm_phase_integrator.py
+│   └── test_integration.py
 ├── frontend/            # Source frontend assets
 ├── docs/                # Documentation
 └── prompts/             # AI prompts
@@ -61,6 +68,11 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - `GEMINI_API_KEY` - Google Gemini API key
 
 ## Recent Changes
+- 2025-12-17: Implemented comprehensive test suite (Section 34.8)
+  - 140 automated tests with pytest, pytest-cov, pytest-mock
+  - Tests for IntentParser, SmartRetrySystem (96%), OutputVerifier (84%), LLMPhaseIntegrator
+  - Integration tests for full 8-phase Constructor flow
+  - Multi-language code verification tests (Python, JS, HTML, CSS, JSON)
 - 2025-12-17: Implemented LLMPhaseIntegrator (Section 34.7)
   - Created `/api/ai-llm/phase` endpoint for individual phase execution
   - Created `/api/ai-llm/pipeline` endpoint for full 8-phase pipeline

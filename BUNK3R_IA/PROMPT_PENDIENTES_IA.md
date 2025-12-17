@@ -29,9 +29,9 @@
 ║    34.21 Analizador de Impacto (ChangeImpactAnalyzer)            ║
 ║    34.22 Gestor de Workflows (WorkflowManager)                   ║
 ║    34.23 Gestor de Tareas (TaskManager)                          ║
+║    34.8 Tests automatizados del Constructor [NUEVO]              ║
 ║                                                                  ║
 ║ PENDIENTES:                                                      ║
-║    34.8 Tests automatizados del Constructor                      ║
 ║    34.15 Sistema de streaming de respuestas                      ║
 ║                                                                  ║
 ║ COMPONENTES AVANZADOS (34.A - 34.H): ~169 horas                  ║
@@ -82,6 +82,13 @@ BUNK3R_IA/
 │   ├── smart_retry.py       # Sistema de reintentos (34.17)
 │   ├── pre_execution_validator.py  # Validador pre-ejecucion (34.19)
 │   └── llm_phase_integrator.py     # [NUEVO] Integracion LLM 8 fases (34.7)
+├── tests/                   # [NUEVO] Tests automatizados (140 tests)
+│   ├── conftest.py          # Fixtures y mocks
+│   ├── test_intent_parser.py
+│   ├── test_smart_retry.py
+│   ├── test_output_verifier.py
+│   ├── test_llm_phase_integrator.py
+│   └── test_integration.py
 ├── docs/                    # Documentacion
 ├── frontend/                # ai-chat.js, ai-chat.css
 └── prompts/                 # Prompts del sistema
@@ -152,12 +159,13 @@ BUNK3R_IA/
 - [x] Integracion con SmartRetry para llamadas robustas
 - [x] API endpoints: /api/ai-llm/phase, /api/ai-llm/pipeline, /api/ai-llm/execute-plan
 
-### 34.8 - Tests del Constructor [PENDIENTE] [4h]
-- [ ] Tests unitarios de cada fase
-- [ ] Tests de integracion end-to-end
-- [ ] Mocking de proveedores de IA
-- [ ] Cobertura minima 80%
-- [ ] CI/CD integration
+### 34.8 - Tests del Constructor [COMPLETADO]
+- [x] Tests unitarios de cada fase (140 tests)
+- [x] Tests de integracion end-to-end
+- [x] Mocking de proveedores de IA
+- [x] Cobertura: SmartRetry 96%, OutputVerifier 84%
+- [x] pytest + pytest-cov + pytest-mock
+- [x] Archivos: tests/conftest.py, test_intent_parser.py, test_smart_retry.py, test_output_verifier.py, test_llm_phase_integrator.py, test_integration.py
 
 ---
 
@@ -520,7 +528,7 @@ BUNK3R_IA/
 
 ## PROXIMOS PASOS RECOMENDADOS
 
-1. **Prioridad Alta**: 34.8 Tests automatizados del Constructor
+1. **Prioridad Alta**: 34.8 Tests automatizados del Constructor [COMPLETADO 17 Dic 2025]
 2. **Prioridad Alta**: 34.15 Sistema de streaming de respuestas
 3. **Prioridad Media**: 34.B.1 Memoria Vectorial (ChromaDB)
 4. **Prioridad Media**: 34.D.4 Security Scanner
