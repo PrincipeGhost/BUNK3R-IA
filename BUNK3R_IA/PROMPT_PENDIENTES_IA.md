@@ -4,12 +4,15 @@
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    BUNK3R_IA - ESTADO ACTUAL                     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║ Ultima actualizacion: 8 Diciembre 2025                           ║
+║ Ultima actualizacion: 17 Diciembre 2025                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
 ║ COMPLETADAS:                                                     ║
 ║    34.1 Frontend IA conectado con 8 fases                        ║
 ║    34.2 AIService multi-proveedor con fallback                   ║
+║    34.3 ClarificationManager - Preguntas inteligentes [NEW]      ║
+║    34.4 PlanPresenter - Presentacion de planes [NEW]             ║
+║    34.5 OutputVerifier - Verificacion de codigo [NEW]            ║
 ║    34.6 AIToolkit (archivos, comandos, errores)                  ║
 ║    34.9 Sistema de 8 fases del Constructor                       ║
 ║    34.10 IntentParser - Analisis de solicitudes                  ║
@@ -18,21 +21,18 @@
 ║    34.13 TaskOrchestrator - Orquestacion de tareas               ║
 ║    34.14 DeliveryManager - Entrega de resultados                 ║
 ║    34.16 Motor de Decisiones Automatico (AIDecisionEngine)       ║
+║    34.17 Sistema de Reintentos Inteligente [NEW]                 ║
 ║    34.18 Contexto de Proyecto Persistente (AIProjectContext)     ║
+║    34.19 Validador Pre-Ejecucion completo [NEW]                  ║
 ║    34.20 Sistema de Rollback (RollbackManager)                   ║
 ║    34.21 Analizador de Impacto (ChangeImpactAnalyzer)            ║
 ║    34.22 Gestor de Workflows (WorkflowManager)                   ║
 ║    34.23 Gestor de Tareas (TaskManager)                          ║
 ║                                                                  ║
 ║ PENDIENTES CRITICOS:                                             ║
-║    34.3 ClarificationManager - Preguntas inteligentes            ║
-║    34.4 PlanPresenter - Presentacion de planes                   ║
-║    34.5 OutputVerifier - Verificacion de codigo                  ║
 ║    34.7 Integracion real con LLM en todas las fases              ║
 ║    34.8 Tests automatizados del Constructor                      ║
 ║    34.15 Sistema de streaming de respuestas                      ║
-║    34.17 Sistema de Reintentos Inteligente                       ║
-║    34.19 Validador Pre-Ejecucion completo                        ║
 ║                                                                  ║
 ║ COMPONENTES AVANZADOS (34.A - 34.H): ~169 horas                  ║
 ║    34.A Busqueda en Vivo (Serper + Playwright)                   ║
@@ -68,14 +68,19 @@ BUNK3R_IA/
 ├── config.py                # Configuraciones
 ├── requirements.txt         # Dependencias
 ├── api/
-│   └── routes.py            # Todas las rutas API
+│   └── routes.py            # Todas las rutas API (incluye nuevos endpoints)
 ├── core/
 │   ├── ai_service.py        # Servicio multi-proveedor
 │   ├── ai_constructor.py    # Constructor de 8 fases
 │   ├── ai_core_engine.py    # Motor de decisiones
 │   ├── ai_toolkit.py        # Herramientas
 │   ├── ai_flow_logger.py    # Sistema de logging
-│   └── ai_project_context.py
+│   ├── ai_project_context.py
+│   ├── output_verifier.py   # [NEW] Verificador de codigo (34.5)
+│   ├── clarification_manager.py  # [NEW] Gestor de clarificacion (34.3)
+│   ├── plan_presenter.py    # [NEW] Presentador de planes (34.4)
+│   ├── smart_retry.py       # [NEW] Sistema de reintentos (34.17)
+│   └── pre_execution_validator.py  # [NEW] Validador pre-ejecucion (34.19)
 ├── docs/                    # Documentacion
 ├── frontend/                # ai-chat.js, ai-chat.css
 └── prompts/                 # Prompts del sistema

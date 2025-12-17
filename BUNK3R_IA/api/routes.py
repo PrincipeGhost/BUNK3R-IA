@@ -892,3 +892,417 @@ def health_check():
         'status': 'running',
         'timestamp': datetime.now().isoformat()
     })
+
+
+# ========================================
+# NUEVOS ENDPOINTS (34.3, 34.4, 34.5, 34.17, 34.19)
+# ========================================
+
+@ai_bp.route('/ai-verifier/verify', methods=['POST'])
+def ai_verify_code():
+    """Verify code syntax and quality (34.5 OutputVerifier)"""
+    try:
+        from BUNK3R_IA.core.output_verifier import output_verifier
+        
+        data = request.json
+        code = data.get('code', '')
+        filename = data.get('filename')
+        
+        if not code:
+            return jsonify({'success': False, 'error': 'Code is required'}), 400
+        
+        report = output_verifier.verify(code, filename)
+        
+        return jsonify({
+            'success': True,
+            **report.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Code verification error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-verifier/quick', methods=['POST'])
+def ai_verify_quick():
+    """Quick syntax validation (34.5 OutputVerifier)"""
+    try:
+        from BUNK3R_IA.core.output_verifier import output_verifier
+        
+        data = request.json
+        code = data.get('code', '')
+        
+        if not code:
+            return jsonify({'success': False, 'error': 'Code is required'}), 400
+        
+        is_valid, message = output_verifier.quick_validate(code)
+        
+        return jsonify({
+            'success': True,
+            'is_valid': is_valid,
+            'message': message
+        })
+    except Exception as e:
+        logger.error(f"Quick verification error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-clarification/detect', methods=['POST'])
+def ai_clarification_detect():
+    """Detect ambiguity in request (34.3 ClarificationManager)"""
+    try:
+        from BUNK3R_IA.core.clarification_manager import clarification_manager
+        
+        data = request.json
+        request_text = data.get('request', '')
+        
+        if not request_text:
+            return jsonify({'success': False, 'error': 'Request text is required'}), 400
+        
+        ambiguity = clarification_manager.detect_ambiguity(request_text)
+        
+        return jsonify({
+            'success': True,
+            **ambiguity.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Ambiguity detection error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-clarification/questions', methods=['POST'])
+def ai_clarification_questions():
+    """Generate clarification questions (34.3 ClarificationManager)"""
+    try:
+        from BUNK3R_IA.core.clarification_manager import clarification_manager
+        
+        data = request.json
+        request_text = data.get('request', '')
+        max_questions = data.get('max_questions', 3)
+        
+        if not request_text:
+            return jsonify({'success': False, 'error': 'Request text is required'}), 400
+        
+        questions = clarification_manager.generate_questions(request_text, max_questions=max_questions)
+        
+        return jsonify({
+            'success': True,
+            'questions': [q.to_dict() for q in questions],
+            'count': len(questions),
+            'formatted': clarification_manager.format_questions_for_chat(questions)
+        })
+    except Exception as e:
+        logger.error(f"Clarification questions error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-clarification/session', methods=['POST'])
+def ai_clarification_session():
+    """Create clarification session (34.3 ClarificationManager)"""
+    try:
+        from BUNK3R_IA.core.clarification_manager import clarification_manager
+        import uuid
+        
+        data = request.json
+        user_id = data.get('user_id', 'anonymous')
+        request_text = data.get('request', '')
+        
+        if not request_text:
+            return jsonify({'success': False, 'error': 'Request text is required'}), 400
+        
+        session_id = str(uuid.uuid4())[:8]
+        session = clarification_manager.create_session(session_id, user_id, request_text)
+        
+        return jsonify({
+            'success': True,
+            **session.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Clarification session error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-clarification/answer', methods=['POST'])
+def ai_clarification_answer():
+    """Submit answer to clarification question (34.3 ClarificationManager)"""
+    try:
+        from BUNK3R_IA.core.clarification_manager import clarification_manager
+        
+        data = request.json
+        session_id = data.get('session_id', '')
+        question_id = data.get('question_id', '')
+        answer = data.get('answer', '')
+        
+        if not all([session_id, question_id, answer]):
+            return jsonify({'success': False, 'error': 'session_id, question_id and answer are required'}), 400
+        
+        success, next_question = clarification_manager.submit_answer(session_id, question_id, answer)
+        
+        session = clarification_manager.get_session(session_id)
+        
+        return jsonify({
+            'success': success,
+            'completed': session.completed if session else False,
+            'next_question': next_question.to_dict() if next_question else None,
+            'enriched_request': clarification_manager.get_enriched_request(session_id) if session and session.completed else None
+        })
+    except Exception as e:
+        logger.error(f"Clarification answer error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-plan/create', methods=['POST'])
+def ai_plan_create():
+    """Create execution plan (34.4 PlanPresenter)"""
+    try:
+        from BUNK3R_IA.core.plan_presenter import plan_presenter
+        import uuid
+        
+        data = request.json
+        title = data.get('title', 'Plan de Ejecución')
+        description = data.get('description', '')
+        tasks = data.get('tasks', [])
+        context = data.get('context', {})
+        
+        if not tasks:
+            return jsonify({'success': False, 'error': 'Tasks list is required'}), 400
+        
+        plan_id = str(uuid.uuid4())[:8]
+        plan = plan_presenter.create_plan(plan_id, title, description, tasks, context)
+        
+        return jsonify({
+            'success': True,
+            **plan.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Plan creation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-plan/format', methods=['GET'])
+def ai_plan_format():
+    """Get formatted plan (34.4 PlanPresenter)"""
+    try:
+        from BUNK3R_IA.core.plan_presenter import plan_presenter
+        
+        plan_id = request.args.get('plan_id', '')
+        compact = request.args.get('compact', 'false').lower() == 'true'
+        
+        if not plan_id:
+            return jsonify({'success': False, 'error': 'Plan ID is required'}), 400
+        
+        plan = plan_presenter.get_plan(plan_id)
+        
+        if not plan:
+            return jsonify({'success': False, 'error': 'Plan not found'}), 404
+        
+        if compact:
+            formatted = plan_presenter.format_plan_compact(plan)
+        else:
+            formatted = plan_presenter.format_plan_visual(plan)
+        
+        return jsonify({
+            'success': True,
+            'formatted': formatted,
+            'plan': plan.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Plan format error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-plan/confirm', methods=['POST'])
+def ai_plan_confirm():
+    """Confirm execution plan (34.4 PlanPresenter)"""
+    try:
+        from BUNK3R_IA.core.plan_presenter import plan_presenter
+        
+        data = request.json
+        plan_id = data.get('plan_id', '')
+        
+        if not plan_id:
+            return jsonify({'success': False, 'error': 'Plan ID is required'}), 400
+        
+        success, message = plan_presenter.confirm_plan(plan_id)
+        
+        return jsonify({
+            'success': success,
+            'message': message
+        })
+    except Exception as e:
+        logger.error(f"Plan confirm error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-plan/modify', methods=['POST'])
+def ai_plan_modify():
+    """Modify execution plan (34.4 PlanPresenter)"""
+    try:
+        from BUNK3R_IA.core.plan_presenter import plan_presenter
+        
+        data = request.json
+        plan_id = data.get('plan_id', '')
+        modification = data.get('modification', '')
+        
+        if not plan_id or not modification:
+            return jsonify({'success': False, 'error': 'Plan ID and modification are required'}), 400
+        
+        success, plan = plan_presenter.modify_plan(plan_id, modification)
+        
+        if success and plan:
+            return jsonify({
+                'success': True,
+                **plan.to_dict()
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Failed to modify plan'}), 400
+    except Exception as e:
+        logger.error(f"Plan modify error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-plan/progress', methods=['GET'])
+def ai_plan_progress():
+    """Get plan execution progress (34.4 PlanPresenter)"""
+    try:
+        from BUNK3R_IA.core.plan_presenter import plan_presenter
+        
+        plan_id = request.args.get('plan_id', '')
+        
+        if not plan_id:
+            return jsonify({'success': False, 'error': 'Plan ID is required'}), 400
+        
+        progress = plan_presenter.get_progress(plan_id)
+        
+        return jsonify({
+            'success': True,
+            **progress
+        })
+    except Exception as e:
+        logger.error(f"Plan progress error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-retry/stats', methods=['GET'])
+def ai_retry_stats():
+    """Get retry system statistics (34.17 SmartRetrySystem)"""
+    try:
+        from BUNK3R_IA.core.smart_retry import smart_retry
+        
+        stats = smart_retry.get_failure_stats()
+        
+        return jsonify({
+            'success': True,
+            **stats
+        })
+    except Exception as e:
+        logger.error(f"Retry stats error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-retry/reset', methods=['POST'])
+def ai_retry_reset():
+    """Reset retry system scores (34.17 SmartRetrySystem)"""
+    try:
+        from BUNK3R_IA.core.smart_retry import smart_retry
+        
+        data = request.json or {}
+        reset_logs = data.get('reset_logs', False)
+        
+        smart_retry.reset_provider_scores()
+        
+        if reset_logs:
+            smart_retry.clear_failure_log()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Retry scores reset successfully'
+        })
+    except Exception as e:
+        logger.error(f"Retry reset error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-validator/validate', methods=['POST'])
+def ai_validator_validate():
+    """Validate action before execution (34.19 PreExecutionValidator)"""
+    try:
+        from BUNK3R_IA.core.pre_execution_validator import pre_execution_validator, ActionType
+        
+        data = request.json
+        action_type = data.get('action_type', '')
+        action_data = data.get('data', {})
+        
+        if not action_type:
+            return jsonify({'success': False, 'error': 'Action type is required'}), 400
+        
+        try:
+            action = ActionType(action_type)
+        except ValueError:
+            return jsonify({'success': False, 'error': f'Invalid action type: {action_type}'}), 400
+        
+        result = pre_execution_validator.validate_action(action, action_data)
+        
+        return jsonify({
+            'success': True,
+            **result.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Validation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-validator/batch', methods=['POST'])
+def ai_validator_batch():
+    """Validate batch of actions (34.19 PreExecutionValidator)"""
+    try:
+        from BUNK3R_IA.core.pre_execution_validator import pre_execution_validator, ActionType
+        
+        data = request.json
+        actions = data.get('actions', [])
+        
+        if not actions:
+            return jsonify({'success': False, 'error': 'Actions list is required'}), 400
+        
+        action_tuples = []
+        for action in actions:
+            try:
+                action_type = ActionType(action.get('type', ''))
+                action_data = action.get('data', {})
+                action_tuples.append((action_type, action_data))
+            except ValueError:
+                continue
+        
+        result = pre_execution_validator.validate_batch(action_tuples)
+        
+        return jsonify({
+            'success': True,
+            **result.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"Batch validation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-validator/dependencies', methods=['POST'])
+def ai_validator_dependencies():
+    """Check code dependencies (34.19 PreExecutionValidator)"""
+    try:
+        from BUNK3R_IA.core.pre_execution_validator import pre_execution_validator
+        
+        data = request.json
+        code = data.get('code', '')
+        language = data.get('language', 'python')
+        
+        if not code:
+            return jsonify({'success': False, 'error': 'Code is required'}), 400
+        
+        issues = pre_execution_validator.check_dependencies(code, language)
+        
+        return jsonify({
+            'success': True,
+            'issues': [i.to_dict() for i in issues],
+            'count': len(issues)
+        })
+    except Exception as e:
+        logger.error(f"Dependency check error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
