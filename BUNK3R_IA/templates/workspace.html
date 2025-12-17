@@ -229,8 +229,30 @@
             const quickBtns = document.querySelectorAll('.ai-quick-btn');
             const browserRefresh = document.getElementById('browser-refresh');
             
+            const sendArrowBtn = document.getElementById('ai-chat-send-arrow');
+            
+            function updateSendButtons() {
+                const hasText = chatInput.value.trim().length > 0;
+                sendBtn.disabled = !hasText;
+                if (sendArrowBtn) {
+                    sendArrowBtn.disabled = !hasText;
+                    sendArrowBtn.style.opacity = hasText ? '1' : '0.5';
+                }
+            }
+            
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    if (typeof AIChat !== 'undefined' && AIChat.sendMessage) {
+                        AIChat.sendMessage(message);
+                    } else {
+                        sendBtn.click();
+                    }
+                }
+            }
+            
             chatInput.addEventListener('input', function() {
-                sendBtn.disabled = !this.value.trim();
+                updateSendButtons();
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
@@ -238,9 +260,7 @@
             chatInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    if (!sendBtn.disabled) {
-                        sendBtn.click();
-                    }
+                    sendMessage();
                 }
             });
             
@@ -291,14 +311,17 @@
                 });
             });
             
-            const sendArrow = document.getElementById('ai-chat-send-arrow');
-            if (sendArrow) {
-                sendArrow.addEventListener('click', function() {
-                    if (chatInput.value.trim()) {
-                        sendBtn.click();
-                    }
+            if (sendArrowBtn) {
+                sendArrowBtn.addEventListener('click', function() {
+                    sendMessage();
                 });
             }
+            
+            sendBtn.addEventListener('click', function(e) {
+                if (chatInput.value.trim()) {
+                    sendMessage();
+                }
+            });
             
             if (typeof AIChat !== 'undefined') {
                 AIChat.init();
