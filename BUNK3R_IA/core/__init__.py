@@ -15,6 +15,9 @@ from .plan_presenter import PlanPresenter, plan_presenter, create_plan, format_p
 from .smart_retry import SmartRetrySystem, smart_retry, RetryConfig, RetryStrategy
 from .pre_execution_validator import PreExecutionValidator, pre_execution_validator, validate_action
 
+# Integración LLM (34.7)
+from .llm_phase_integrator import LLMPhaseIntegrator, llm_integrator, execute_phase, run_pipeline, ConstructorPhase, PhaseResult
+
 __all__ = [
     # Servicios principales
     'AIService',
@@ -52,4 +55,12 @@ __all__ = [
     'PreExecutionValidator',
     'pre_execution_validator',
     'validate_action',
+    
+    # Integración LLM (34.7)
+    'LLMPhaseIntegrator',
+    'llm_integrator',
+    'execute_phase',
+    'run_pipeline',
+    'ConstructorPhase',
+    'PhaseResult',
 ]

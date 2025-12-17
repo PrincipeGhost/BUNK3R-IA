@@ -4,16 +4,17 @@
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    BUNK3R_IA - ESTADO ACTUAL                     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║ Ultima actualizacion: 17 Diciembre 2025                          ║
+║ Ultima actualizacion: 17 Diciembre 2025 (Sesion 2)               ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
 ║ COMPLETADAS:                                                     ║
 ║    34.1 Frontend IA conectado con 8 fases                        ║
 ║    34.2 AIService multi-proveedor con fallback                   ║
-║    34.3 ClarificationManager - Preguntas inteligentes [NEW]      ║
-║    34.4 PlanPresenter - Presentacion de planes [NEW]             ║
-║    34.5 OutputVerifier - Verificacion de codigo [NEW]            ║
+║    34.3 ClarificationManager - Preguntas inteligentes            ║
+║    34.4 PlanPresenter - Presentacion de planes                   ║
+║    34.5 OutputVerifier - Verificacion de codigo                  ║
 ║    34.6 AIToolkit (archivos, comandos, errores)                  ║
+║    34.7 LLMPhaseIntegrator - Integracion LLM 8 fases [NUEVO]     ║
 ║    34.9 Sistema de 8 fases del Constructor                       ║
 ║    34.10 IntentParser - Analisis de solicitudes                  ║
 ║    34.11 ResearchEngine - Investigacion de contexto              ║
@@ -21,16 +22,15 @@
 ║    34.13 TaskOrchestrator - Orquestacion de tareas               ║
 ║    34.14 DeliveryManager - Entrega de resultados                 ║
 ║    34.16 Motor de Decisiones Automatico (AIDecisionEngine)       ║
-║    34.17 Sistema de Reintentos Inteligente [NEW]                 ║
+║    34.17 Sistema de Reintentos Inteligente (SmartRetrySystem)    ║
 ║    34.18 Contexto de Proyecto Persistente (AIProjectContext)     ║
-║    34.19 Validador Pre-Ejecucion completo [NEW]                  ║
+║    34.19 Validador Pre-Ejecucion (PreExecutionValidator)         ║
 ║    34.20 Sistema de Rollback (RollbackManager)                   ║
 ║    34.21 Analizador de Impacto (ChangeImpactAnalyzer)            ║
 ║    34.22 Gestor de Workflows (WorkflowManager)                   ║
 ║    34.23 Gestor de Tareas (TaskManager)                          ║
 ║                                                                  ║
-║ PENDIENTES CRITICOS:                                             ║
-║    34.7 Integracion real con LLM en todas las fases              ║
+║ PENDIENTES:                                                      ║
 ║    34.8 Tests automatizados del Constructor                      ║
 ║    34.15 Sistema de streaming de respuestas                      ║
 ║                                                                  ║
@@ -79,8 +79,9 @@ BUNK3R_IA/
 │   ├── output_verifier.py   # [NEW] Verificador de codigo (34.5)
 │   ├── clarification_manager.py  # [NEW] Gestor de clarificacion (34.3)
 │   ├── plan_presenter.py    # [NEW] Presentador de planes (34.4)
-│   ├── smart_retry.py       # [NEW] Sistema de reintentos (34.17)
-│   └── pre_execution_validator.py  # [NEW] Validador pre-ejecucion (34.19)
+│   ├── smart_retry.py       # Sistema de reintentos (34.17)
+│   ├── pre_execution_validator.py  # Validador pre-ejecucion (34.19)
+│   └── llm_phase_integrator.py     # [NUEVO] Integracion LLM 8 fases (34.7)
 ├── docs/                    # Documentacion
 ├── frontend/                # ai-chat.js, ai-chat.css
 └── prompts/                 # Prompts del sistema
@@ -105,26 +106,29 @@ BUNK3R_IA/
 - [x] Fallback automatico entre proveedores
 - [x] Historial de conversacion por usuario
 
-### 34.3 - ClarificationManager [PENDIENTE] [3h]
-- [ ] Deteccion de solicitudes ambiguas
-- [ ] Generacion de preguntas clarificadoras
-- [ ] Priorizacion de preguntas (max 3)
-- [ ] Integracion con flujo de 8 fases
-- [ ] Persistencia de respuestas
+### 34.3 - ClarificationManager [COMPLETADO]
+- [x] Deteccion de solicitudes ambiguas (AmbiguityDetection)
+- [x] Generacion de preguntas clarificadoras (ClarificationQuestion)
+- [x] Priorizacion de preguntas (max 3, QuestionPriority)
+- [x] Integracion con flujo de 8 fases
+- [x] Persistencia de respuestas (ClarificationSession)
+- [x] Templates de preguntas por tipo de ambiguedad
 
-### 34.4 - PlanPresenter [PENDIENTE] [2h]
-- [ ] Formato visual de planes
-- [ ] Estimacion de tiempo por tarea
-- [ ] Arbol de dependencias
-- [ ] Confirmacion interactiva
-- [ ] Modificacion de plan por usuario
+### 34.4 - PlanPresenter [COMPLETADO]
+- [x] Formato visual de planes (format_plan_visual, format_plan_compact)
+- [x] Estimacion de tiempo por tarea (TaskComplexity, estimated_minutes)
+- [x] Arbol de dependencias (resolve_dependencies)
+- [x] Confirmacion interactiva (confirm_plan)
+- [x] Modificacion de plan por usuario (modify_plan)
+- [x] Identificacion de riesgos (PlanRisk, RiskLevel)
 
-### 34.5 - OutputVerifier [PENDIENTE] [4h]
-- [ ] Validacion de sintaxis por lenguaje
-- [ ] Verificacion de imports
-- [ ] Deteccion de codigo incompleto
-- [ ] Score de calidad 0-100
-- [ ] Sugerencias de mejora automaticas
+### 34.5 - OutputVerifier [COMPLETADO]
+- [x] Validacion de sintaxis por lenguaje (Python, JS, HTML, CSS, JSON, SQL)
+- [x] Verificacion de imports (check_imports)
+- [x] Deteccion de codigo incompleto (calculate_completeness)
+- [x] Score de calidad 0-100 (quality_score, QualityMetric)
+- [x] Sugerencias de mejora automaticas (generate_suggestions)
+- [x] Metricas de documentacion, formato y estructura
 
 ### 34.6 - AIToolkit [COMPLETADO]
 - [x] AIFileToolkit - Operaciones de archivos
@@ -134,15 +138,19 @@ BUNK3R_IA/
 - [x] Whitelist de paquetes
 - [x] Proteccion de rutas sensibles
 
-### 34.7 - Integracion LLM en Todas las Fases [PENDIENTE] [8h]
-- [ ] Fase 1: LLM para analisis de intent
-- [ ] Fase 2: LLM para investigacion
-- [ ] Fase 3: LLM para clarificacion
-- [ ] Fase 4: LLM para construccion de prompt
-- [ ] Fase 5: LLM para presentacion de plan
-- [ ] Fase 6: LLM para generacion de codigo
-- [ ] Fase 7: LLM para verificacion
-- [ ] Fase 8: LLM para entrega final
+### 34.7 - Integracion LLM en Todas las Fases [COMPLETADO]
+- [x] LLMPhaseIntegrator creado en core/llm_phase_integrator.py
+- [x] Fase 1: LLM para analisis de intent (INTENT_ANALYSIS)
+- [x] Fase 2: LLM para investigacion (RESEARCH)
+- [x] Fase 3: LLM para clarificacion (CLARIFICATION)
+- [x] Fase 4: LLM para construccion de prompt (PROMPT_BUILDING)
+- [x] Fase 5: LLM para presentacion de plan (PLAN_PRESENTATION)
+- [x] Fase 6: LLM para generacion de codigo (EXECUTION)
+- [x] Fase 7: LLM para verificacion (VERIFICATION)
+- [x] Fase 8: LLM para entrega final (DELIVERY)
+- [x] Prompts especificos por fase con formato JSON
+- [x] Integracion con SmartRetry para llamadas robustas
+- [x] API endpoints: /api/ai-llm/phase, /api/ai-llm/pipeline, /api/ai-llm/execute-plan
 
 ### 34.8 - Tests del Constructor [PENDIENTE] [4h]
 - [ ] Tests unitarios de cada fase
@@ -161,12 +169,13 @@ BUNK3R_IA/
 - [x] Workflows predefinidos por tipo de intent
 - [x] Confianza de clasificacion
 
-### 34.17 - Sistema de Reintentos Inteligente [PENDIENTE] [3h]
-- [ ] Retry con backoff exponencial
-- [ ] Cambio automatico de proveedor en fallo
-- [ ] Limite de reintentos configurable
-- [ ] Logging de fallos
-- [ ] Notificacion al usuario
+### 34.17 - Sistema de Reintentos Inteligente [COMPLETADO]
+- [x] Retry con backoff exponencial (RetryStrategy.EXPONENTIAL)
+- [x] Cambio automatico de proveedor en fallo (switch_provider_after)
+- [x] Limite de reintentos configurable (RetryConfig.max_attempts)
+- [x] Logging de fallos (failure_log, get_failure_stats)
+- [x] Clasificacion de errores (RetryReason: timeout, rate_limit, etc)
+- [x] Decorador @retry_decorator para funciones
 
 ### 34.18 - Contexto de Proyecto Persistente [COMPLETADO]
 - [x] AIProjectContext por usuario
@@ -175,12 +184,13 @@ BUNK3R_IA/
 - [x] Errores encontrados y solucionados
 - [x] Serializacion para persistencia
 
-### 34.19 - Validador Pre-Ejecucion [PARCIAL] [3h]
-- [x] PreExecutionValidator base
-- [ ] Verificacion de sintaxis antes de escribir
-- [ ] Verificacion de dependencias
-- [ ] Verificacion de permisos
-- [ ] Alerta de cambios destructivos
+### 34.19 - Validador Pre-Ejecucion [COMPLETADO]
+- [x] PreExecutionValidator completo
+- [x] Verificacion de sintaxis antes de escribir (validate_create_file)
+- [x] Verificacion de dependencias (check_dependencies)
+- [x] Verificacion de permisos (PROTECTED_PATHS, CRITICAL_PATHS)
+- [x] Alerta de cambios destructivos (DANGEROUS_COMMANDS, DESTRUCTIVE_SQL)
+- [x] Validacion de comandos y operaciones de BD
 
 ### 34.20 - Sistema de Rollback Automatico [COMPLETADO]
 - [x] RollbackManager con checkpoints
@@ -468,6 +478,10 @@ BUNK3R_IA/
 | `/api/ai-core/checkpoint/*` | POST/GET | Checkpoints |
 | `/api/ai-core/impact/analyze` | POST | Analizar impacto |
 | `/api/ai-core/tasks/*` | POST/GET | Gestion de tareas |
+| `/api/ai-llm/phase` | POST | Ejecutar fase LLM (34.7) |
+| `/api/ai-llm/pipeline` | POST | Pipeline completo 8 fases |
+| `/api/ai-llm/execute-plan` | POST | Ejecutar plan aprobado |
+| `/api/ai-llm/phases` | GET | Listar fases disponibles |
 
 ---
 
@@ -490,8 +504,8 @@ BUNK3R_IA/
 
 | Seccion | Completado | Pendiente | Total |
 |---------|------------|-----------|-------|
-| 34.1-34.8 Base | ~16h | ~21h | 37h |
-| 34.16-34.23 Nucleo | ~15h | ~6h | 21h |
+| 34.1-34.8 Base | ~33h | ~8h | 41h |
+| 34.16-34.23 Nucleo | ~21h | ~0h | 21h |
 | 34.A Busqueda | 0h | 10h | 10h |
 | 34.B Memoria | 0h | 21h | 21h |
 | 34.C Analisis | 0h | 22h | 22h |
@@ -500,14 +514,14 @@ BUNK3R_IA/
 | 34.F Streaming | 0h | 16h | 16h |
 | 34.G Self-Healing | 0h | 23h | 23h |
 | 34.H Git | 0h | 17h | 17h |
-| **TOTAL** | **~31h** | **~178h** | **~209h** |
+| **TOTAL** | **~54h** | **~159h** | **~213h** |
 
 ---
 
 ## PROXIMOS PASOS RECOMENDADOS
 
-1. **Prioridad Alta**: 34.5 OutputVerifier (verificacion de codigo)
-2. **Prioridad Alta**: 34.7 Integracion LLM en todas las fases
+1. **Prioridad Alta**: 34.8 Tests automatizados del Constructor
+2. **Prioridad Alta**: 34.15 Sistema de streaming de respuestas
 3. **Prioridad Media**: 34.B.1 Memoria Vectorial (ChromaDB)
 4. **Prioridad Media**: 34.D.4 Security Scanner
 5. **Prioridad Baja**: 34.F Progress Streaming

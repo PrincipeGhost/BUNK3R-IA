@@ -1359,3 +1359,129 @@ def ai_constructor_delete_project(session_id):
     except Exception as e:
         logger.error(f"Delete project error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================
+# LLM Phase Integrator Routes (34.7)
+# ============================================
+
+@ai_bp.route('/ai-llm/phase', methods=['POST'])
+def ai_llm_execute_phase():
+    """Execute a specific phase of the constructor with LLM (34.7)"""
+    try:
+        from BUNK3R_IA.core.llm_phase_integrator import llm_integrator, ConstructorPhase
+        
+        data = request.json
+        phase_num = data.get('phase', 1)
+        input_data = data.get('input_data', {})
+        user_id = data.get('user_id', 'anonymous')
+        
+        try:
+            phase = ConstructorPhase(phase_num)
+        except ValueError:
+            return jsonify({'success': False, 'error': f'Invalid phase: {phase_num}'}), 400
+        
+        result = llm_integrator.execute_phase(phase, input_data, user_id)
+        
+        return jsonify({
+            'success': True,
+            **result.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"LLM phase execution error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-llm/pipeline', methods=['POST'])
+def ai_llm_run_pipeline():
+    """Run the full 8-phase pipeline with LLM (34.7)"""
+    try:
+        from BUNK3R_IA.core.llm_phase_integrator import llm_integrator
+        
+        data = request.json
+        user_request = data.get('request', '').strip()
+        user_id = data.get('user_id', 'anonymous')
+        skip_clarification = data.get('skip_clarification', False)
+        
+        if not user_request:
+            return jsonify({'success': False, 'error': 'Request is required'}), 400
+        
+        results = llm_integrator.run_full_pipeline(
+            user_request, 
+            user_id, 
+            skip_clarification
+        )
+        
+        serialized = {}
+        for key, value in results.items():
+            if hasattr(value, 'to_dict'):
+                serialized[key] = value.to_dict()
+            else:
+                serialized[key] = value
+        
+        return jsonify({
+            'success': True,
+            'results': serialized
+        })
+    except Exception as e:
+        logger.error(f"LLM pipeline error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-llm/execute-plan', methods=['POST'])
+def ai_llm_execute_plan():
+    """Execute an approved plan (phases 6-8) with LLM (34.7)"""
+    try:
+        from BUNK3R_IA.core.llm_phase_integrator import llm_integrator
+        
+        data = request.json
+        plan_data = data.get('plan', {})
+        original_request = data.get('original_request', '')
+        user_id = data.get('user_id', 'anonymous')
+        
+        if not plan_data:
+            return jsonify({'success': False, 'error': 'Plan data is required'}), 400
+        
+        result = llm_integrator.execute_plan(plan_data, original_request, user_id)
+        
+        return jsonify({
+            'success': True,
+            **result
+        })
+    except Exception as e:
+        logger.error(f"LLM execute plan error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-llm/phases', methods=['GET'])
+def ai_llm_list_phases():
+    """List all available phases (34.7)"""
+    try:
+        from BUNK3R_IA.core.llm_phase_integrator import ConstructorPhase
+        
+        phases = [
+            {
+                'number': phase.value,
+                'name': phase.name,
+                'description': {
+                    1: 'Análisis de Intención - Detecta qué quiere el usuario',
+                    2: 'Investigación - Busca mejores prácticas y patrones',
+                    3: 'Clarificación - Genera preguntas si hay ambigüedad',
+                    4: 'Construcción de Prompt - Crea el prompt maestro',
+                    5: 'Presentación de Plan - Genera plan de ejecución',
+                    6: 'Ejecución - Genera el código',
+                    7: 'Verificación - Valida el código generado',
+                    8: 'Entrega - Prepara el resultado final'
+                }.get(phase.value, '')
+            }
+            for phase in ConstructorPhase
+        ]
+        
+        return jsonify({
+            'success': True,
+            'phases': phases,
+            'count': len(phases)
+        })
+    except Exception as e:
+        logger.error(f"List phases error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
