@@ -1306,3 +1306,56 @@ def ai_validator_dependencies():
     except Exception as e:
         logger.error(f"Dependency check error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-constructor/generate', methods=['POST'])
+def ai_constructor_generate():
+    """Generate project with AI and return preview URL (Section 35)"""
+    try:
+        from BUNK3R_IA.core.live_preview import live_preview
+        
+        data = request.json
+        prompt = data.get('prompt', '').strip()
+        session_id = data.get('session_id')
+        
+        if not prompt:
+            return jsonify({'success': False, 'error': 'Prompt is required'}), 400
+        
+        result = live_preview.generate_with_fallback(prompt, session_id)
+        
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"AI Constructor generate error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-constructor/projects', methods=['GET'])
+def ai_constructor_list_projects():
+    """List all generated projects (Section 35)"""
+    try:
+        from BUNK3R_IA.core.live_preview import live_preview
+        
+        projects = live_preview.list_projects()
+        
+        return jsonify({
+            'success': True,
+            'projects': projects,
+            'count': len(projects)
+        })
+    except Exception as e:
+        logger.error(f"List projects error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ai_bp.route('/ai-constructor/projects/<session_id>', methods=['DELETE'])
+def ai_constructor_delete_project(session_id):
+    """Delete a generated project (Section 35)"""
+    try:
+        from BUNK3R_IA.core.live_preview import live_preview
+        
+        result = live_preview.delete_project(session_id)
+        
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Delete project error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

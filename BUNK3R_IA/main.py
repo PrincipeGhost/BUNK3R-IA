@@ -15,7 +15,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, Response, abort
 from BUNK3R_IA.config import get_config
 from BUNK3R_IA.api.routes import ai_bp, set_db_manager
 
@@ -49,6 +49,47 @@ def create_app(config_class=None):
     @app.route('/')
     def index():
         return render_template('workspace.html')
+    
+    @app.route('/preview/<session_id>')
+    def serve_preview(session_id):
+        """Serve generated HTML preview"""
+        from BUNK3R_IA.core.live_preview import live_preview
+        
+        safe_session = ''.join(c for c in session_id if c.isalnum() or c in '-_')
+        
+        if not safe_session:
+            abort(400, "Invalid session ID")
+        
+        html_content = live_preview.get_project_html(safe_session)
+        
+        if html_content:
+            return Response(html_content, mimetype='text/html')
+        else:
+            return Response(
+                '''<!DOCTYPE html>
+                <html>
+                <head><title>Preview No Disponible</title>
+                <style>
+                    body { 
+                        font-family: system-ui, -apple-system, sans-serif; 
+                        display: flex; justify-content: center; align-items: center; 
+                        height: 100vh; margin: 0; 
+                        background: #1a1a2e; color: #eee; 
+                    }
+                    .container { text-align: center; }
+                    h1 { color: #FFD700; }
+                </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>Preview No Disponible</h1>
+                        <p>El proyecto solicitado no existe o ha expirado.</p>
+                    </div>
+                </body>
+                </html>''',
+                status=404,
+                mimetype='text/html'
+            )
     
     @app.route('/api/info')
     def api_info():
