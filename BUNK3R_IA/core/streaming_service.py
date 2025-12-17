@@ -343,6 +343,79 @@ class CerebrasStreamingProvider(StreamingProvider):
             yield StreamEvent(StreamEventType.ERROR, str(e), {"provider": self.name})
 
 
+class AntigravityStreamingProvider(StreamingProvider):
+    """Antigravity Bridge - Usa Google Antigravity via Cloudflare Tunnel"""
+    
+    def __init__(self, bridge_url: str):
+        super().__init__(bridge_url)
+        self.name = "antigravity"
+        self.bridge_url = bridge_url
+        self.available = bool(bridge_url)
+    
+    def stream_chat(self, messages: List[Dict], system_prompt: str = None) -> Generator[StreamEvent, None, None]:
+        try:
+            import requests
+            
+            yield StreamEvent(StreamEventType.START, "", {"provider": self.name})
+            
+            prompt_parts = []
+            if system_prompt:
+                prompt_parts.append(f"[Sistema]\n{system_prompt}")
+            
+            for msg in messages[-10:]:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "user":
+                    prompt_parts.append(f"[Usuario]\n{content}")
+                elif role == "assistant":
+                    prompt_parts.append(f"[Asistente]\n{content}")
+            
+            full_prompt = "\n\n".join(prompt_parts)
+            
+            health_url = f"{self.bridge_url.rstrip('/')}/health"
+            try:
+                health_response = requests.get(health_url, timeout=5)
+                if health_response.status_code != 200:
+                    yield StreamEvent(StreamEventType.ERROR, "Bridge not available", {"provider": self.name})
+                    return
+            except:
+                yield StreamEvent(StreamEventType.ERROR, "Bridge not reachable", {"provider": self.name})
+                return
+            
+            query_url = f"{self.bridge_url.rstrip('/')}/query"
+            response = requests.post(
+                query_url,
+                json={"prompt": full_prompt},
+                timeout=180
+            )
+            
+            if response.status_code != 200:
+                yield StreamEvent(StreamEventType.ERROR, f"HTTP {response.status_code}", {"provider": self.name})
+                return
+            
+            result = response.json()
+            
+            if result.get("status") == "success":
+                full_response = result.get("response", "")
+                
+                chunk_size = 20
+                for i in range(0, len(full_response), chunk_size):
+                    chunk = full_response[i:i+chunk_size]
+                    yield StreamEvent(StreamEventType.TOKEN, chunk, {"provider": self.name})
+                
+                yield StreamEvent(StreamEventType.COMPLETE, full_response, {
+                    "provider": self.name,
+                    "total_length": len(full_response)
+                })
+            else:
+                error_msg = result.get("error", "Unknown error")
+                yield StreamEvent(StreamEventType.ERROR, error_msg, {"provider": self.name})
+                
+        except Exception as e:
+            logger.error(f"Antigravity streaming error: {e}")
+            yield StreamEvent(StreamEventType.ERROR, str(e), {"provider": self.name})
+
+
 class StreamingService:
     """
     Servicio principal de streaming con fallback automático
@@ -358,6 +431,11 @@ class StreamingService:
     
     def _initialize_providers(self):
         """Inicializa proveedores de streaming en orden de prioridad"""
+        
+        antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', '')
+        if antigravity_url:
+            self.providers.append(AntigravityStreamingProvider(antigravity_url))
+            logger.info("Antigravity streaming provider initialized (priority 0)")
         
         groq_key = os.environ.get('GROQ_API_KEY', '')
         if groq_key:
