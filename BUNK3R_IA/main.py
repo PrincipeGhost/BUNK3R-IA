@@ -39,11 +39,25 @@ def create_app(config_class=None):
     
     app.register_blueprint(ai_bp)
     
+    # Habilitar CORS para permitir peticiones externas (necesario para integración)
+    from flask_cors import CORS
+    CORS(app, resources={r"/*": {"origins": "*"}})
+    
     @app.after_request
     def add_header(response):
+        # Cache control
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
+        
+        # Permitir Embedding (Iframe)
+        # Esto es crucial para que la página parezca "incrustada" en el otro sitio
+        response.headers['X-Frame-Options'] = 'ALLOWALL' 
+        response.headers['Content-Security-Policy'] = "frame-ancestors *;"
+        response.headers['Access-Control-Allow-Origin'] = "*"
+        response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
+        response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
+        
         return response
     
     @app.route('/')
