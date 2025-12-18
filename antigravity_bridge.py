@@ -107,6 +107,27 @@ class AntigravityAutomator:
         
         return code_blocks
     
+    def _clean_response(self, full_text: str, prompt: str) -> str:
+        """Filtra el texto copiado para devolver solo la respuesta nueva"""
+        try:
+            # Buscamos la última ocurrencia del prompt para encontrar el mensaje actual
+            # Normalizamos un poco por si hay espacios extra
+            prompt = prompt.strip()
+            if not prompt:
+                return full_text
+                
+            last_index = full_text.rfind(prompt)
+            
+            if last_index != -1:
+                # Cortamos todo lo anterior al prompt, incluyendo el prompt mismo
+                raw_response = full_text[last_index + len(prompt):]
+                return raw_response.strip()
+                
+            return full_text
+        except Exception as e:
+            print(f"Error limpiando respuesta: {e}")
+            return full_text
+
     def process_query(self, prompt: str) -> dict:
         if self.is_processing:
             return {"error": "Ya hay una consulta en proceso", "status": "busy"}
@@ -118,11 +139,16 @@ class AntigravityAutomator:
             self.open_agent_panel()
             self.send_query(prompt)
             
-            response = self.wait_and_extract_response()
-            code_blocks = self.extract_code_blocks(response)
+            full_response = self.wait_and_extract_response()
+            
+            # Limpiamos la respuesta para quitar historial y prompt
+            clean_response = self._clean_response(full_response, prompt)
+            
+            code_blocks = self.extract_code_blocks(clean_response)
             
             return {
-                "response": response,
+                "response": clean_response,
+                "full_clipboard": full_response, # Guardamos el original por si acaso
                 "code_blocks": code_blocks,
                 "status": "success",
                 "method": "clipboard",
