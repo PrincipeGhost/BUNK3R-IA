@@ -52,8 +52,8 @@ class AntigravityAutomator:
         return True
     
     def open_agent_panel(self):
-        pyautogui.hotkey('ctrl', 'l')
-        time.sleep(0.8)
+        pyautogui.hotkey('ctrl', 'shift', 'l')
+        time.sleep(1.0)
     
     def send_query(self, text: str):
         pyautogui.hotkey('ctrl', 'a')
