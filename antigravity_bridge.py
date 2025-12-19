@@ -110,20 +110,64 @@ class AntigravityAutomator:
     def _clean_response(self, full_text: str, prompt: str) -> str:
         """Filtra el texto copiado para devolver solo la respuesta nueva"""
         try:
-            # Buscamos la última ocurrencia del prompt para encontrar el mensaje actual
-            # Normalizamos un poco por si hay espacios extra
-            prompt = prompt.strip()
-            if not prompt:
-                return full_text
+            if not full_text:
+                return ""
                 
-            last_index = full_text.rfind(prompt)
+            # 1. Quitar el prompt y todo lo anterior
+            # Intentamos encontrar la última ocurrencia del prompt (o parte de él)
+            prompt_clean = prompt.strip()
+            last_index = -1
+            
+            # Buscamos por el prompt completo primero
+            if prompt_clean:
+                last_index = full_text.rfind(prompt_clean)
+            
+            # Si no lo encontramos, intentamos con las últimas líneas del prompt por si Antigravity lo recortó
+            if last_index == -1 and prompt_clean:
+                lines = [l for l in prompt_clean.split('\n') if l.strip()]
+                if lines:
+                    last_line = lines[-1]
+                    last_index = full_text.rfind(last_line)
             
             if last_index != -1:
-                # Cortamos todo lo anterior al prompt, incluyendo el prompt mismo
-                raw_response = full_text[last_index + len(prompt):]
-                return raw_response.strip()
-                
-            return full_text
+                # El texto real empieza después del prompt
+                # Pero a veces Antigravity repite el prompt en el área de respuesta
+                # Saltamos esa parte
+                raw_response = full_text[last_index:].split(prompt_clean, 1)[-1] if prompt_clean in full_text[last_index:] else full_text[last_index + len(prompt_clean):]
+            else:
+                raw_response = full_text
+
+            # 2. Eliminar el bloque de razonamiento ("Thought for X s")
+            # Usamos regex para atrapar "Thought for 4s", "Thought for 10s", etc.
+            raw_response = re.sub(r'Thought for \d+s\s+', '', raw_response, flags=re.IGNORECASE)
+            # También variaciones comunes
+            raw_response = re.sub(r'Pensado durante \d+s\s+', '', raw_response, flags=re.IGNORECASE)
+            
+            # 3. Eliminar basura de la interfaz (botones de abajo)
+            # Antigravity suele poner "Good Bad Add context Images Mentions..." al final
+            ui_markers = [
+                "Good\nBad", "Good Bad", 
+                "Add context", "Images", "Mentions", "Workflows",
+                "Conversation mode", "Planning", "Fast",
+                "Gemini 3 Pro", "Model", "View plans"
+            ]
+            
+            clean_lines = []
+            for line in raw_response.split('\n'):
+                line_strip = line.strip()
+                # Si encontramos un marcador de UI, dejamos de procesar líneas
+                if any(marker in line_strip for marker in ui_markers) and len(line_strip) < 50:
+                    break
+                clean_lines.append(line)
+            
+            final_response = "\n".join(clean_lines).strip()
+            
+            # 4. Limpieza final de etiquetas de sistema/usuario si quedaron
+            final_response = re.sub(r'^\[Asistente\]\s*', '', final_response, flags=re.IGNORECASE)
+            final_response = re.sub(r'^\[Assistant\]\s*', '', final_response, flags=re.IGNORECASE)
+            
+            return final_response
+            
         except Exception as e:
             print(f"Error limpiando respuesta: {e}")
             return full_text
