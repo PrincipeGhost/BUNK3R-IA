@@ -897,7 +897,6 @@
                 }
             }
 
-
             // --- FILE TREE & IDE LOGIC ---
             // Global state for file management
             let currentRepo = null;
@@ -930,18 +929,27 @@
                 div.style.display = 'flex';
                 div.style.alignItems = 'center';
                 div.style.gap = '6px';
-                div.dataset.level = level;
-
+                div.dataset.level = level; 
+                
                 div.onmouseenter = () => div.style.background = 'rgba(255,255,255,0.05)';
                 div.onmouseleave = () => div.style.background = 'transparent';
 
                 const isFolder = item.type === 'folder';
-                let chevron = isFolder ? '<span class="folder-chevron" style="width:12px; display:inline-block;">â–¶</span>' : '<span style="width:12px; display:inline-block;"></span>';
+                
+                // Improved Chevron using SVG
+                let chevron = '';
+                if (isFolder) {
+                    // SVG arrow that rotates
+                    chevron = `<svg class="folder-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s; min-width:12px;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+                } else {
+                    chevron = `<span style="width:12px; display:inline-block; min-width:12px;"></span>`;
+                }
+
                 let icon = isFolder
                     ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
                     : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
 
-                div.innerHTML = `${chevron}${icon} <span>${item.name}</span>`;
+                div.innerHTML = `${chevron}${icon} <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</span>`;
 
                 if (isFolder) {
                     div.onclick = (e) => { e.stopPropagation(); toggleFolder(div, item, level, fullPath); };
@@ -959,7 +967,7 @@
                 const chevron = folderDiv.querySelector('.folder-chevron');
 
                 if (isExpanded) {
-                    chevron.textContent = 'â–¶';
+                    if(chevron) chevron.style.transform = 'rotate(0deg)';
                     folderDiv.dataset.expanded = 'false';
                     const currentLevel = parseInt(folderDiv.dataset.level);
                     let nextSibling = folderDiv.nextElementSibling;
@@ -972,7 +980,7 @@
                         } else { break; }
                     }
                 } else {
-                    chevron.textContent = 'â–Ľ';
+                    if(chevron) chevron.style.transform = 'rotate(90deg)';
                     folderDiv.dataset.expanded = 'true';
                     try {
                         const response = await fetch(`/api/github/contents?repo=${currentRepo}&path=${folderPath}`, { headers: { 'Authorization': 'Bearer ' + currentToken } });
@@ -987,7 +995,7 @@
                         }
                     } catch (e) {
                         console.error('Error loading folder:', e);
-                        chevron.textContent = 'â–¶';
+                        if(chevron) chevron.style.transform = 'rotate(0deg)';
                         folderDiv.dataset.expanded = 'false';
                     }
                 }
@@ -996,7 +1004,7 @@
             async function openFileInTab(fileItem, repoFullName, token) {
                 const existingIndex = openTabs.findIndex(t => t.path === fileItem.path && t.repoFullName === repoFullName);
                 if (existingIndex !== -1) { switchToTab(existingIndex); return; }
-
+                
                 try {
                     let content = '';
                     let fileType = detectFileType(fileItem.name);
@@ -1025,7 +1033,7 @@
             function detectFileType(filename) {
                 const ext = filename.split('.').pop().toLowerCase();
                 const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
-                const codeExts = ['js', 'py', 'html', 'css', 'json', 'md', 'txt', 'java', 'cpp', 'c', 'go', 'rs', 'ts', 'jsx', 'tsx', 'vue', 'xml'];
+                const codeExts = ['js', 'py', 'html', 'css', 'json', 'md', 'txt', 'java', 'cpp', 'c', 'go', 'rs', 'ts', 'jsx', 'tsx', 'vue', 'xml', 'sql', 'sh', 'yaml', 'toml'];
                 if (imageExts.includes(ext)) return 'image';
                 if (ext === 'pdf') return 'pdf';
                 if (ext === 'md') return 'markdown';
@@ -1042,7 +1050,7 @@
                 openTabs.forEach((tab, index) => {
                     const tabBtn = document.createElement('button');
                     tabBtn.className = 'ai-tab-btn' + (index === activeTabIndex ? ' active' : '');
-                    tabBtn.style.borderTop = '2px solid #238636';
+                    tabBtn.style.borderTop = '2px solid #238636'; 
                     tabBtn.dataset.fileTab = index;
                     tabBtn.innerHTML = `${tab.name}${tab.modified ? '*' : ''} <span class="tab-close" style="margin-left:6px; opacity:0.6;">Ă—</span>`;
                     tabBtn.onclick = (e) => {
@@ -1076,18 +1084,20 @@
             function renderActiveTabContent() {
                 const addressBar = document.querySelector('.ai-browser-bar');
                 const previewContent = document.querySelector('.ai-preview-content');
-                const consoleContent = document.querySelector('.ai-console-content');
+                const consolePanel = document.getElementById('ai-console'); 
                 const previewEmpty = document.getElementById('ai-preview-empty');
                 const previewIframe = document.getElementById('ai-preview-iframe');
                 let editorContainer = document.getElementById('file-editor-container');
 
                 if (activeTabIndex < 0 || !openTabs[activeTabIndex]) {
                     if (editorContainer) editorContainer.classList.add('hidden');
-                    return;
+                    return; 
                 }
 
                 if (previewContent) previewContent.classList.remove('hidden');
-                if (consoleContent) consoleContent.classList.add('hidden');
+                // Force hide console
+                if (consolePanel) consolePanel.classList.add('hidden');
+                
                 if (previewEmpty) previewEmpty.classList.add('hidden');
                 if (previewIframe) previewIframe.classList.add('hidden');
                 if (addressBar) addressBar.style.display = 'none';
@@ -1104,7 +1114,7 @@
                 if (tab.type === 'image') {
                     editorContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%;"><img src="${tab.content}" style="max-width:100%; max-height:100%;" alt="${tab.name}"></div>`;
                 } else if (tab.type === 'markdown') {
-                    editorContainer.innerHTML = `<div style="background:white; color:black; padding:20px; border-radius:8px; max-width:800px; margin:0 auto;">${typeof marked !== 'undefined' ? marked.parse(tab.content) : '<pre>' + tab.content + '</pre>'}</div>`;
+                     editorContainer.innerHTML = `<div style="background:white; color:black; padding:20px; border-radius:8px; max-width:800px; margin:0 auto;">${typeof marked !== 'undefined' ? marked.parse(tab.content) : '<pre>'+tab.content+'</pre>'}</div>`;
                 } else {
                     editorContainer.innerHTML = `<textarea id="code-editor" spellcheck="false" style="width:100%; height:100%; background:#1e1e1e; color:#d4d4d4; border:none; outline:none; font-family:'Menlo', 'Monaco', 'Courier New', monospace; padding:10px; resize:none; line-height:1.5;">${tab.content}</textarea>`;
                     const textarea = document.getElementById('code-editor');
@@ -1119,38 +1129,41 @@
             // Preview/Console Toggle Logic
             const tabPreview = document.querySelector('.ai-tabs .ai-tab-btn:nth-child(1)');
             const tabConsole = document.querySelector('.ai-tabs .ai-tab-btn:nth-child(2)');
-
+            
             if (tabPreview && tabConsole) {
                 tabPreview.onclick = () => {
                     activeTabIndex = -1; renderTabs();
                     tabPreview.classList.add('active'); tabConsole.classList.remove('active');
+                    
                     document.querySelector('.ai-preview-content').classList.remove('hidden');
-                    const consoleContent = document.querySelector('.ai-console-content');
-                    if (consoleContent) consoleContent.classList.add('hidden');
-                    else document.getElementById('ai-console').classList.add('hidden');
+                    
+                    const consolePanel = document.getElementById('ai-console');
+                    if(consolePanel) consolePanel.classList.add('hidden');
 
                     document.querySelector('.ai-browser-bar').style.display = 'flex';
+                    
                     const editor = document.getElementById('file-editor-container');
                     if (editor) editor.classList.add('hidden');
+                    
                     document.getElementById('ai-preview-empty').classList.remove('hidden');
-                    if (document.getElementById('ai-preview-iframe').getAttribute('src')) {
-                        document.getElementById('ai-preview-iframe').classList.remove('hidden');
-                        document.getElementById('ai-preview-empty').classList.add('hidden');
-                    }
                 };
                 tabConsole.onclick = () => {
                     activeTabIndex = -1; renderTabs();
                     tabConsole.classList.add('active'); tabPreview.classList.remove('active');
-                    const consoleContent = document.querySelector('.ai-console-content');
-                    if (consoleContent) consoleContent.classList.remove('hidden');
-                    else document.getElementById('ai-console').classList.remove('hidden');
+                    
+                    const consolePanel = document.getElementById('ai-console');
+                    if(consolePanel) consolePanel.classList.remove('hidden');
+                    
+                    document.querySelector('.ai-preview-content').classList.remove('hidden');
+                    document.getElementById('ai-preview-empty').classList.add('hidden');
+                    document.getElementById('ai-preview-iframe').classList.add('hidden');
+                    
+                    const editor = document.getElementById('file-editor-container');
+                    if (editor) editor.classList.add('hidden');
 
-                    document.querySelector('.ai-preview-content').classList.add('hidden');
                     document.querySelector('.ai-browser-bar').style.display = 'none';
                 };
             }
-
-            // New Project Button
             document.getElementById('btn-new-project').addEventListener('click', () => {
                 const name = prompt("Nombre del proyecto:");
                 if (name) {
