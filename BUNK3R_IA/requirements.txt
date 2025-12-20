@@ -1,9 +1,11 @@
 # BUNK3R_IA - Dependencias del sistema de IA
 # Versión: 1.0.0
 
+
 # Core Flask
 flask>=2.3.0
 gunicorn>=21.0.0
+flask-cors>=4.0.0
 
 # Database
 psycopg2-binary>=2.9.0
