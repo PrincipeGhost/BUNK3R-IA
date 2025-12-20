@@ -410,103 +410,131 @@
                     </div>
                 </div>
                 <div class="ai-browser-bar">
-                    <div class="browser-nav-buttons">
-                        <button class="browser-nav-btn" id="browser-back" title="Atras">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M19 12H5" />
-                                <polyline points="12 19 5 12 12 5" />
-                            </svg>
-                        </button>
-                        <button class="browser-nav-btn" id="browser-forward" title="Adelante">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M5 12h14" />
-                                <polyline points="12 5 19 12 12 19" />
-                            </svg>
-                        </button>
-                        <button class="browser-nav-btn" id="browser-refresh" title="Actualizar">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M23 4v6h-6" />
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="browser-url-bar">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
-                        <input type="text" class="browser-url-input" id="browser-url" value="preview.bunk3r.dev/"
-                            readonly>
-                    </div>
-                    <button class="browser-action-btn" id="browser-open-external" title="Abrir en nueva ventana">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                            <polyline points="15 3 21 3 21 9" />
-                            <line x1="10" y1="14" x2="21" y2="3" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="ai-preview-content">
-                    <div class="ai-preview-empty" id="ai-preview-empty">
-                        <div class="ai-preview-icon">
-                            <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor"
-                                stroke-width="0.8">
-                                <rect x="2" y="3" width="20" height="14" rx="2" />
-                                <line x1="8" y1="21" x2="16" y2="21" />
-                                <line x1="12" y1="17" x2="12" y2="21" />
-                                <path d="M7 8h4" />
-                                <path d="M7 11h6" />
-                            </svg>
-                        </div>
-                        <p>Tu proyecto aparecera aqui</p>
-                        <span class="ai-preview-hint">Escribe una descripcion para comenzar a construir</span>
-                    </div>
-                    <iframe class="ai-preview-iframe hidden" id="ai-preview-iframe"></iframe>
-                    <div class="ai-console hidden" id="ai-console">
-                        <div class="ai-console-output" id="ai-console-output">
-                            <div class="console-line info">BUNK3R IA Console v1.0</div>
-                            <div class="console-line info">Sistema listo. Escribe comandos o genera un proyecto para ver
-                                la salida.</div>
-                        </div>
-                        <div class="ai-console-input-wrapper">
-                            <span class="console-prompt">$</span>
-                            <input type="text" class="ai-console-input" id="ai-console-input"
-                                placeholder="Escribe un comando...">
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <!-- CENTER PANEL CONTENT -->
+                    <div class="ai-center-content"
+                        style="flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative;">
 
-            <div class="panel-resizer" id="resizer-right"></div>
+                        <!-- 1. PREVIEW PANEL -->
+                        <div id="ai-panel-preview" class="ai-view-panel"
+                            style="display:flex; flex-direction:column; height:100%;">
+                            <!-- Browser Bar -->
+                            <div class="ai-browser-bar">
+                                <div class="browser-nav-buttons">
+                                    <button class="browser-nav-btn" id="browser-back" title="Atras">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M19 12H5" />
+                                            <polyline points="12 19 5 12 12 5" />
+                                        </svg>
+                                    </button>
+                                    <button class="browser-nav-btn" id="browser-forward" title="Adelante">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M5 12h14" />
+                                            <polyline points="12 5 19 12 12 19" />
+                                        </svg>
+                                    </button>
+                                    <button class="browser-nav-btn" id="browser-refresh" title="Actualizar">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M23 4v6h-6" />
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="browser-url-bar">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <input type="text" class="browser-url-input" id="browser-url"
+                                        value="preview.bunk3r.dev/" readonly>
+                                </div>
+                                <button class="browser-action-btn" id="browser-open-external"
+                                    title="Abrir en nueva ventana">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                        <polyline points="15 3 21 3 21 9" />
+                                        <line x1="10" y1="14" x2="21" y2="3" />
+                                    </svg>
+                                </button>
+                            </div>
 
-            <div class="ai-panel ai-panel-files" id="panel-files">
-                <div class="ai-files-header">
-                    <span class="ai-files-title">Archivos</span>
-                    <button class="ai-files-add-btn" title="Nuevo archivo">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="ai-files-list" id="ai-files-list">
-                    <div class="ai-files-empty" id="ai-files-empty">
-                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
-                            stroke-width="1">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                        </svg>
-                        <span>Sin archivos</span>
-                        <span class="ai-files-empty-hint">Los archivos se generaran automaticamente</span>
+                            <!-- Preview Body -->
+                            <div class="ai-preview-body" style="flex:1; position:relative; overflow:hidden;">
+                                <div class="ai-preview-empty" id="ai-preview-empty">
+                                    <div class="ai-preview-icon">
+                                        <svg viewBox="0 0 24 24" width="80" height="80" fill="none"
+                                            stroke="currentColor" stroke-width="0.8">
+                                            <rect x="2" y="3" width="20" height="14" rx="2" />
+                                            <line x1="8" y1="21" x2="16" y2="21" />
+                                            <line x1="12" y1="17" x2="12" y2="21" />
+                                            <path d="M7 8h4" />
+                                            <path d="M7 11h6" />
+                                        </svg>
+                                    </div>
+                                    <p>Tu proyecto aparecera aqui</p>
+                                    <span class="ai-preview-hint">Escribe una descripcion para comenzar a
+                                        construir</span>
+                                </div>
+                                <iframe class="ai-preview-iframe hidden" id="ai-preview-iframe"
+                                    style="width:100%; height:100%; border:none;"></iframe>
+                            </div>
+                        </div>
+
+                        <!-- 2. CONSOLE PANEL -->
+                        <div id="ai-panel-console" class="ai-view-panel hidden"
+                            style="height:100%; background:#0d1117;">
+                            <div class="ai-console" id="ai-console"
+                                style="display:flex; flex-direction:column; height:100%;">
+                                <div class="ai-console-output" id="ai-console-output">
+                                    <div class="console-line info">BUNK3R IA Console v1.0</div>
+                                    <div class="console-line info">Sistema listo. Escribe comandos o genera un proyecto
+                                        para ver la salida.</div>
+                                </div>
+                                <div class="ai-console-input-wrapper">
+                                    <span class="console-prompt">$</span>
+                                    <input type="text" class="ai-console-input" id="ai-console-input"
+                                        placeholder="Escribe un comando...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. EDITOR PANEL -->
+                        <div id="ai-panel-editor" class="ai-view-panel hidden" style="height:100%; background:#1e1e1e;">
+                            <div id="file-editor-container" style="width:100%; height:100%; overflow:auto;"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="panel-resizer" id="resizer-right"></div>
+
+                    <div class="ai-panel ai-panel-files" id="panel-files">
+                        <div class="ai-files-header">
+                            <span class="ai-files-title">Archivos</span>
+                            <button class="ai-files-add-btn" title="Nuevo archivo">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="ai-files-list" id="ai-files-list">
+                            <div class="ai-files-empty" id="ai-files-empty">
+                                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+                                    stroke-width="1">
+                                    <path
+                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                </svg>
+                                <span>Sin archivos</span>
+                                <span class="ai-files-empty-hint">Los archivos se generaran automaticamente</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
     </main>
 
     <script src="/static/ai-chat.js"></script>
@@ -898,11 +926,12 @@
             }
 
             // --- FILE TREE & IDE LOGIC ---
+            // --- FILE TREE & IDE LOGIC ---
             // Global state for file management
-            let currentRepo = null;
+            let currentRepo = nll;
             let currentToken = null;
             let openTabs = [];
-            let activeTabIndex = -1;
+             let activeTabIndex = -1;
 
             window.renderFileTree = function (files, container, repoFullName = null, token = null, parentPath = '') {
                 if (repoFullName) {
@@ -928,7 +957,7 @@
                 div.style.padding = '6px 10px';
                 div.style.display = 'flex';
                 div.style.alignItems = 'center';
-                div.style.gap = '6px';
+          ap = '6px';
                 div.dataset.level = level; 
                 
                 div.onmouseenter = () => div.style.background = 'rgba(255,255,255,0.05)';
@@ -936,10 +965,8 @@
 
                 const isFolder = item.type === 'folder';
                 
-                // Improved Chevron using SVG
                 let chevron = '';
                 if (isFolder) {
-                    // SVG arrow that rotates
                     chevron = `<svg class="folder-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s; min-width:12px;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
                 } else {
                     chevron = `<span style="width:12px; display:inline-block; min-width:12px;"></span>`;
@@ -994,7 +1021,7 @@
                             folderDiv.parentNode.insertBefore(fragment, folderDiv.nextSibling);
                         }
                     } catch (e) {
-                        console.error('Error loading folder:', e);
+                     ('Error loading folder:', e);
                         if(chevron) chevron.style.transform = 'rotate(0deg)';
                         folderDiv.dataset.expanded = 'false';
                     }
@@ -1003,7 +1030,11 @@
 
             async function openFileInTab(fileItem, repoFullName, token) {
                 const existingIndex = openTabs.findIndex(t => t.path === fileItem.path && t.repoFullName === repoFullName);
-                if (existingIndex !== -1) { switchToTab(existingIndex); return; }
+                if (existingIndex !== -1) { 
+                    switchToTab(existingIndex);
+                    showPanel('editor');
+                    return; 
+                }
                 
                 try {
                     let content = '';
@@ -1024,6 +1055,8 @@
                     activeTabIndex = openTabs.length - 1;
                     renderTabs();
                     renderActiveTabContent();
+                    
+                    showPanel('editor');
                 } catch (e) {
                     console.error('Error opening file:', e);
                     alert('Error: ' + e.message);
@@ -1036,7 +1069,7 @@
                 const codeExts = ['js', 'py', 'html', 'css', 'json', 'md', 'txt', 'java', 'cpp', 'c', 'go', 'rs', 'ts', 'jsx', 'tsx', 'vue', 'xml', 'sql', 'sh', 'yaml', 'toml'];
                 if (imageExts.includes(ext)) return 'image';
                 if (ext === 'pdf') return 'pdf';
-                if (ext === 'md') return 'markdown';
+                if (ext === 'md') return'markdown';
                 if (codeExts.includes(ext)) return 'code';
                 return 'text';
             }
@@ -1056,7 +1089,10 @@
                     tabBtn.onclick = (e) => {
                         e.stopPropagation();
                         if (e.target.classList.contains('tab-close')) closeTab(index);
-                        else switchToTab(index);
+                        else {
+                            switchToTab(index);
+                            showPanel('editor');
+                        }
                     };
                     tabsContainer.appendChild(tabBtn);
                 });
@@ -1074,45 +1110,41 @@
                 if (activeTabIndex >= index) activeTabIndex = Math.max(0, openTabs.length - 1);
                 if (openTabs.length === 0) activeTabIndex = -1;
                 renderTabs();
-                if (activeTabIndex >= 0) renderActiveTabContent();
-                else {
-                    const previewBtn = document.querySelector('.ai-tabs > .ai-tab-btn:first-child');
-                    if (previewBtn) previewBtn.click();
-                }
+                if (activeTabIndex >= 0) {
+                    renderActiveTabContent();
+                    showPanel('editor');
+                } else {
+                    showPanel('preview');
+               }
+            }
+
+            function showPanel(panelName) {
+                ['preview', 'console', 'editor'].forEach(p => {
+                    const el = document.getElementById(`ai-panel-${p}`);
+                    if(el) el.classList.add('hidden');
+                });
+                
+                const target = document.getElementById(`ai-panel-${panelName}`);
+                if(target) target.classList.remove('hidden');
+
+                const tabPreview = document.querySelector('.ai-tabs .ai-tab-btn:nth-child(1)');
+                const tabConsole = document.querySelector('.ai-tabs .ai-tab-btn:nth-child(2)');
+                if(tabPreview) tabPreview.classList.remove('active');
+                if(tabConsole) tabConsole.classList.remove('active');
+                
+                if (panelName === 'preview' && tabPreview) tabPreview.classList.add('active');
+                if (panelName === 'console' && tabConsole) tabConsole.classList.add('active');
             }
 
             function renderActiveTabContent() {
-                const addressBar = document.querySelector('.ai-browser-bar');
-                const previewContent = document.querySelector('.ai-preview-content');
-                const consolePanel = document.getElementById('ai-console'); 
-                const previewEmpty = document.getElementById('ai-preview-empty');
-                const previewIframe = document.getElementById('ai-preview-iframe');
                 let editorContainer = document.getElementById('file-editor-container');
-
-                if (activeTabIndex < 0 || !openTabs[activeTabIndex]) {
-                    if (editorContainer) editorContainer.classList.add('hidden');
-                    return; 
-                }
-
-                if (previewContent) previewContent.classList.remove('hidden');
-                // Force hide console
-                if (consolePanel) consolePanel.classList.add('hidden');
+                if (!editorContainer) return;
                 
-                if (previewEmpty) previewEmpty.classList.add('hidden');
-                if (previewIframe) previewIframe.classList.add('hidden');
-                if (addressBar) addressBar.style.display = 'none';
+                if (activeTabIndex < 0 || !openTabs[activeTabIndex]) return;
 
-                if (!editorContainer) {
-                    editorContainer = document.createElement('div');
-                    editorContainer.id = 'file-editor-container';
-                    editorContainer.style.cssText = 'width:100%; height:100%; background:#1e1e1e; color:#d4d4d4; overflow:auto; padding:20px; font-family:monospace; font-size:14px; line-height:1.6;';
-                    previewContent.appendChild(editorContainer);
-                }
-                editorContainer.classList.remove('hidden');
-
-                const tab = openTabs[activeTabIndex];
+                           openTabs[activeTabIndex];
                 if (tab.type === 'image') {
-                    editorContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%;"><img src="${tab.content}" style="max-width:100%; max-height:100%;" alt="${tab.name}"></div>`;
+                    editorContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%;"><img   src="${tab. c ontent}" style="max-width:100%; max-height:100%;" alt="${tab.name}"></div>`;
                 } else if (tab.type === 'markdown') {
                      editorContainer.innerHTML = `<div style="background:white; color:black; padding:20px; border-radius:8px; max-width:800px; margin:0 auto;">${typeof marked !== 'undefined' ? marked.parse(tab.content) : '<pre>'+tab.content+'</pre>'}</div>`;
                 } else {
@@ -1120,48 +1152,23 @@
                     const textarea = document.getElementById('code-editor');
                     textarea.oninput = () => {
                         openTabs[activeTabIndex].content = textarea.value;
-                        openTabs[activeTabIndex].modified = true;
+                Tabs[activeTabIndex].modified = true;
                         renderTabs();
                     };
                 }
             }
 
-            // Preview/Console Toggle Logic
             const tabPreview = document.querySelector('.ai-tabs .ai-tab-btn:nth-child(1)');
             const tabConsole = document.querySelector('.ai-tabs .ai-tab-btn:nth-child(2)');
             
             if (tabPreview && tabConsole) {
                 tabPreview.onclick = () => {
-                    activeTabIndex = -1; renderTabs();
-                    tabPreview.classList.add('active'); tabConsole.classList.remove('active');
-                    
-                    document.querySelector('.ai-preview-content').classList.remove('hidden');
-                    
-                    const consolePanel = document.getElementById('ai-console');
-                    if(consolePanel) consolePanel.classList.add('hidden');
-
-                    document.querySelector('.ai-browser-bar').style.display = 'flex';
-                    
-                    const editor = document.getElementById('file-editor-container');
-                    if (editor) editor.classList.add('hidden');
-                    
-                    document.getElementById('ai-preview-empty').classList.remove('hidden');
+                   activeTab Index = -1; renderTabs();
+                    showPanel('preview');
                 };
                 tabConsole.onclick = () => {
-                    activeTabIndex = -1; renderTabs();
-                    tabConsole.classList.add('active'); tabPreview.classList.remove('active');
-                    
-                    const consolePanel = document.getElementById('ai-console');
-                    if(consolePanel) consolePanel.classList.remove('hidden');
-                    
-                    document.querySelector('.ai-preview-content').classList.remove('hidden');
-                    document.getElementById('ai-preview-empty').classList.add('hidden');
-                    document.getElementById('ai-preview-iframe').classList.add('hidden');
-                    
-                    const editor = document.getElementById('file-editor-container');
-                    if (editor) editor.classList.add('hidden');
-
-                    document.querySelector('.ai-browser-bar').style.display = 'none';
+                   activeTabIndex = -1; renderTabs();
+                    showPanel('console');
                 };
             }
             document.getElementById('btn-new-project').addEventListener('click', () => {
@@ -1169,9 +1176,8 @@
                 if (name) {
                     fetch('/api/projects/create', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: name })
-                    }).then(() => loadProjects());
+                        headers: {                        tion/json' },
+                        body: JSON.stringify({ name: name }                        then(() => loadProjects());
                 }
             });
 
