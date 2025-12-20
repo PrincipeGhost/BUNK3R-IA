@@ -972,14 +972,25 @@
                     const chevron = folderDiv.querySelector('.folder-chevron');
 
                     if (isExpanded) {
-                        // Collapse: remove children
+                        // Collapse: remove all children recursively
                         chevron.textContent = '▶';
                         folderDiv.dataset.expanded = 'false';
+
+                        const folderPadding = parseInt(folderDiv.style.paddingLeft) || 0;
                         let nextSibling = folderDiv.nextElementSibling;
-                        while (nextSibling && parseInt(nextSibling.style.paddingLeft) > parseInt(folderDiv.style.paddingLeft)) {
-                            const toRemove = nextSibling;
-                            nextSibling = nextSibling.nextElementSibling;
-                            toRemove.remove();
+
+                        while (nextSibling) {
+                            const siblingPadding = parseInt(nextSibling.style.paddingLeft) || 0;
+
+                            // If sibling has more padding, it's a child
+                            if (siblingPadding > folderPadding) {
+                                const toRemove = nextSibling;
+                                nextSibling = nextSibling.nextElementSibling;
+                                toRemove.remove();
+                            } else {
+                                // Reached a sibling at same or lower level, stop
+                                break;
+                            }
                         }
                     } else {
                         // Expand: fetch and insert children
@@ -1022,27 +1033,29 @@
                     switchToTab(existingIndex);
                     return;
                 }
-
                 // Fetch file content
                 try {
-                    const response = await fetch(fileItem.download_url || `/api/github/contents?repo=${repoFullName}&path=${fileItem.path}`, {
-                        headers: fileItem.download_url ? {} : { 'Authorization': 'Bearer ' + token }
-                    });
-
                     let content = '';
-                    let fileType = 'text';
-
-                    if (fileItem.download_url) {
-                        content = await response.text();
-                        fileType = detectFileType(fileItem.name);
+                    let fileType = detectFileType(fileItem.name);
+                    // For images, just store the URL
+                    if (fileType === 'image') {
+                        content = fileItem.download_url;
                     } else {
-                        const data = await response.json();
-                        if (data.content) {
-                            content = atob(data.content); // GitHub returns base64
-                            fileType = detectFileType(fileItem.name);
+                        // For text/code files, fetch the actual content
+                        if (fileItem.download_url) {
+                            const response = await fetch(fileItem.download_url);
+                            content = await response.text();
+                        } else {
+                            // Fallback to API if no download_url
+                            const response = await fetch(`/api/github/contents?repo=${repoFullName}&path=${fileItem.path}`, {
+                                headers: { 'Authorization': 'Bearer ' + token }
+                            });
+                            const data = await response.json();
+                            if (data.content) {
+                                content = atob(data.content); // GitHub returns base64
+                            }
                         }
                     }
-
                     // Add to tabs
                     openTabs.push({
                         name: fileItem.name,
@@ -1052,16 +1065,15 @@
                         repoFullName: repoFullName,
                         modified: false
                     });
-
                     activeTabIndex = openTabs.length - 1;
                     renderTabs();
                     renderActiveTabContent();
-
                 } catch (e) {
                     console.error('Error opening file:', e);
-                    alert('Error al abrir el archivo');
+                    alert('Error al abrir el archivo: ' + e.message);
                 }
             }
+
 
             function detectFileType(filename) {
                 const ext = filename.split('.').pop().toLowerCase();
