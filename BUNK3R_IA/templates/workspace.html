@@ -369,25 +369,30 @@
                 </div>
             </div>
 
-            <div class="ai-panel ai-panel-preview" id="panel-preview">
+
             <!-- CENTER PANEL: EDITOR ONLY -->
-            <div class="ai-center-view" style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0;">
+            <div class="ai-center-view"
+                style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0;">
                 <!-- TABS HEADER -->
-                <div class="ai-tabs" style="height:35px; background:#2d333b; display:flex; align-items:flex-end; overflow-x:auto; border-bottom:1px solid #30363d; padding-right:10px;">
+                <div class="ai-tabs"
+                    style="height:35px; background:#2d333b; display:flex; align-items:flex-end; overflow-x:auto; border-bottom:1px solid #30363d; padding-right:10px;">
                     <!-- Tabs injected by JS -->
                 </div>
 
                 <!-- EDITOR CONTAINER -->
-                <div id="file-editor-container" style="flex:1; width:100%; overflow:auto; position:relative; background:#1e1e1e;">
-                    <div class="ai-empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#6b7280; user-select:none;">
-                         <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1" style="opacity:0.5; margin-bottom:16px;">
-                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                             <polyline points="14 2 14 8 20 8"></polyline>
-                             <line x1="16" y1="13" x2="8" y2="13"></line>
-                             <line x1="16" y1="17" x2="8" y2="17"></line>
-                             <polyline points="10 9 9 9 8 9"></polyline>
-                         </svg>
-                         <p style="font-size:14px;">Selecciona un archivo del explorador para editar</p>
+                <div id="file-editor-container"
+                    style="flex:1; width:100%; overflow:auto; position:relative; background:#1e1e1e;">
+                    <div class="ai-empty-state"
+                        style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#6b7280; user-select:none;">
+                        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor"
+                            stroke-width="1" style="opacity:0.5; margin-bottom:16px;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <p style="font-size:14px;">Selecciona un archivo del explorador para editar</p>
                     </div>
                 </div>
             </div>
@@ -397,7 +402,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- GLOBAL STATE ---
-            window.currentRepo = null;
+window.currentRepo = null;
             window.currentToken = null;
             window.openTabs = [];
             window.activeTabIndex = -1;
@@ -720,4 +725,5 @@
         });
     </script>
 </body>
+
 </html>
