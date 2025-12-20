@@ -402,7 +402,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- GLOBAL STATE ---
-window.currentRepo = null;
+            window.currentRepo = null;
             window.currentToken = null;
             window.openTabs = [];
             window.activeTabIndex = -1;
@@ -417,9 +417,9 @@ window.currentRepo = null;
             function toggleMobileMenu() {
                 mobileMenu.classList.toggle('active');
             }
-            if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-            if(mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMobileMenu);
-            if(mobileOverlay) mobileOverlay.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMobileMenu);
+            if (mobileOverlay) mobileOverlay.addEventListener('click', toggleMobileMenu);
 
             // --- ACTIVITY BILL SWITCHING ---
             const activityBtns = document.querySelectorAll('.activity-btn');
@@ -475,13 +475,13 @@ window.currentRepo = null;
                 div.style.fontSize = '13px';
                 div.style.gap = '6px';
                 div.style.userSelect = 'none';
-                div.dataset.level = level; 
-                
+                div.dataset.level = level;
+
                 div.onmouseenter = () => div.style.background = '#161b22';
                 div.onmouseleave = () => div.style.background = 'transparent';
 
                 const isFolder = item.type === 'folder';
-                
+
                 let chevron = '';
                 if (isFolder) {
                     chevron = `<svg class="folder-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s; min-width:14px; color:#8b949e;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
@@ -493,12 +493,12 @@ window.currentRepo = null;
                 let icon = isFolder
                     ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="#54aeff" stroke="currentColor" stroke-width="0" style="min-width:16px;"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`
                     : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8b949e" stroke-width="2" style="min-width:16px;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`;
-                
+
                 // Specific file icons
-                if(!isFolder) {
-                    if(item.name.endsWith('.js')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#f1e05a" stroke="none"><path d="M3 3h18v18H3z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`; // Simplification
-                    else if(item.name.endsWith('.html')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#e34c26" stroke="none"><path d="M12 2L2 22h20L12 2z"/></svg>`;
-                    else if(item.name.endsWith('.css')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#563d7c" stroke="none"><circle cx="12" cy="12" r="10"/></svg>`;
+                if (!isFolder) {
+                    if (item.name.endsWith('.js')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#f1e05a" stroke="none"><path d="M3 3h18v18H3z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`; // Simplification
+                    else if (item.name.endsWith('.html')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#e34c26" stroke="none"><path d="M12 2L2 22h20L12 2z"/></svg>`;
+                    else if (item.name.endsWith('.css')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#563d7c" stroke="none"><circle cx="12" cy="12" r="10"/></svg>`;
                 }
 
                 div.innerHTML = `${chevron}${icon} <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</span>`;
@@ -519,7 +519,7 @@ window.currentRepo = null;
                 const chevron = folderDiv.querySelector('.folder-chevron');
 
                 if (isExpanded) {
-                    if(chevron) chevron.style.transform = 'rotate(0deg)';
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
                     folderDiv.dataset.expanded = 'false';
                     const currentLevel = parseInt(folderDiv.dataset.level);
                     let nextSibling = folderDiv.nextElementSibling;
@@ -532,7 +532,7 @@ window.currentRepo = null;
                         } else { break; }
                     }
                 } else {
-                    if(chevron) chevron.style.transform = 'rotate(90deg)';
+                    if (chevron) chevron.style.transform = 'rotate(90deg)';
                     folderDiv.dataset.expanded = 'true';
                     try {
                         const response = await fetch(`/api/github/contents?repo=${window.currentRepo}&path=${folderPath}`, { headers: { 'Authorization': 'Bearer ' + window.currentToken } });
@@ -547,7 +547,7 @@ window.currentRepo = null;
                         }
                     } catch (e) {
                         // console.error('Error loading folder:', e);
-                        if(chevron) chevron.style.transform = 'rotate(0deg)';
+                        if (chevron) chevron.style.transform = 'rotate(0deg)';
                         folderDiv.dataset.expanded = 'false';
                     }
                 }
@@ -555,11 +555,11 @@ window.currentRepo = null;
 
             async function openFileInTab(fileItem, repoFullName, token) {
                 const existingIndex = window.openTabs.findIndex(t => t.path === fileItem.path && t.repoFullName === repoFullName);
-                if (existingIndex !== -1) { 
+                if (existingIndex !== -1) {
                     switchToTab(existingIndex);
-                    return; 
+                    return;
                 }
-                
+
                 try {
                     let content = '';
                     let fileType = detectFileType(fileItem.name);
@@ -601,7 +601,7 @@ window.currentRepo = null;
                     const tabBtn = document.createElement('div');
                     const isActive = index === window.activeTabIndex;
                     tabBtn.className = 'ai-tab-item';
-                    
+
                     // Simple styling via JS (or rely on CSS if exists)
                     tabBtn.style.padding = '8px 12px';
                     tabBtn.style.fontSize = '13px';
@@ -612,7 +612,7 @@ window.currentRepo = null;
                     tabBtn.style.display = 'flex';
                     tabBtn.style.alignItems = 'center';
                     tabBtn.style.userSelect = 'none';
-                    
+
                     const nameSpan = document.createElement('span');
                     nameSpan.textContent = tab.name + (tab.modified ? ' â—Ź' : '');
                     tabBtn.appendChild(nameSpan);
@@ -625,7 +625,7 @@ window.currentRepo = null;
                     closeSpan.onmouseover = () => { closeSpan.style.background = '#484f58'; };
                     closeSpan.onmouseleave = () => { closeSpan.style.background = 'transparent'; };
                     closeSpan.onclick = (e) => { e.stopPropagation(); closeTab(index); };
-                    
+
                     tabBtn.appendChild(closeSpan);
 
                     tabBtn.onclick = () => switchToTab(index);
@@ -661,7 +661,7 @@ window.currentRepo = null;
                 }
 
                 const tab = window.openTabs[window.activeTabIndex];
-                
+
                 // Clear container
                 container.innerHTML = '';
 
@@ -683,26 +683,116 @@ window.currentRepo = null;
                     textarea.style.lineHeight = '1.5';
                     textarea.style.padding = '20px';
                     textarea.style.resize = 'none';
-                    
+
                     textarea.oninput = () => {
                         window.openTabs[window.activeTabIndex].content = textarea.value;
-                        if(!window.openTabs[window.activeTabIndex].modified) {
+                        if (!window.openTabs[window.activeTabIndex].modified) {
                             window.openTabs[window.activeTabIndex].modified = true;
                             renderTabs();
                         }
                     };
-                    
+
                     container.appendChild(textarea);
                 }
             }
 
             // --- INIT ---
-            // Projects Logic (Simplified)
-            // ... (Leaving existing project logic in "New Project" listener if needed) ...
-            
+            function init() {
+                const storedToken = localStorage.getItem('github_token');
+
+                // SETUP GITHUB PANEL
+                const tokenInput = document.getElementById('github-token-input');
+                const btnSaveToken = document.getElementById('btn-save-token');
+                const authSection = document.getElementById('github-auth-section');
+                const listSection = document.getElementById('ai-github-list');
+
+                if (storedToken) {
+                    window.currentToken = storedToken;
+                    if (authSection) authSection.classList.add('hidden');
+                    loadRepos(storedToken);
+                } else {
+                    if (authSection) authSection.classList.remove('hidden');
+                    if (listSection) listSection.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">Configura tu Token para ver repositorios</div>';
+                }
+
+                if (btnSaveToken && tokenInput) {
+                    btnSaveToken.addEventListener('click', () => {
+                        const val = tokenInput.value.trim();
+                        if (val) {
+                            localStorage.setItem('github_token', val);
+                            window.currentToken = val;
+                            authSection.classList.add('hidden');
+                            loadRepos(val);
+                        }
+                    });
+                }
+            }
+
+            async function loadRepos(token) {
+                const list = document.getElementById('ai-github-list');
+                if (!list) return;
+                list.innerHTML = '<div class="ai-project-loading">Cargando repositorios...</div>';
+
+                try {
+                    const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=20', {
+                        headers: { 'Authorization': 'token ' + token }
+                    });
+                    if (!response.ok) throw new Error('Auth Failed');
+                    const repos = await response.json();
+
+                    list.innerHTML = '';
+                    if (repos.length === 0) {
+                        list.innerHTML = '<div style="padding:10px;">No se encontraron repositorios.</div>';
+                        return;
+                    }
+
+                    repos.forEach(repo => {
+                        const div = document.createElement('div');
+                        div.className = 'ai-project-card';
+                        div.innerHTML = `
+                            <div class="ai-project-name">${repo.name}</div>
+                            <div class="ai-project-id">${repo.full_name}</div>
+                            <div class="ai-project-status">${repo.private ? 'Private' : 'Public'}</div>
+                        `;
+                        div.onclick = () => loadRepoFiles(repo);
+                        list.appendChild(div);
+                    });
+                } catch (e) {
+                    list.innerHTML = `<div style="padding:10px; color:#f85149;">Error: ${e.message} <br> <button onclick="localStorage.removeItem('github_token'); location.reload();" style="margin-top:10px; padding:5px; background:#21262d; border:1px solid #30363d; color:white; cursor:pointer;">Reset Token</button></div>`;
+                }
+            }
+
+            async function loadRepoFiles(repo) {
+                const list = document.getElementById('ai-github-list');
+                // Create a header for the repo view
+                list.innerHTML = `
+                    <div style="padding:10px; border-bottom:1px solid #30363d; margin-bottom:10px; display:flex; align-items:center; gap:10px;">
+                        <button onclick="init()" style="background:none; border:none; color:#58a6ff; cursor:pointer;">← Volver</button>
+                        <span style="font-weight:bold; color:#c9d1d9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.name}</span>
+                    </div>
+                    <div id="repo-files-container">Loading files...</div>
+                `;
+
+                const container = document.getElementById('repo-files-container');
+                try {
+                    const response = await fetch(`/api/github/contents?repo=${repo.full_name}&path=`, { headers: { 'Authorization': 'Bearer ' + window.currentToken } });
+                    const data = await response.json();
+
+                    if (data.files) {
+                        window.renderFileTree(data.files, container, repo.full_name, window.currentToken);
+                    } else {
+                        container.innerHTML = 'Error loading files';
+                    }
+                } catch (e) {
+                    container.innerHTML = 'Error: ' + e.message;
+                }
+            }
+
+            init();
+
             // New Project Button Logic
             const btnNewProj = document.getElementById('btn-new-project');
-            if(btnNewProj) {
+            if (btnNewProj) {
                 btnNewProj.addEventListener('click', () => {
                     const name = prompt("Nombre del proyecto:");
                     if (name) {
@@ -710,7 +800,7 @@ window.currentRepo = null;
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ name: name })
-                        }).then(() => { if(window.loadProjects) window.loadProjects(); });
+                        }).then(() => { if (window.loadProjects) window.loadProjects(); });
                     }
                 });
             }
