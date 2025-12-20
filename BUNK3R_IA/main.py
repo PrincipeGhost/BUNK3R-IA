@@ -18,6 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, jsonify, render_template, Response, abort
 from BUNK3R_IA.config import get_config
 from BUNK3R_IA.api.routes import ai_bp, set_db_manager
+from BUNK3R_IA.api.project_routes import projects_bp
+from BUNK3R_IA.api.github_routes import github_bp
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,6 +40,8 @@ def create_app(config_class=None):
     app.config.from_object(config_class)
     
     app.register_blueprint(ai_bp)
+    app.register_blueprint(projects_bp)
+    app.register_blueprint(github_bp)
     
     # Habilitar CORS para permitir peticiones externas (necesario para integración)
     from flask_cors import CORS

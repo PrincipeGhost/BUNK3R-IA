@@ -1,17 +1,148 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BUNK3R IA - Constructor Inteligente</title>
     <link rel="stylesheet" href="/static/ai-chat.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23F0B90B' width='100' height='100' rx='20'/%3E%3Cpath d='M50 20 L75 35 V65 L50 80 L25 65 V35 Z' fill='%230a0d10'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23F0B90B' width='100' height='100' rx='20'/%3E%3Cpath d='M50 20 L75 35 V65 L50 80 L25 65 V35 Z' fill='%230a0d10'/%3E%3C/svg%3E">
 </head>
+<style>
+    /* INJECTED STYLES FOR ACTIVITY BAR & PROJECTS */
+    .activity-bar {
+        width: 50px;
+        background: #0d1117;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 0;
+        z-index: 10;
+    }
+
+    .activity-btn {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #6b7280;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .activity-btn:hover {
+        color: #EAECEF;
+    }
+
+    .activity-btn.active {
+        color: #F0B90B;
+        border-left: 2px solid #F0B90B;
+    }
+
+    .activity-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* PROJECT PANEL */
+    .ai-panel-projects {
+        flex: 0 0 280px;
+        min-width: 280px;
+        max-width: 400px;
+        border-right: 1px solid rgba(240, 185, 11, 0.15);
+        background: linear-gradient(180deg, #0d1117 0%, #0a0d10 100%);
+        display: none;
+        /* Hidden by default */
+        flex-direction: column;
+    }
+
+    .ai-panel-projects.active-view {
+        display: flex;
+    }
+
+    .ai-projects-header {
+        padding: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .ai-projects-title {
+        font-weight: 700;
+        color: #EAECEF;
+    }
+
+    .ai-projects-add-btn {
+        background: rgba(240, 185, 11, 0.1);
+        border: 1px solid rgba(240, 185, 11, 0.2);
+        color: #F0B90B;
+        border-radius: 4px;
+        padding: 4px;
+        cursor: pointer;
+    }
+
+    .ai-project-card {
+        padding: 12px;
+        margin: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .ai-project-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(240, 185, 11, 0.3);
+    }
+
+    .ai-project-card.active {
+        border-color: #F0B90B;
+        background: rgba(240, 185, 11, 0.05);
+    }
+
+    .ai-project-name {
+        font-weight: 600;
+        color: #EAECEF;
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .ai-project-id {
+        font-size: 11px;
+        color: #6b7280;
+        font-family: monospace;
+    }
+
+    .ai-project-status {
+        font-size: 10px;
+        margin-top: 6px;
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #1f2937;
+        color: #9ca3af;
+    }
+
+    .ai-project-status.active {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+    }
+</style>
+</head>
+
 <body>
     <header class="mobile-header">
         <div class="mobile-header-left">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mobile-logo">
-                <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
+                <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
             </svg>
             <span class="mobile-title">BUNK3R IA</span>
         </div>
@@ -29,36 +160,36 @@
                 <span>Menu</span>
                 <button class="mobile-menu-close" id="mobile-menu-close">
                     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
             </div>
             <div class="mobile-menu-items">
                 <button class="mobile-menu-item active" data-panel="chat">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                     <span>Chat IA</span>
                 </button>
                 <button class="mobile-menu-item" data-panel="preview">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
                     </svg>
                     <span>Preview</span>
                 </button>
                 <button class="mobile-menu-item" data-panel="files">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
                     <span>Archivos</span>
                 </button>
                 <button class="mobile-menu-item" data-panel="console">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="4 17 10 11 4 5"/>
-                        <line x1="12" y1="19" x2="20" y2="19"/>
+                        <polyline points="4 17 10 11 4 5" />
+                        <line x1="12" y1="19" x2="20" y2="19" />
                     </svg>
                     <span>Consola</span>
                 </button>
@@ -68,39 +199,120 @@
 
     <main class="workspace-main">
         <div class="ai-workspace-container">
+            <!-- ACTIVITY BAR (NUEVO) -->
+            <div class="activity-bar">
+                <div class="activity-top">
+                    <button class="activity-btn active" data-view="chat" title="Chat IA">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </button>
+                    <button class="activity-btn" data-view="projects" title="Explorador de Proyectos">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                    </button>
+                    <button class="activity-btn" data-view="github" title="Conexión GitHub">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="activity-bottom">
+                    <button class="activity-btn" data-view="secrets" title="Bóveda de Secretos">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                    </button>
+                    <button class="activity-btn" id="activity-settings" title="Configuración">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- PANEL GITHUB (NUEVO) -->
+            <div class="ai-panel ai-panel-projects hidden" id="panel-github" style="background:#0d1117;">
+                <div class="ai-projects-header" style="background:#161b22;border-bottom:1px solid #30363d;">
+                    <span class="ai-projects-title" style="color:#c9d1d9;">GitHub Repos</span>
+                    <button class="ai-projects-add-btn" id="btn-github-settings" title="Configurar Token">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                    <button class="ai-projects-add-btn" id="btn-new-repo" title="Nuevo Repo">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- Token Input Section (Initially Hidden unless no token) -->
+                <div id="github-auth-section" class="hidden" style="padding:15px; border-bottom:1px solid #30363d;">
+                    <input type="text" id="github-token-input" placeholder="Pegar Personal Access Token(ghp_...)"
+                        style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; margin-bottom:8px;">
+                    <button id="btn-save-token"
+                        style="width:100%; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer;">Guardar
+                        Token</button>
+                </div>
+                <div class="ai-projects-list" id="ai-github-list" style="background:#0d1117;">
+                    <div class="ai-project-loading">Esperando conexión...</div>
+                </div>
+            </div>
+
             <div class="ai-panel ai-panel-chat active-panel" id="panel-chat">
                 <div class="ai-chat-sidebar-header">
                     <div class="ai-chat-sidebar-logo">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
-                            <line x1="12" y1="22" x2="12" y2="15.5"/>
-                            <polyline points="22,8.5 12,15.5 2,8.5"/>
+                            <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
+                            <line x1="12" y1="22" x2="12" y2="15.5" />
+                            <polyline points="22,8.5 12,15.5 2,8.5" />
                         </svg>
                         <span class="ai-chat-sidebar-title">Constructor Inteligente</span>
                     </div>
-                    <p class="ai-chat-sidebar-subtitle">Describe tu proyecto y lo construire paso a paso usando IA avanzada</p>
+                    <p class="ai-chat-sidebar-subtitle">Describe tu proyecto y lo construire paso a paso usando IA
+                        avanzada</p>
                     <div class="ai-quick-actions-sidebar">
                         <button class="ai-quick-btn-sidebar" data-prompt="Crea una landing page moderna y profesional">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                <line x1="3" y1="9" x2="21" y2="9"/>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <line x1="3" y1="9" x2="21" y2="9" />
                             </svg>
                             Landing Page
                         </button>
-                        <button class="ai-quick-btn-sidebar" data-prompt="Crea un dashboard con graficos y estadisticas">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="7" height="9"/>
-                                <rect x="14" y="3" width="7" height="5"/>
-                                <rect x="14" y="12" width="7" height="9"/>
-                                <rect x="3" y="16" width="7" height="5"/>
+                        <button class="ai-quick-btn-sidebar"
+                            data-prompt="Crea un dashboard con graficos y estadisticas">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="7" height="9" />
+                                <rect x="14" y="3" width="7" height="5" />
+                                <rect x="14" y="12" width="7" height="9" />
+                                <rect x="3" y="16" width="7" height="5" />
                             </svg>
                             Dashboard
                         </button>
-                        <button class="ai-quick-btn-sidebar" data-prompt="Crea una tienda online con carrito de compras">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="9" cy="21" r="1"/>
-                                <circle cx="20" cy="21" r="1"/>
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        <button class="ai-quick-btn-sidebar"
+                            data-prompt="Crea una tienda online con carrito de compras">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="9" cy="21" r="1" />
+                                <circle cx="20" cy="21" r="1" />
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                             </svg>
                             E-Commerce
                         </button>
@@ -109,67 +321,89 @@
                 <div class="ai-chat-messages" id="ai-chat-messages">
                 </div>
                 <div class="ai-chat-input-container modern-input">
-                    <textarea 
-                        class="ai-chat-input" 
-                        id="ai-chat-input" 
-                        placeholder="Describe lo que quieres crear..."
-                        rows="1"
-                    ></textarea>
+                    <textarea class="ai-chat-input" id="ai-chat-input" placeholder="Describe lo que quieres crear..."
+                        rows="1"></textarea>
                     <div class="ai-chat-toolbar">
                         <div class="toolbar-left">
                             <button class="toolbar-btn build-btn" id="ai-chat-send">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
                                 </svg>
                                 <span>Build</span>
                             </button>
                         </div>
                         <div class="toolbar-right">
                             <button class="toolbar-btn icon-btn send-arrow" id="ai-chat-send-arrow">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="19" x2="12" y2="5"/>
-                                    <polyline points="5 12 12 5 19 12"/>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="19" x2="12" y2="5" />
+                                    <polyline points="5 12 12 5 19 12" />
                                 </svg>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="panel-resizer" id="resizer-left"></div>
-            
+
+            <div class="panel-resizer" id="resizer-left"></div>
+
+            <!-- PANEL DE PROYECTOS (NUEVO) -->
+            <div class="ai-panel ai-panel-projects hidden" id="panel-projects">
+                <div class="ai-projects-header">
+                    <span class="ai-projects-title">Mis Proyectos</span>
+                    <button class="ai-projects-add-btn" id="btn-new-project" title="Nuevo Proyecto">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="ai-projects-list" id="ai-projects-list">
+                    <!-- Lista de proyectos inyectada vía JS -->
+                    <div class="ai-project-loading">Cargando proyectos...</div>
+                </div>
+            </div>
+
             <div class="ai-panel ai-panel-preview" id="panel-preview">
                 <div class="ai-tabs-header">
                     <div class="ai-tab-buttons">
                         <button class="ai-tab-btn active" data-file="preview">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                                <line x1="8" y1="21" x2="16" y2="21"/>
-                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="17" x2="12" y2="21" />
                             </svg>
                             Preview
                         </button>
                         <button class="ai-tab-btn" data-file="console">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="4 17 10 11 4 5"/>
-                                <line x1="12" y1="19" x2="20" y2="19"/>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="4 17 10 11 4 5" />
+                                <line x1="12" y1="19" x2="20" y2="19" />
                             </svg>
                             Console
                         </button>
                     </div>
                     <div class="ai-tab-actions">
                         <button class="ai-preview-btn" id="ai-preview-refresh" title="Actualizar vista">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M23 4v6h-6"/>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M23 4v6h-6" />
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                             </svg>
                         </button>
                         <button class="ai-preview-btn" id="ai-preview-fullscreen" title="Pantalla completa">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
-                                <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
-                                <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
-                                <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                                <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                                <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
                             </svg>
                         </button>
                     </div>
@@ -177,48 +411,55 @@
                 <div class="ai-browser-bar">
                     <div class="browser-nav-buttons">
                         <button class="browser-nav-btn" id="browser-back" title="Atras">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 12H5"/>
-                                <polyline points="12 19 5 12 12 5"/>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M19 12H5" />
+                                <polyline points="12 19 5 12 12 5" />
                             </svg>
                         </button>
                         <button class="browser-nav-btn" id="browser-forward" title="Adelante">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14"/>
-                                <polyline points="12 5 19 12 12 19"/>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M5 12h14" />
+                                <polyline points="12 5 19 12 12 19" />
                             </svg>
                         </button>
                         <button class="browser-nav-btn" id="browser-refresh" title="Actualizar">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M23 4v6h-6"/>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M23 4v6h-6" />
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                             </svg>
                         </button>
                     </div>
                     <div class="browser-url-bar">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                            <circle cx="12" cy="12" r="3"/>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="12" cy="12" r="3" />
                         </svg>
-                        <input type="text" class="browser-url-input" id="browser-url" value="preview.bunk3r.dev/" readonly>
+                        <input type="text" class="browser-url-input" id="browser-url" value="preview.bunk3r.dev/"
+                            readonly>
                     </div>
                     <button class="browser-action-btn" id="browser-open-external" title="Abrir en nueva ventana">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                            <polyline points="15 3 21 3 21 9"/>
-                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            <polyline points="15 3 21 3 21 9" />
+                            <line x1="10" y1="14" x2="21" y2="3" />
                         </svg>
                     </button>
                 </div>
                 <div class="ai-preview-content">
                     <div class="ai-preview-empty" id="ai-preview-empty">
                         <div class="ai-preview-icon">
-                            <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor" stroke-width="0.8">
-                                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                                <line x1="8" y1="21" x2="16" y2="21"/>
-                                <line x1="12" y1="17" x2="12" y2="21"/>
-                                <path d="M7 8h4"/>
-                                <path d="M7 11h6"/>
+                            <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor"
+                                stroke-width="0.8">
+                                <rect x="2" y="3" width="20" height="14" rx="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="17" x2="12" y2="21" />
+                                <path d="M7 8h4" />
+                                <path d="M7 11h6" />
                             </svg>
                         </div>
                         <p>Tu proyecto aparecera aqui</p>
@@ -228,32 +469,36 @@
                     <div class="ai-console hidden" id="ai-console">
                         <div class="ai-console-output" id="ai-console-output">
                             <div class="console-line info">BUNK3R IA Console v1.0</div>
-                            <div class="console-line info">Sistema listo. Escribe comandos o genera un proyecto para ver la salida.</div>
+                            <div class="console-line info">Sistema listo. Escribe comandos o genera un proyecto para ver
+                                la salida.</div>
                         </div>
                         <div class="ai-console-input-wrapper">
                             <span class="console-prompt">$</span>
-                            <input type="text" class="ai-console-input" id="ai-console-input" placeholder="Escribe un comando...">
+                            <input type="text" class="ai-console-input" id="ai-console-input"
+                                placeholder="Escribe un comando...">
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="panel-resizer" id="resizer-right"></div>
-            
+
             <div class="ai-panel ai-panel-files" id="panel-files">
                 <div class="ai-files-header">
                     <span class="ai-files-title">Archivos</span>
                     <button class="ai-files-add-btn" title="Nuevo archivo">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
                     </button>
                 </div>
                 <div class="ai-files-list" id="ai-files-list">
                     <div class="ai-files-empty" id="ai-files-empty">
-                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+                            stroke-width="1">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                         </svg>
                         <span>Sin archivos</span>
                         <span class="ai-files-empty-hint">Los archivos se generaran automaticamente</span>
@@ -262,10 +507,10 @@
             </div>
         </div>
     </main>
-    
+
     <script src="/static/ai-chat.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const chatInput = document.getElementById('ai-chat-input');
             const sendBtn = document.getElementById('ai-chat-send');
             const tabs = document.querySelectorAll('.ai-tab-btn');
@@ -274,67 +519,67 @@
             const consolePanel = document.getElementById('ai-console');
             const quickBtns = document.querySelectorAll('.ai-quick-btn');
             const browserRefresh = document.getElementById('browser-refresh');
-            
+
             const sendArrowBtn = document.getElementById('ai-chat-send-arrow');
-            
+
             const hamburgerBtn = document.getElementById('hamburger-btn');
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileMenuClose = document.getElementById('mobile-menu-close');
             const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
             const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
-            
+
             function openMobileMenu() {
                 mobileMenu.classList.add('open');
                 document.body.style.overflow = 'hidden';
             }
-            
+
             function closeMobileMenu() {
                 mobileMenu.classList.remove('open');
                 document.body.style.overflow = '';
             }
-            
+
             function switchPanel(panelName) {
                 const panels = document.querySelectorAll('.ai-panel');
                 panels.forEach(panel => panel.classList.remove('active-panel'));
-                
+
                 const targetPanel = document.getElementById('panel-' + panelName);
                 if (targetPanel) {
                     targetPanel.classList.add('active-panel');
                 }
-                
+
                 mobileMenuItems.forEach(item => {
                     item.classList.toggle('active', item.dataset.panel === panelName);
                 });
-                
+
                 if (panelName === 'console') {
                     const previewPanel = document.getElementById('panel-preview');
                     previewPanel.classList.add('active-panel');
                     const consolePanelEl = document.getElementById('ai-console');
                     const previewEmptyEl = document.getElementById('ai-preview-empty');
                     const previewIframeEl = document.getElementById('ai-preview-iframe');
-                    
+
                     if (consolePanelEl) consolePanelEl.classList.remove('hidden');
                     if (previewEmptyEl) previewEmptyEl.classList.add('hidden');
                     if (previewIframeEl) previewIframeEl.classList.add('hidden');
-                    
+
                     tabs.forEach(t => t.classList.remove('active'));
                     const consoleTab = document.querySelector('.ai-tab-btn[data-file="console"]');
                     if (consoleTab) consoleTab.classList.add('active');
                 }
-                
+
                 closeMobileMenu();
             }
-            
+
             hamburgerBtn.addEventListener('click', openMobileMenu);
             mobileMenuClose.addEventListener('click', closeMobileMenu);
             mobileMenuOverlay.addEventListener('click', closeMobileMenu);
-            
+
             mobileMenuItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     switchPanel(this.dataset.panel);
                 });
             });
-            
+
             function updateSendButtons() {
                 const hasText = chatInput.value.trim().length > 0;
                 sendBtn.disabled = !hasText;
@@ -343,7 +588,7 @@
                     sendArrowBtn.style.opacity = hasText ? '1' : '0.5';
                 }
             }
-            
+
             function sendMessage() {
                 const message = chatInput.value.trim();
                 if (message) {
@@ -352,30 +597,30 @@
                     }
                 }
             }
-            
-            chatInput.addEventListener('input', function() {
+
+            chatInput.addEventListener('input', function () {
                 updateSendButtons();
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
-            
-            chatInput.addEventListener('keydown', function(e) {
+
+            chatInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
                 }
             });
-            
+
             tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
+                tab.addEventListener('click', function () {
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
-                    
+
                     const file = this.dataset.file;
                     previewEmpty.classList.add('hidden');
                     previewIframe.classList.add('hidden');
                     consolePanel.classList.add('hidden');
-                    
+
                     if (file === 'preview') {
                         if (previewIframe.src && previewIframe.src !== 'about:blank') {
                             previewIframe.classList.remove('hidden');
@@ -387,71 +632,71 @@
                     }
                 });
             });
-            
-            browserRefresh.addEventListener('click', function() {
+
+            browserRefresh.addEventListener('click', function () {
                 if (previewIframe.src && previewIframe.src !== 'about:blank') {
                     previewIframe.src = previewIframe.src;
                 }
             });
-            
+
             quickBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const prompt = this.dataset.prompt;
                     chatInput.value = prompt;
                     chatInput.dispatchEvent(new Event('input'));
                     chatInput.focus();
                 });
             });
-            
+
             const sidebarQuickBtns = document.querySelectorAll('.ai-quick-btn-sidebar');
             sidebarQuickBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const prompt = this.dataset.prompt;
                     chatInput.value = prompt;
                     chatInput.dispatchEvent(new Event('input'));
                     chatInput.focus();
                 });
             });
-            
+
             if (sendArrowBtn) {
-                sendArrowBtn.addEventListener('click', function() {
+                sendArrowBtn.addEventListener('click', function () {
                     sendMessage();
                 });
             }
-            
+
             if (typeof AIChat !== 'undefined') {
                 AIChat.init();
             }
-            
+
             const resizerLeft = document.getElementById('resizer-left');
             const resizerRight = document.getElementById('resizer-right');
             const panelChat = document.querySelector('.ai-panel-chat');
             const panelPreview = document.querySelector('.ai-panel-preview');
             const panelFiles = document.querySelector('.ai-panel-files');
             const container = document.querySelector('.ai-workspace-container');
-            
+
             let isResizing = false;
             let currentResizer = null;
-            
+
             function initResize(e, resizer) {
                 if (window.innerWidth <= 768) return;
                 isResizing = true;
                 currentResizer = resizer;
                 document.body.classList.add('resizing');
                 resizer.classList.add('resizing');
-                
+
                 document.addEventListener('mousemove', handleResize);
                 document.addEventListener('mouseup', stopResize);
                 e.preventDefault();
             }
-            
+
             function handleResize(e) {
                 if (!isResizing) return;
-                
+
                 const containerRect = container.getBoundingClientRect();
                 const containerWidth = containerRect.width;
                 const mouseX = e.clientX - containerRect.left;
-                
+
                 if (currentResizer === resizerLeft) {
                     const newChatWidth = Math.max(200, Math.min(mouseX, containerWidth * 0.5));
                     panelChat.style.width = newChatWidth + 'px';
@@ -462,7 +707,7 @@
                     panelFiles.style.flex = 'none';
                 }
             }
-            
+
             function stopResize() {
                 isResizing = false;
                 document.body.classList.remove('resizing');
@@ -473,10 +718,207 @@
                 document.removeEventListener('mousemove', handleResize);
                 document.removeEventListener('mouseup', stopResize);
             }
-            
+
+            // --- ACTIVITY BAR LOGIC ---
+            const activityBtns = document.querySelectorAll('.activity-btn[data-view]');
+
+            function switchMainView(viewName) {
+                // Update buttons
+                activityBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewName));
+
+                // Hide all main panels (Chat & Projects share the left slot)
+                const panelChat = document.getElementById('panel-chat');
+                const panelProjects = document.getElementById('panel-projects');
+
+                if (viewName === 'chat') {
+                    panelChat.style.display = 'flex';
+                    panelProjects.style.display = 'none';
+                    if (document.getElementById('panel-github')) document.getElementById('panel-github').style.display = 'none';
+                    panelChat.classList.add('active-panel');
+                } else if (viewName === 'projects') {
+                    panelChat.style.display = 'none';
+                    if (document.getElementById('panel-github')) document.getElementById('panel-github').style.display = 'none';
+                    panelProjects.style.display = 'flex';
+                    loadProjects();
+                } else if (viewName === 'github') {
+                    panelChat.style.display = 'none';
+                    panelProjects.style.display = 'none';
+                    const panelGithub = document.getElementById('panel-github');
+                    if (panelGithub) {
+                        panelGithub.style.display = 'flex';
+                        const token = localStorage.getItem('gh_token');
+                        if (!token) {
+                            document.getElementById('github-auth-section').classList.remove('hidden');
+                            document.getElementById('ai-github-list').innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280;">Introduce tu Token para ver tus repositorios.</div>';
+                        } else {
+                            document.getElementById('github-auth-section').classList.add('hidden');
+                            loadGithubRepos(token);
+                        }
+                    }
+                } else if (viewName === 'secrets') {
+                    alert('Bóveda de Secretos: Próximamente en Fase 5');
+                    return;
+                }
+            }
+
+            activityBtns.forEach(btn => {
+                btn.addEventListener('click', () => switchMainView(btn.dataset.view));
+            });
+
+            // --- GITHUB LOGIC ---
+            document.getElementById('btn-github-settings').addEventListener('click', () => {
+                const section = document.getElementById('github-auth-section');
+                section.classList.toggle('hidden');
+            });
+
+            document.getElementById('btn-save-token').addEventListener('click', () => {
+                const token = document.getElementById('github-token-input').value.trim();
+                if (token) {
+                    localStorage.setItem('gh_token', token);
+                    document.getElementById('github-auth-section').classList.add('hidden');
+                    loadGithubRepos(token);
+                }
+            });
+
+            async function loadGithubRepos(token) {
+                const listContainer = document.getElementById('ai-github-list');
+                listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280;">Cargando repositorios...</div>';
+
+                try {
+                    const response = await fetch('/api/github/repos', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+
+                    if (response.status === 401) {
+                        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Token inválido o expirado.</div>';
+                        localStorage.removeItem('gh_token');
+                        document.getElementById('github-auth-section').classList.remove('hidden');
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.repos && data.repos.length > 0) {
+                        listContainer.innerHTML = '';
+                        data.repos.forEach(repo => {
+                            const card = document.createElement('div');
+                            card.className = 'ai-project-card';
+                            card.innerHTML = `
+                                <div class="ai-project-name">${repo.name} ${repo.private ? '🔒' : ''}</div>
+                                <div class="ai-project-id" style="color:#8b949e;">${repo.description || 'Sin descripción'}</div>
+                                <div class="ai-project-status ${repo.language ? 'active' : ''}">${repo.language || 'N/A'}</div>
+                            `;
+                            listContainer.appendChild(card);
+                        });
+                    } else {
+                        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280;">No se encontraron repositorios.</div>';
+                    }
+                } catch (e) {
+                    listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error al conectar con GitHub</div>';
+                    console.error(e);
+                }
+            }
+            // Load projects if needed
+            loadProjects();
+
+            loadProjects();
+
+
+            // --- PROJECT LOGIC ---
+            async function loadProjects() {
+                const listContainer = document.getElementById('ai-projects-list');
+                listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280;">Cargando...</div>';
+
+                try {
+                    const response = await fetch('/api/projects/');
+                    const data = await response.json();
+
+                    if (data.projects && data.projects.length > 0) {
+                        listContainer.innerHTML = '';
+                        data.projects.forEach(proj => {
+                            const card = document.createElement('div');
+                            card.className = 'ai-project-card';
+                            card.onclick = () => loadProjectFiles(proj.project_id);
+                            card.innerHTML = `
+                                <div class="ai-project-name">${proj.name}</div>
+                                <div class="ai-project-id">${proj.project_id}</div>
+                                <div class="ai-project-status ${proj.status === 'active' ? 'active' : ''}">${proj.status}</div>
+                            `;
+                            listContainer.appendChild(card);
+                        });
+                    } else {
+                        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280;">No hay proyectos aún.</div>';
+                    }
+                } catch (e) {
+                    listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error al cargar proyectos</div>';
+                    console.error(e);
+                }
+            }
+
+            async function loadProjectFiles(projectId) {
+                // Fetch files for sidebar
+                const filesList = document.getElementById('ai-files-list');
+                filesList.innerHTML = '<div style="padding:10px; color:#6b7280;">Cargando archivos...</div>';
+
+                try {
+                    const response = await fetch(`/api/projects/${projectId}/files`);
+                    const data = await response.json();
+                    renderFileTree(data.files, filesList);
+                    // Switch back to chat to work on it? Or stay in projects?
+                    // For now, let's open chat if user wants, but files are updated.
+                } catch (e) {
+                    filesList.innerHTML = 'Error loading files';
+                }
+            }
+
+            function renderFileTree(files, container) {
+                container.innerHTML = '';
+                if (!files || files.length === 0) {
+                    container.innerHTML = '<div class="ai-files-empty">Vacío</div>';
+                    return;
+                }
+
+                // Simple recursive renderer
+                function createNode(item, level) {
+                    const div = document.createElement('div');
+                    div.className = 'ai-file-item';
+                    div.style.paddingLeft = (level * 10 + 10) + 'px';
+                    // Icon logic
+                    let icon = item.type === 'folder'
+                        ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+                        : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+
+                    div.innerHTML = `${icon} <span>${item.name}</span>`;
+                    return div;
+                }
+
+                function cloneTree(items, parentEl, level) {
+                    items.forEach(item => {
+                        parentEl.appendChild(createNode(item, level));
+                        if (item.children) {
+                            cloneTree(item.children, parentEl, level + 1);
+                        }
+                    });
+                }
+                cloneTree(files, container, 0);
+            }
+
+            // New Project Button
+            document.getElementById('btn-new-project').addEventListener('click', () => {
+                const name = prompt("Nombre del proyecto:");
+                if (name) {
+                    fetch('/api/projects/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: name })
+                    }).then(() => loadProjects());
+                }
+            });
+
             resizerLeft.addEventListener('mousedown', (e) => initResize(e, resizerLeft));
             resizerRight.addEventListener('mousedown', (e) => initResize(e, resizerRight));
         });
     </script>
 </body>
+
 </html>
