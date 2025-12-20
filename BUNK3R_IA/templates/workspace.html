@@ -269,7 +269,8 @@
                         style="width:100%; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer;">Guardar
                         Token</button>
                 </div>
-                <div class="ai-projects-list" id="ai-github-list" style="background:#0d1117;">
+                <div class="ai-projects-list" id="ai-github-list"
+                    style="background:#0d1117; overflow-y: auto; flex: 1;">
                     <div class="ai-project-loading">Esperando conexión...</div>
                 </div>
             </div>
@@ -803,6 +804,8 @@
                         data.repos.forEach(repo => {
                             const card = document.createElement('div');
                             card.className = 'ai-project-card';
+                            // Click handler to open repo
+                            card.onclick = () => openGithubRepo(repo.full_name, token);
                             card.innerHTML = `
                                 <div class="ai-project-name">${repo.name} ${repo.private ? '🔒' : ''}</div>
                                 <div class="ai-project-id" style="color:#8b949e;">${repo.description || 'Sin descripción'}</div>
@@ -816,6 +819,34 @@
                 } catch (e) {
                     listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error al conectar con GitHub</div>';
                     console.error(e);
+                }
+            }
+
+            async function openGithubRepo(repoFullName, token) {
+                // Switch to Preview/Files view if needed or just update file panel
+                // We'll update the Files Panel with the repo content
+
+                const filesList = document.getElementById('ai-files-list');
+                filesList.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280;">Cargando archivos de GitHub...</div>';
+
+                // Ensure files panel is visible if in mobile or adjust layout? 
+                // For now, assume split view is active.
+
+                try {
+                    const response = await fetch(`/api/github/contents?repo=${repoFullName}`, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.files) {
+                        renderFileTree(data.files, document.getElementById('ai-files-list'));
+                    } else {
+                        filesList.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">No se pudieron cargar los archivos.</div>';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    filesList.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error de conexión.</div>';
                 }
             }
             // Load projects if needed
