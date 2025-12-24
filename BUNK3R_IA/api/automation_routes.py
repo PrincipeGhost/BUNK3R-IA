@@ -1,6 +1,6 @@
 """
 Automation Routes - API endpoints for browser extension
-Handles CRUD operations for web automations
+Handles CRUD operations for web automations AND AI Command & Control
 """
 from flask import Blueprint, request, jsonify
 from datetime import datetime
@@ -9,6 +9,9 @@ import sqlite3
 import os
 
 automation_bp = Blueprint('automation', __name__)
+
+# Temporary in-memory queue for commands (In prod, use Redis or SQLite)
+COMMAND_QUEUE = []
 
 # Database path (will be in user's database)
 def get_db_path(user_id):
@@ -42,6 +45,44 @@ def init_automations_table(user_id):
     
     conn.commit()
     conn.close()
+
+# --- GHOST AGENT ENDPOINTS ---
+
+@automation_bp.route('/api/extension/poll', methods=['GET'])
+def poll_commands():
+    """Extension polls this endpoint for new instructions"""
+    global COMMAND_QUEUE
+    
+    if not COMMAND_QUEUE:
+        return jsonify({'commands': []})
+    
+    # Send all pending commands and clear queue
+    to_send = list(COMMAND_QUEUE)
+    COMMAND_QUEUE.clear()
+    
+    return jsonify({'commands': to_send})
+
+@automation_bp.route('/api/extension/event', methods=['POST'])
+def receive_event():
+    """Extension reports events (recorded actions, page data)"""
+    data = request.json
+    print(f"📡 Event from Extension: {data.get('type')}")
+    
+    # Here acts as a stream receiver. 
+    # In a real implementation, you might want to push this to a websocket 
+    # connected to the frontend so the user sees "AI is typing..." or "AI clicked..."
+    
+    return jsonify({'status': 'ok'})
+
+@automation_bp.route('/api/extension/command', methods=['POST'])
+def queue_command():
+    """Internal API for AI to send commands to browser"""
+    data = request.json
+    # data example: {'type': 'OPEN_TAB', 'url': 'https://google.com'}
+    COMMAND_QUEUE.append(data)
+    return jsonify({'status': 'queued', 'queue_size': len(COMMAND_QUEUE)})
+
+# --- CRUD ENDPOINTS ---
 
 @automation_bp.route('/api/automations', methods=['GET'])
 def get_automations():
@@ -270,28 +311,49 @@ def delete_automation(automation_id):
 
 @automation_bp.route('/api/automations/<automation_id>/execute', methods=['POST'])
 def execute_automation(automation_id):
-    """Log automation execution"""
+    """Execute automation (triggers browser command)"""
     try:
         user_id = request.headers.get('X-User-ID', 'demo_user')
         
         db_path = get_db_path(user_id)
         conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        now = datetime.now().isoformat()
+        # Get automation
+        cursor.execute('SELECT * FROM automations WHERE id = ?', (automation_id,))
+        row = cursor.fetchone()
         
+        if not row:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Automation not found'}), 404
+            
+        automation = {
+            'id': row['id'],
+            'name': row['name'],
+            'actions': json.loads(row['actions'])
+        }
+        
+        # Update stats
+        now = datetime.now().isoformat()
         cursor.execute('''
             UPDATE automations 
             SET execution_count = execution_count + 1,
                 last_executed = ?
             WHERE id = ?
         ''', (now, automation_id))
-        
         conn.commit()
         conn.close()
         
+        # QUEUE COMMAND FOR BROWSER
+        COMMAND_QUEUE.append({
+            'type': 'EXECUTE_AUTOMATION',
+            'automation': automation
+        })
+        
         return jsonify({
             'success': True,
+            'message': 'Automation queued for execution',
             'executed_at': now
         })
         
@@ -305,8 +367,6 @@ def execute_automation(automation_id):
 def generate_automation():
     """Generate automation using AI"""
     try:
-        from BUNK3R_IA.core.ai_service import get_ai_service
-        
         data = request.get_json()
         description = data.get('description', '')
         page_context = data.get('page_context', {})
@@ -317,35 +377,7 @@ def generate_automation():
                 'error': 'Description is required'
             }), 400
         
-        # Build prompt for AI
-        prompt = f"""
-Genera una automatización web basada en esta descripción:
-"{description}"
-
-Contexto de la página:
-URL: {page_context.get('url', 'N/A')}
-Título: {page_context.get('title', 'N/A')}
-
-Responde SOLO con un JSON válido en este formato:
-{{
-  "name": "Nombre descriptivo",
-  "description": "Descripción detallada",
-  "actions": [
-    {{"type": "click", "selector": "#button"}},
-    {{"type": "fill", "selector": "#input", "value": "texto"}},
-    {{"type": "wait", "duration": 1000}}
-  ],
-  "category": "productividad"
-}}
-
-Tipos de acciones disponibles: click, fill, select, wait, extract, navigate, scroll
-"""
-        
-        # Get AI service (simplified - you'll need proper initialization)
-        # ai_service = get_ai_service(None)
-        # response = ai_service.chat('system', prompt)
-        
-        # For now, return a template
+        # Placeholder for AI generation logic
         automation = {
             "name": f"Automatización: {description[:50]}",
             "description": description,
@@ -372,18 +404,22 @@ def get_stats():
     try:
         user_id = request.headers.get('X-User-ID', 'demo_user')
         
+        init_automations_table(user_id)
         db_path = get_db_path(user_id)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
         cursor.execute('SELECT COUNT(*) as total FROM automations')
-        total = cursor.fetchone()[0]
+        row = cursor.fetchone()
+        total = row[0] if row else 0
         
         cursor.execute('SELECT COUNT(*) as enabled FROM automations WHERE enabled = 1')
-        enabled = cursor.fetchone()[0]
+        row = cursor.fetchone()
+        enabled = row[0] if row else 0
         
         cursor.execute('SELECT SUM(execution_count) as executions FROM automations')
-        executions = cursor.fetchone()[0] or 0
+        row = cursor.fetchone()
+        executions = row[0] if row else 0
         
         conn.close()
         
