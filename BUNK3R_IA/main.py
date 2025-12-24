@@ -43,6 +43,7 @@ def create_app(config_class=None):
     app.register_blueprint(ai_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(github_bp)
+    app.register_blueprint(automation_bp)
     
     # Habilitar CORS para permitir peticiones externas (necesario para integración)
     from flask_cors import CORS
