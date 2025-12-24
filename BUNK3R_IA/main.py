@@ -20,6 +20,7 @@ from BUNK3R_IA.config import get_config
 from BUNK3R_IA.api.routes import ai_bp, set_db_manager
 from BUNK3R_IA.api.project_routes import projects_bp
 from BUNK3R_IA.api.github_routes import github_bp
+from BUNK3R_IA.api.automation_routes import automation_bp
 
 logging.basicConfig(
     level=logging.INFO,
