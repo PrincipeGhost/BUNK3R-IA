@@ -362,9 +362,9 @@
             <div class="panel-resizer" id="resizer-left"></div>
 
             <!-- PANEL DE PROYECTOS (UNIFICADO) -->
-            <div class="ai-panel ai-panel-projects hidden" id="panel-projects" style="background:#0d1117;">
-                <div class="ai-projects-header" style="background:#161b22;border-bottom:1px solid #30363d;">
-                    <span class="ai-projects-title" style="color:#c9d1d9;">Archivos</span>
+            <div class="ai-panel ai-panel-projects hidden" id="panel-projects" style="background:#0d1117; display: flex; flex-direction: column; height: 100%;">
+                <div class="ai-projects-header" style="background:#161b22; border-bottom:1px solid #30363d; padding: 12px; flex-shrink: 0;">
+                    <span class="ai-projects-title" style="color:#c9d1d9; font-weight: 600;">Explorador</span>
                     <div style="display:flex; gap:8px;">
                         <button class="ai-projects-add-btn" id="btn-project-github-settings" title="Configurar Token">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -388,9 +388,6 @@
                     <button id="btn-project-save-token"
                         style="width:100%; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer;">Guardar Token</button>
                 </div>
-
-                <!-- Create Repo Section - ELIMINADA POR CREACIÓN DIRECTA -->
-                <div id="project-create-repo-section" style="display:none;"></div>
 
                 <div class="ai-projects-list" id="ai-projects-list" style="background:#0d1117; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #30363d #0d1117;">
                     <div class="ai-project-loading">Cargando proyectos...</div>
