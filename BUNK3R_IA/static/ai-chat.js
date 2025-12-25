@@ -723,11 +723,37 @@ const AIChat = {
         
         if (isCodeRequest) {
             await this.sendConstructorMessage(message);
-        } else if (this.streamingEnabled) {
-            await this.sendStreamingMessage(message);
         } else {
-            await this.sendConstructorMessage(message);
+            await this.sendSimpleChat(message);
         }
+    },
+    
+    async sendSimpleChat(message) {
+        this.showTyping();
+        try {
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: this.getApiHeaders(),
+                body: JSON.stringify({ message: message })
+            });
+            
+            const data = await response.json();
+            this.hideTyping();
+            
+            if (data.success) {
+                this.appendMessage('assistant', data.response || data.message || 'Respuesta recibida');
+            } else {
+                this.appendMessage('assistant', data.error || 'Error al procesar. Intenta de nuevo.');
+            }
+        } catch (error) {
+            this.hideTyping();
+            this.appendMessage('assistant', 'Error de conexion. Verifica tu internet e intenta de nuevo.');
+            console.error('Chat error:', error);
+        }
+        
+        this.isLoading = false;
+        const send = this.getSendButton();
+        if (send) send.disabled = false;
     },
     
     isCodeGenerationRequest(message) {
