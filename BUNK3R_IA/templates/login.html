@@ -50,6 +50,25 @@
             transition: background 0.2s;
         }
         .gh-btn:hover { background: #2ea043; }
+        .demo-btn {
+            background: #1f6feb;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin-top: 12px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+        .demo-btn:hover { background: #388bfd; }
+        .divider { color: #30363d; margin: 24px 0; }
     </style>
 </head>
 <body>
@@ -67,6 +86,26 @@
             </svg>
             Iniciar sesión con GitHub
         </a>
+        <div class="divider">o</div>
+        <button class="demo-btn" onclick="quickLogin()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"></polyline>
+                <line x1="12" y1="12" x2="20" y2="7.5"></line>
+                <line x1="12" y1="12" x2="12" y2="21"></line>
+                <line x1="12" y1="12" x2="4" y2="7.5"></line>
+            </svg>
+            Acceso Rápido
+        </button>
     </div>
+    <script>
+        function quickLogin() {
+            fetch('/quick-login', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) window.location.href = '/';
+                })
+                .catch(e => alert('Error: ' + e));
+        }
+    </script>
 </body>
 </html>
