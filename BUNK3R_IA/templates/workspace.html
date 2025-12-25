@@ -466,35 +466,37 @@
                     const view = btn.dataset.view;
                     if (!view) return; 
 
+                    console.log('Switching to view:', view);
+
                     // Update buttons
                     activityBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
 
-                    // Update panels
+                    // Update panels - Ocultar todos primero
                     panels.forEach(p => {
+                        p.style.display = 'none';
                         p.classList.add('hidden');
                         p.classList.remove('active-panel');
                     });
 
-                    // Forzar visibilidad del panel correcto
-                    let targetId = `panel-${view}`;
-                    let target = document.getElementById(targetId);
+                    // Determinar ID del panel destino
+                    let targetId = (view === 'github') ? 'panel-github' : 
+                                  (view === 'projects') ? 'panel-projects' : 
+                                  `panel-${view}`;
                     
+                    const target = document.getElementById(targetId);
                     if (target) {
+                        console.log('Panel found:', targetId);
+                        target.style.display = 'flex';
                         target.classList.remove('hidden');
                         target.classList.add('active-panel');
                         
-                        // Si es el panel de GitHub, cargar los repositorios
+                        // Carga de datos si aplica
                         if (view === 'github' && typeof window.loadGitHubRepos === 'function') {
                             window.loadGitHubRepos();
                         }
-                    } else if (view === 'projects') {
-                        // Mapeo especial si el botón es 'projects' pero el panel es 'panel-projects'
-                        const projectPanel = document.getElementById('panel-projects');
-                        if (projectPanel) {
-                            projectPanel.classList.remove('hidden');
-                            projectPanel.classList.add('active-panel');
-                        }
+                    } else {
+                        console.error('Panel not found:', targetId);
                     }
                 });
             });
