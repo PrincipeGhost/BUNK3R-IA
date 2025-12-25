@@ -294,6 +294,90 @@ class CerebrasProvider(AIProvider):
             return {"success": False, "error": str(e), "provider": self.name}
 
 
+class OpenAIProvider(AIProvider):
+    """OpenAI GPT API"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "openai"
+        self.model = "gpt-4o-mini"
+        self.base_url = "https://api.openai.com/v1/chat/completions"
+    
+    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            chat_messages.extend(messages)
+            
+            response = requests.post(
+                self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "temperature": 0.7,
+                    "max_tokens": 8192
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"OpenAI error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class BaiduProvider(AIProvider):
+    """Baidu Qianfan API"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "baidu"
+        self.model = "ernie-3.5-8k"
+        self.base_url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-3.5-8k"
+    
+    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            for msg in messages:
+                role = "user" if msg.get("role") == "user" else "assistant"
+                chat_messages.append({"role": role, "content": msg.get("content", "")})
+            
+            payload = {"messages": chat_messages}
+            
+            response = requests.post(
+                f"{self.base_url}?access_token={self.api_key}",
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("result", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Baidu error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
 class DeepSeekProvider(AIProvider):
     """DeepSeek API - UPGRADED for better reasoning with more tokens"""
     
@@ -453,23 +537,35 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
             self.providers.append(CerebrasProvider(cerebras_key))
             logger.info("Cerebras provider initialized (Priority 2)")
         
-        # Priority 3: Gemini (may hit quota limits)
+        # Priority 3: OpenAI GPT
+        openai_key = os.environ.get('OPENAI_API_KEY', '')
+        if openai_key:
+            self.providers.append(OpenAIProvider(openai_key))
+            logger.info("OpenAI provider initialized (Priority 3)")
+        
+        # Priority 4: Gemini
         gemini_key = os.environ.get('GEMINI_API_KEY', '')
         if gemini_key:
             self.providers.append(GeminiProvider(gemini_key))
-            logger.info("Gemini provider initialized (Priority 3)")
+            logger.info("Gemini provider initialized (Priority 4)")
         
-        # Priority 4: DeepSeek API (may have auth issues)
+        # Priority 5: Baidu
+        baidu_key = os.environ.get('BAIDU_API_KEY', '')
+        if baidu_key:
+            self.providers.append(BaiduProvider(baidu_key))
+            logger.info("Baidu provider initialized (Priority 5)")
+        
+        # Priority 6: DeepSeek API
         deepseek_key = os.environ.get('DEEPSEEK_API_KEY', '')
         if deepseek_key:
             self.providers.append(DeepSeekProvider(deepseek_key))
-            logger.info("DeepSeek API provider initialized (Priority 4)")
+            logger.info("DeepSeek API provider initialized (Priority 6)")
         
-        # Priority 5: HuggingFace Llama (fallback)
+        # Priority 7: HuggingFace Llama (fallback)
         hf_key = os.environ.get('HUGGINGFACE_API_KEY', '')
         if hf_key:
             self.providers.append(HuggingFaceProvider(hf_key))
-            logger.info("HuggingFace Llama provider initialized (Priority 5)")
+            logger.info("HuggingFace Llama provider initialized (Priority 7)")
         
         if not self.providers:
             logger.warning("No AI providers configured. Set API keys in environment variables.")

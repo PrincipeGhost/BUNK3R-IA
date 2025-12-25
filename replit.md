@@ -61,11 +61,17 @@ The server runs on port 5000 via the BUNK3R_IA Server workflow.
 - POST `/api/ai-llm/execute-plan` - Execute approved plan
 - GET `/api/ai-llm/phases` - List available phases
 
-## Environment Variables
+## Environment Variables & AI Providers
+Proveedores de IA disponibles (por orden de prioridad):
+1. **OpenAI** - `OPENAI_API_KEY` (GPT-4o-mini) ✅ CONFIGURADO
+2. **Google Gemini** - `GEMINI_API_KEY` (Gemini 2.0 Flash) ✅ CONFIGURADO  
+3. **Baidu** - `BAIDU_API_KEY` (ERNIE 3.5) ✅ CONFIGURADO
+4. **Groq** - `GROQ_API_KEY` (Llama 3.3 70B)
+5. **Cerebras** - `CEREBRAS_API_KEY` (Llama 3.3 70B)
+6. **DeepSeek** - `DEEPSEEK_API_KEY` (DeepSeek Chat)
+
+Otros:
 - `DATABASE_URL` - PostgreSQL connection (uses Replit DB)
-- `DEEPSEEK_API_KEY` - DeepSeek API key
-- `GROQ_API_KEY` - Groq API key
-- `GEMINI_API_KEY` - Google Gemini API key
 - `ANTIGRAVITY_BRIDGE_URL` - URL del bridge de Antigravity (Cloudflare Tunnel)
 
 ## Antigravity Integration (GRAVITY-CONNECT)

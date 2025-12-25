@@ -201,6 +201,33 @@ def create_app(config_class=None):
             }
         })
     
+    @app.route('/api/ai-providers', methods=['GET'])
+    def ai_providers():
+        """Get list of available AI providers"""
+        from BUNK3R_IA.core.ai_service import get_ai_service
+        
+        try:
+            ai_service = get_ai_service(None)
+            if ai_service:
+                providers = ai_service.get_available_providers()
+                return jsonify({
+                    'success': True,
+                    'providers': providers,
+                    'count': len(providers),
+                    'configured': {
+                        'openai': bool(os.environ.get('OPENAI_API_KEY')),
+                        'gemini': bool(os.environ.get('GEMINI_API_KEY')),
+                        'baidu': bool(os.environ.get('BAIDU_API_KEY')),
+                        'groq': bool(os.environ.get('GROQ_API_KEY')),
+                        'deepseek': bool(os.environ.get('DEEPSEEK_API_KEY')),
+                        'cerebras': bool(os.environ.get('CEREBRAS_API_KEY'))
+                    }
+                })
+            else:
+                return jsonify({'success': False, 'error': 'AI service not available'}), 503
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
     return app
 
 def init_database(database_url=None):
