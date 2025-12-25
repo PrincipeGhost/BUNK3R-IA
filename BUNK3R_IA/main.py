@@ -50,7 +50,7 @@ def create_app(config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
     
-    # app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+    # GitHub Auth setup
     from BUNK3R_IA.replit_auth import setup_github_auth
     setup_github_auth(app)
     app.register_blueprint(ai_bp)
@@ -90,8 +90,10 @@ def create_app(config_class=None):
         return dict(current_user=current_user)
 
     @app.route('/')
-    @require_login
     def index():
+        from flask_login import current_user
+        if not current_user.is_authenticated:
+            return render_template('login.html')
         return render_template('workspace.html')
     
     @app.route('/preview/<session_id>')

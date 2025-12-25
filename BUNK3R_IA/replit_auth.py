@@ -11,16 +11,23 @@ def load_user(user_id):
     return User.query.get(user_id)
 
 def setup_github_auth(app):
-    github_bp = make_github_blueprint(
-        client_id=os.environ.get("GITHUB_CLIENT_ID"),
-        client_secret=os.environ.get("GITHUB_CLIENT_SECRET"),
-        scope="user:email,repo"
-    )
-    app.register_blueprint(github_bp, url_prefix="/auth")
+    client_id = os.environ.get("GITHUB_CLIENT_ID")
+    client_secret = os.environ.get("GITHUB_CLIENT_SECRET")
+    
+    if client_id and client_secret:
+        github_bp = make_github_blueprint(
+            client_id=client_id,
+            client_secret=client_secret,
+            scope="user:email,repo"
+        )
+        app.register_blueprint(github_bp, url_prefix="/auth")
+    
     login_manager.init_app(app)
 
     @app.route("/login")
-    def login():
+    def login_route():
+        if not os.environ.get("GITHUB_CLIENT_ID"):
+            return "GITHUB_CLIENT_ID no configurado en Secretos", 401
         return redirect(url_for("github.login"))
 
     @app.route("/logout")
@@ -28,14 +35,12 @@ def setup_github_auth(app):
         logout_user()
         return redirect(url_for("index"))
 
-    return github_bp
-
 def require_login(f):
     from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for("github.login"))
+            return redirect(url_for("login_route"))
         return f(*args, **kwargs)
     return decorated_function
 
