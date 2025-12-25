@@ -392,18 +392,8 @@
                         style="width:100%; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer;">Guardar Token</button>
                 </div>
 
-                <!-- Create Repo Section -->
-                <div id="project-create-repo-section" class="hidden" style="display:none; padding:15px; border-bottom:1px solid #30363d; background: rgba(240, 185, 11, 0.05);">
-                    <div style="font-size: 12px; color: #F0B90B; margin-bottom: 8px; font-weight: bold;">Nuevo Repositorio</div>
-                    <input type="text" id="new-repo-name" placeholder="Nombre del repositorio..."
-                        style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; margin-bottom:8px;">
-                    <div style="display:flex; gap:8px;">
-                        <button id="btn-confirm-create-repo"
-                            style="flex:1; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer; font-size: 12px;">Crear</button>
-                        <button id="btn-cancel-create-repo"
-                            style="flex:1; padding:6px; background:#30363d; color:white; border:none; border-radius:6px; cursor:pointer; font-size: 12px;">Cancelar</button>
-                    </div>
-                </div>
+                <!-- Create Repo Section - ELIMINADA POR CREACIÓN DIRECTA -->
+                <div id="project-create-repo-section" style="display:none;"></div>
 
                 <div class="ai-projects-list" id="ai-projects-list" style="background:#0d1117; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #30363d #0d1117;">
                     <div class="ai-project-loading">Cargando proyectos...</div>
@@ -659,33 +649,11 @@
             const newRepoNameInput = document.getElementById('new-repo-name');
 
             if (btnNewProject) {
-                btnNewProject.addEventListener('click', () => {
-                    if (createRepoSection) {
-                        const isHidden = createRepoSection.style.display === 'none';
-                        createRepoSection.style.display = isHidden ? 'block' : 'none';
-                        if (isHidden) {
-                            newRepoNameInput.focus();
-                        }
-                    }
-                });
-            }
+                btnNewProject.addEventListener('click', async () => {
+                    const name = prompt('Ingresa el nombre del nuevo repositorio:');
+                    if (!name) return;
 
-            if (btnCancelCreate) {
-                btnCancelCreate.addEventListener('click', () => {
-                    if (createRepoSection) createRepoSection.style.display = 'none';
-                    if (newRepoNameInput) newRepoNameInput.value = '';
-                });
-            }
-
-            if (btnConfirmCreate) {
-                btnConfirmCreate.addEventListener('click', async () => {
-                    const name = newRepoNameInput.value.trim();
                     const token = localStorage.getItem('github_token');
-                    
-                    if (!name) {
-                        alert('Por favor, ingresa un nombre para el repositorio.');
-                        return;
-                    }
                     if (!token) {
                         alert('Primero debes configurar tu Token de GitHub.');
                         const authSection = document.getElementById('project-github-auth-section');
@@ -693,8 +661,9 @@
                         return;
                     }
 
-                    btnConfirmCreate.disabled = true;
-                    btnConfirmCreate.innerText = 'Creando...';
+                    const originalContent = btnNewProject.innerHTML;
+                    btnNewProject.disabled = true;
+                    btnNewProject.innerHTML = '<span style="font-size:10px;">...</span>';
 
                     try {
                         const response = await fetch('https://api.github.com/user/repos', {
@@ -713,9 +682,7 @@
                         if (response.ok) {
                             const repo = await response.json();
                             alert(`Repositorio "${repo.name}" creado con éxito.`);
-                            createRepoSection.style.display = 'none';
-                            newRepoNameInput.value = '';
-                            window.loadGitHubRepos(); // Recargar lista
+                            window.loadGitHubRepos();
                         } else {
                             const err = await response.json();
                             alert('Error al crear el repositorio: ' + (err.message || 'Desconocido'));
@@ -723,8 +690,8 @@
                     } catch (e) {
                         alert('Error de conexión al crear el repositorio.');
                     } finally {
-                        btnConfirmCreate.disabled = false;
-                        btnConfirmCreate.innerText = 'Crear';
+                        btnNewProject.disabled = false;
+                        btnNewProject.innerHTML = originalContent;
                     }
                 });
             }
