@@ -692,8 +692,12 @@
 
             if (btnNewProject) {
                 btnNewProject.addEventListener('click', () => {
-                    if (createRepoSection) createRepoSection.classList.toggle('hidden');
-                    if (newRepoNameInput) newRepoNameInput.focus();
+                    if (createRepoSection) {
+                        createRepoSection.classList.toggle('hidden');
+                        if (!createRepoSection.classList.contains('hidden')) {
+                            newRepoNameInput.focus();
+                        }
+                    }
                 });
             }
 
@@ -715,6 +719,7 @@
                     }
                     if (!token) {
                         alert('Primero debes configurar tu Token de GitHub.');
+                        document.getElementById('project-github-auth-section')?.classList.remove('hidden');
                         return;
                     }
 
