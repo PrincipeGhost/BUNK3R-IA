@@ -570,11 +570,26 @@
                                 window.currentRepo = repo.full_name;
                                 listContainer.innerHTML = '<div class="ai-project-loading">Cargando archivos...</div>';
                                 try {
+                                    // Sincronizar con el estado global de la aplicación
+                                    if (window.AIChat && typeof window.AIChat.setContext === 'function') {
+                                        window.AIChat.setContext({ repo: repo.full_name });
+                                    }
+
                                     const contentsResp = await fetch(`/api/github/contents?repo=${repo.full_name}`);
                                     const contentsData = await contentsResp.json();
                                     
                                     listContainer.innerHTML = '';
                                     
+                                    const headerInfo = document.createElement('div');
+                                    headerInfo.style.padding = '12px';
+                                    headerInfo.style.background = '#161b22';
+                                    headerInfo.style.borderBottom = '1px solid #30363d';
+                                    headerInfo.innerHTML = `
+                                        <div style="font-size:12px; font-weight:bold; color:#F0B90B; margin-bottom:4px;">REPO ACTIVO</div>
+                                        <div style="font-size:14px; color:#c9d1d9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.name}</div>
+                                    `;
+                                    listContainer.appendChild(headerInfo);
+
                                     const backBtn = document.createElement('div');
                                     backBtn.style.padding = '10px';
                                     backBtn.style.background = '#21262d';
@@ -594,13 +609,24 @@
                                     `;
                                     backBtn.onclick = (e) => {
                                         e.stopPropagation();
+                                        window.currentRepo = null;
                                         window.loadGitHubRepos();
                                     };
                                     listContainer.appendChild(backBtn);
 
-                                    window.renderFileTree(contentsData.files, listContainer, repo.full_name, storedToken);
+                                    if (contentsData.files && contentsData.files.length > 0) {
+                                        window.renderFileTree(contentsData.files, listContainer, repo.full_name, storedToken);
+                                    } else {
+                                        const emptyMsg = document.createElement('div');
+                                        emptyMsg.style.padding = '20px';
+                                        emptyMsg.style.textAlign = 'center';
+                                        emptyMsg.style.color = '#8b949e';
+                                        emptyMsg.innerText = 'Este repositorio está vacío.';
+                                        listContainer.appendChild(emptyMsg);
+                                    }
                                     
                                 } catch (e) {
+                                    console.error('Error loading contents:', e);
                                     listContainer.innerHTML = '<div class="ai-error">Error al cargar contenido</div>';
                                 }
                             };
