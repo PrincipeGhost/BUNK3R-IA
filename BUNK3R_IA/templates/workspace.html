@@ -457,6 +457,15 @@
             if (mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMobileMenu);
             if (mobileOverlay) mobileOverlay.addEventListener('click', toggleMobileMenu);
 
+            const sendArrow = document.getElementById('ai-chat-send-arrow');
+            if (sendArrow) {
+                sendArrow.addEventListener('click', () => {
+                    if (typeof AIChat.sendCodeRequest === 'function') {
+                        AIChat.sendCodeRequest();
+                    }
+                });
+            }
+
             // --- ACTIVITY BILL SWITCHING ---
             const activityBtns = document.querySelectorAll('.activity-btn');
             const panels = document.querySelectorAll('.ai-panel');
