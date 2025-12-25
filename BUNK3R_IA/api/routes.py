@@ -67,6 +67,12 @@ def sanitize_error(e, context=''):
     """Sanitize error for safe display"""
     return f"Error in {context}: {str(e)[:100]}"
 
+def get_user_id():
+    from flask_login import current_user
+    if current_user.is_authenticated:
+        return current_user.id
+    return request.headers.get('X-User-ID', 'anonymous')
+
 @ai_bp.route('/ai/chat', methods=['POST'])
 def ai_chat():
     """Send message to AI and get response"""
@@ -74,7 +80,7 @@ def ai_chat():
         from BUNK3R_IA.core.ai_service import get_ai_service
         
         data = request.json
-        user_id = data.get('user_id', 'anonymous')
+        user_id = get_user_id()
         message = data.get('message', '').strip()
         
         if not message:

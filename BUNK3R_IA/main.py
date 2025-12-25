@@ -66,6 +66,27 @@ def create_app(config_class=None):
     def make_session_permanent():
         session.permanent = True
 
+    @app.after_request
+    def add_header(response):
+        # Cache control
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        # Permitir Embedding (Iframe)
+        response.headers['X-Frame-Options'] = 'ALLOWALL' 
+        response.headers['Content-Security-Policy'] = "frame-ancestors *;"
+        response.headers['Access-Control-Allow-Origin'] = "*"
+        response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
+        response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
+        
+        return response
+
+    @app.context_processor
+    def inject_user():
+        from flask_login import current_user
+        return dict(current_user=current_user)
+
     @app.route('/')
     @require_login
     def index():

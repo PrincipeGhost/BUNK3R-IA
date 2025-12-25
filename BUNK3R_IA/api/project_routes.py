@@ -7,8 +7,9 @@ projects_bp = Blueprint('projects', __name__, url_prefix='/api/projects')
 
 @projects_bp.route('/', methods=['GET'])
 def list_projects():
-    """Listar proyectos para un usuario (hardcoded user por ahora)"""
-    user_id = "user_123" # TODO: Implementar Auth real
+    """Listar proyectos para un usuario"""
+    from flask_login import current_user
+    user_id = current_user.id if current_user.is_authenticated else "user_123"
     conn = manager.get_user_db(user_id)
     if not conn:
         return jsonify({"projects": []})

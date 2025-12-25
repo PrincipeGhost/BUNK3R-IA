@@ -330,16 +330,8 @@ const AIChat = {
     
     getApiHeaders() {
         const headers = { 'Content-Type': 'application/json' };
-        if (typeof App !== 'undefined') {
-            if (App.isDemoMode) {
-                headers['X-Demo-Mode'] = 'true';
-                const token = App.demoSessionToken || sessionStorage.getItem('demoSessionToken');
-                if (token) {
-                    headers['X-Demo-Session'] = token;
-                }
-            } else if (App.initData) {
-                headers['X-Telegram-Init-Data'] = App.initData;
-            }
+        if (typeof App !== 'undefined' && App.user) {
+            headers['X-User-ID'] = App.user.id;
         }
         return headers;
     },
