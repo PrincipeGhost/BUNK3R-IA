@@ -59,7 +59,7 @@
         height: 24px;
     }
 
-    /* PROJECT PANEL */
+            /* PROJECT PANEL */
     .ai-panel-projects {
         flex: 0 0 280px;
         min-width: 280px;
@@ -69,6 +69,20 @@
         display: none;
         /* Hidden by default */
         flex-direction: column;
+    }
+
+    #ai-projects-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    #ai-projects-list::-webkit-scrollbar-track {
+        background: #0d1117;
+    }
+    #ai-projects-list::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 10px;
+    }
+    #ai-projects-list::-webkit-scrollbar-thumb:hover {
+        background: #484f58;
     }
 
     .ai-panel-projects.active-view {
