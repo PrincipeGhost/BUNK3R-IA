@@ -345,11 +345,7 @@ const AIChat = {
     },
     
     getApiHeaders() {
-        const headers = { 'Content-Type': 'application/json' };
-        if (typeof App !== 'undefined' && App.user) {
-            headers['X-User-ID'] = App.user.id;
-        }
-        return headers;
+        return { 'Content-Type': 'application/json' };
     },
     
     loadFromStorage() {
