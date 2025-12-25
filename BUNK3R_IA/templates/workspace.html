@@ -216,19 +216,12 @@
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                     </button>
-                    <button class="activity-btn" data-view="projects" title="Explorador de Proyectos">
+                    <button class="activity-btn" data-view="projects" title="Mis Proyectos">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7" />
                             <rect x="14" y="3" width="7" height="7" />
                             <rect x="14" y="14" width="7" height="7" />
                             <rect x="3" y="14" width="7" height="7" />
-                        </svg>
-                    </button>
-                    <button class="activity-btn" id="btn-github-view" data-view="github" title="Conexión GitHub">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path
-                                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
-                            </path>
                         </svg>
                     </button>
                     <button class="activity-btn" data-view="chat" title="Ir al Chat">
@@ -488,10 +481,8 @@
                         p.classList.remove('active-panel');
                     });
 
-                    // Determinar ID del panel destino
-                    let targetId = (view === 'github') ? 'panel-github' : 
-                                  (view === 'projects') ? 'panel-projects' : 
-                                  `panel-${view}`;
+                    // Mapeo unificado: todo lo que sea github o projects va al mismo panel
+                    let targetId = (view === 'github' || view === 'projects') ? 'panel-projects' : `panel-${view}`;
                     
                     const target = document.getElementById(targetId);
                     if (target) {
@@ -500,8 +491,8 @@
                         target.classList.remove('hidden');
                         target.classList.add('active-panel');
                         
-                        // Carga de datos si aplica
-                        if (view === 'github' && typeof window.loadGitHubRepos === 'function') {
+                        // Carga de datos unificada
+                        if ((view === 'github' || view === 'projects') && typeof window.loadGitHubRepos === 'function') {
                             window.loadGitHubRepos();
                         }
                     } else {
@@ -510,35 +501,68 @@
                 });
             });
 
-            // --- GITHUB REPOS LOGIC ---
+            // --- GITHUB REPOS LOGIC (UNIFICADA EN PROYECTOS) ---
             window.loadGitHubRepos = async function() {
-                const listContainer = document.getElementById('ai-github-list');
+                const listContainer = document.getElementById('ai-projects-list');
                 if (!listContainer) return;
 
-                listContainer.innerHTML = '<div class="ai-project-loading">Cargando repositorios...</div>';
+                const storedToken = localStorage.getItem('github_token');
+                if (!storedToken) {
+                    const authSection = document.getElementById('project-github-auth-section');
+                    if (authSection) authSection.classList.remove('hidden');
+                    listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">Configura tu Token para ver tus proyectos de GitHub</div>';
+                    return;
+                }
+
+                listContainer.innerHTML = '<div class="ai-project-loading">Cargando proyectos de GitHub...</div>';
 
                 try {
-                    const response = await fetch('/api/github/repos');
-                    const data = await response.json();
+                    const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=20', {
+                        headers: { 'Authorization': 'token ' + storedToken }
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            localStorage.removeItem('github_token');
+                            document.getElementById('project-github-auth-section')?.classList.remove('hidden');
+                        }
+                        throw new Error('Auth Failed');
+                    }
+                    
+                    const repos = await response.json();
 
-                    if (data.repos && data.repos.length > 0) {
+                    if (repos && repos.length > 0) {
                         listContainer.innerHTML = '';
-                        data.repos.forEach(repo => {
+                        repos.forEach(repo => {
                             const item = document.createElement('div');
-                            item.className = 'ai-project-item';
-                            item.style.padding = '10px';
-                            item.style.borderBottom = '1px solid #30363d';
+                            item.className = 'ai-project-card';
+                            item.style.padding = '12px';
+                            item.style.margin = '8px';
+                            item.style.background = 'rgba(255, 255, 255, 0.03)';
+                            item.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+                            item.style.borderRadius = '8px';
                             item.style.cursor = 'pointer';
-                            item.style.color = '#c9d1d9';
+                            item.style.transition = 'all 0.2s';
+                            
                             item.innerHTML = `
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F0B90B" stroke-width="2">
                                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                     </svg>
-                                    <div style="font-weight:bold;">${repo.name}</div>
+                                    <div style="font-weight:600; color:#EAECEF; font-size:14px;">${repo.name}</div>
                                 </div>
-                                <div style="font-size:11px; color:#8b949e; margin-top:4px; margin-left:24px;">${repo.description || 'Sin descripción'}</div>
+                                <div style="font-size:11px; color:#6b7280; margin-top:4px; margin-left:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.description || 'Sin descripción'}</div>
                             `;
+                            
+                            item.onmouseenter = () => {
+                                item.style.background = 'rgba(255, 255, 255, 0.06)';
+                                item.style.borderColor = 'rgba(240, 185, 11, 0.3)';
+                            };
+                            item.onmouseleave = () => {
+                                item.style.background = 'rgba(255, 255, 255, 0.03)';
+                                item.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                            };
+
                             item.onclick = async () => {
                                 window.currentRepo = repo.full_name;
                                 listContainer.innerHTML = '<div class="ai-project-loading">Cargando archivos...</div>';
@@ -548,7 +572,6 @@
                                     
                                     listContainer.innerHTML = '';
                                     
-                                    // Botón para volver
                                     const backBtn = document.createElement('div');
                                     backBtn.style.padding = '10px';
                                     backBtn.style.background = '#21262d';
@@ -564,7 +587,7 @@
                                             <line x1="19" y1="12" x2="5" y2="12"></line>
                                             <polyline points="12 19 5 12 12 5"></polyline>
                                         </svg>
-                                        <span>Volver a Repositorios</span>
+                                        <span>Volver a Proyectos</span>
                                     `;
                                     backBtn.onclick = (e) => {
                                         e.stopPropagation();
@@ -572,8 +595,7 @@
                                     };
                                     listContainer.appendChild(backBtn);
 
-                                    // Renderizar el árbol de archivos en el mismo contenedor
-                                    window.renderFileTree(contentsData.files, listContainer, repo.full_name);
+                                    window.renderFileTree(contentsData.files, listContainer, repo.full_name, storedToken);
                                     
                                 } catch (e) {
                                     listContainer.innerHTML = '<div class="ai-error">Error al cargar contenido</div>';
@@ -582,12 +604,36 @@
                             listContainer.appendChild(item);
                         });
                     } else {
-                        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">No se encontraron repositorios o necesitas iniciar sesión.</div>';
+                        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">No se encontraron repositorios.</div>';
                     }
                 } catch (e) {
                     listContainer.innerHTML = '<div class="ai-error">Error de conexión con GitHub</div>';
                 }
             };
+
+            // --- TOKEN MANAGEMENT (UNIFICADO) ---
+            const btnProjectSaveToken = document.getElementById('btn-project-save-token');
+            const projectTokenInput = document.getElementById('project-github-token-input');
+            const projectAuthSection = document.getElementById('project-github-auth-section');
+
+            if (btnProjectSaveToken && projectTokenInput) {
+                btnProjectSaveToken.addEventListener('click', () => {
+                    const val = projectTokenInput.value.trim();
+                    if (val) {
+                        localStorage.setItem('github_token', val);
+                        window.currentToken = val;
+                        projectAuthSection.classList.add('hidden');
+                        window.loadGitHubRepos();
+                    }
+                });
+            }
+
+            const btnProjectSettings = document.getElementById('btn-project-github-settings');
+            if (btnProjectSettings) {
+                btnProjectSettings.addEventListener('click', () => {
+                    projectAuthSection.classList.toggle('hidden');
+                });
+            }
 
             // --- FILE TREE LOGIC ---
             window.renderFileTree = function (files, container, repoFullName = null, token = null, parentPath = '') {
