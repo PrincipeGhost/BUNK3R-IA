@@ -474,16 +474,105 @@
                     if (target) {
                         target.classList.remove('hidden');
                         target.classList.add('active-panel');
-                    } else if (view === 'github') {
-                        // Fallback logic for GitHub view if not properly ID'd
+                        
+                        // Si es el panel de GitHub, cargar los repositorios
+                        if (view === 'github' || view === 'projects') {
+                            if (typeof window.loadGitHubRepos === 'function') {
+                                window.loadGitHubRepos();
+                            }
+                        }
+                    } else if (view === 'projects') {
+                        // Si el botón es 'projects' pero el panel es 'github', lo mostramos también
                         const ghPanel = document.getElementById('panel-github');
                         if (ghPanel) {
                             ghPanel.classList.remove('hidden');
                             ghPanel.classList.add('active-panel');
+                            if (typeof window.loadGitHubRepos === 'function') {
+                                window.loadGitHubRepos();
+                            }
                         }
                     }
                 });
             });
+
+            // --- GITHUB REPOS LOGIC ---
+            window.loadGitHubRepos = async function() {
+                const listContainer = document.getElementById('ai-github-list');
+                if (!listContainer) return;
+
+                listContainer.innerHTML = '<div class="ai-project-loading">Cargando repositorios...</div>';
+
+                try {
+                    const response = await fetch('/api/github/repos');
+                    const data = await response.json();
+
+                    if (data.repos && data.repos.length > 0) {
+                        listContainer.innerHTML = '';
+                        data.repos.forEach(repo => {
+                            const item = document.createElement('div');
+                            item.className = 'ai-project-item';
+                            item.style.padding = '10px';
+                            item.style.borderBottom = '1px solid #30363d';
+                            item.style.cursor = 'pointer';
+                            item.style.color = '#c9d1d9';
+                            item.innerHTML = `
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    <div style="font-weight:bold;">${repo.name}</div>
+                                </div>
+                                <div style="font-size:11px; color:#8b949e; margin-top:4px; margin-left:24px;">${repo.description || 'Sin descripción'}</div>
+                            `;
+                            item.onclick = async () => {
+                                window.currentRepo = repo.full_name;
+                                listContainer.innerHTML = '<div class="ai-project-loading">Cargando archivos...</div>';
+                                try {
+                                    const contentsResp = await fetch(`/api/github/contents?repo=${repo.full_name}`);
+                                    const contentsData = await contentsResp.json();
+                                    
+                                    listContainer.innerHTML = '';
+                                    
+                                    // Botón para volver
+                                    const backBtn = document.createElement('div');
+                                    backBtn.style.padding = '10px';
+                                    backBtn.style.background = '#21262d';
+                                    backBtn.style.color = '#58a6ff';
+                                    backBtn.style.cursor = 'pointer';
+                                    backBtn.style.fontSize = '12px';
+                                    backBtn.style.borderBottom = '1px solid #30363d';
+                                    backBtn.style.display = 'flex';
+                                    backBtn.style.alignItems = 'center';
+                                    backBtn.style.gap = '8px';
+                                    backBtn.innerHTML = `
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                                            <polyline points="12 19 5 12 12 5"></polyline>
+                                        </svg>
+                                        <span>Volver a Repositorios</span>
+                                    `;
+                                    backBtn.onclick = (e) => {
+                                        e.stopPropagation();
+                                        window.loadGitHubRepos();
+                                    };
+                                    listContainer.appendChild(backBtn);
+
+                                    // Renderizar el árbol de archivos en el mismo contenedor
+                                    window.renderFileTree(contentsData.files, listContainer, repo.full_name);
+                                    
+                                } catch (e) {
+                                    listContainer.innerHTML = '<div class="ai-error">Error al cargar contenido</div>';
+                                }
+                            };
+                            listContainer.appendChild(item);
+                        });
+                    } else {
+                        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">No se encontraron repositorios o necesitas iniciar sesión.</div>';
+                    }
+                } catch (e) {
+                    listContainer.innerHTML = '<div class="ai-error">Error de conexión con GitHub</div>';
+                }
+            };
 
             // --- FILE TREE LOGIC ---
             window.renderFileTree = function (files, container, repoFullName = null, token = null, parentPath = '') {
