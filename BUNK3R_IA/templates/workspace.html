@@ -534,24 +534,28 @@
                     if (repos && repos.length > 0) {
                         listContainer.innerHTML = '';
                         repos.forEach(repo => {
+                            const storedToken = localStorage.getItem('github_token');
                             const item = document.createElement('div');
                             item.className = 'ai-project-card';
-                            item.style.padding = '12px';
-                            item.style.margin = '8px';
+                            item.style.padding = '8px 12px';
+                            item.style.margin = '4px 8px';
                             item.style.background = 'rgba(255, 255, 255, 0.03)';
                             item.style.border = '1px solid rgba(255, 255, 255, 0.05)';
-                            item.style.borderRadius = '8px';
+                            item.style.borderRadius = '6px';
                             item.style.cursor = 'pointer';
                             item.style.transition = 'all 0.2s';
+                            item.dataset.expanded = 'false';
                             
                             item.innerHTML = `
-                                <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <svg class="folder-arrow" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s; color:#8b949e;">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F0B90B" stroke-width="2">
                                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                     </svg>
-                                    <div style="font-weight:600; color:#EAECEF; font-size:14px;">${repo.name}</div>
+                                    <div style="font-weight:600; color:#EAECEF; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.name}</div>
                                 </div>
-                                <div style="font-size:11px; color:#6b7280; margin-top:4px; margin-left:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.description || 'Sin descripción'}</div>
                             `;
                             
                             item.onmouseenter = () => {
@@ -563,68 +567,58 @@
                                 item.style.borderColor = 'rgba(255, 255, 255, 0.05)';
                             };
 
-                            item.onclick = async () => {
-                                window.currentRepo = repo.full_name;
-                                listContainer.innerHTML = '<div class="ai-project-loading">Cargando archivos...</div>';
+                            item.onclick = async (e) => {
+                                e.stopPropagation();
+                                const isExpanded = item.dataset.expanded === 'true';
+                                
+                                if (isExpanded) {
+                                    const subContainer = item.nextElementSibling;
+                                    if (subContainer && subContainer.classList.contains('ai-sub-tree')) {
+                                        subContainer.remove();
+                                    }
+                                    item.dataset.expanded = 'false';
+                                    const arrow = item.querySelector('.folder-arrow');
+                                    if (arrow) arrow.style.transform = 'rotate(0deg)';
+                                    return;
+                                }
+
+                                // Marcar como expandido
+                                item.dataset.expanded = 'true';
+                                const arrow = item.querySelector('.folder-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+
+                                // Contenedor para los hijos
+                                const subContainer = document.createElement('div');
+                                subContainer.className = 'ai-sub-tree';
+                                subContainer.style.paddingLeft = '12px';
+                                subContainer.innerHTML = '<div class="ai-project-loading" style="font-size:11px; padding:8px;">Cargando...</div>';
+                                item.after(subContainer);
+
                                 try {
-                                    // Sincronizar con el estado global de la aplicación
-                                    if (window.AIChat && typeof window.AIChat.setContext === 'function') {
-                                        window.AIChat.setContext({ repo: repo.full_name });
+                                    // Sincronizar contexto solo si es un repo (no una subcarpeta)
+                                    if (repo.full_name && !window.currentRepo) {
+                                        window.currentRepo = repo.full_name;
+                                        if (window.AIChat && typeof window.AIChat.setContext === 'function') {
+                                            window.AIChat.setContext({ repo: repo.full_name });
+                                        }
                                     }
 
                                     const contentsResp = await fetch(`/api/github/contents?repo=${repo.full_name}&token=${storedToken || ''}`);
                                     const contentsData = await contentsResp.json();
                                     
-                                    listContainer.innerHTML = '';
-                                    
-                                    const headerInfo = document.createElement('div');
-                                    headerInfo.style.padding = '12px';
-                                    headerInfo.style.background = '#161b22';
-                                    headerInfo.style.borderBottom = '1px solid #30363d';
-                                    headerInfo.innerHTML = `
-                                        <div style="font-size:12px; font-weight:bold; color:#F0B90B; margin-bottom:4px;">REPO ACTIVO</div>
-                                        <div style="font-size:14px; color:#c9d1d9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.name}</div>
-                                    `;
-                                    listContainer.appendChild(headerInfo);
-
-                                    const backBtn = document.createElement('div');
-                                    backBtn.style.padding = '10px';
-                                    backBtn.style.background = '#21262d';
-                                    backBtn.style.color = '#58a6ff';
-                                    backBtn.style.cursor = 'pointer';
-                                    backBtn.style.fontSize = '12px';
-                                    backBtn.style.borderBottom = '1px solid #30363d';
-                                    backBtn.style.display = 'flex';
-                                    backBtn.style.alignItems = 'center';
-                                    backBtn.style.gap = '8px';
-                                    backBtn.innerHTML = `
-                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                                            <polyline points="12 19 5 12 12 5"></polyline>
-                                        </svg>
-                                        <span>Volver a Proyectos</span>
-                                    `;
-                                    backBtn.onclick = (e) => {
-                                        e.stopPropagation();
-                                        window.currentRepo = null;
-                                        window.loadGitHubRepos();
-                                    };
-                                    listContainer.appendChild(backBtn);
-
+                                    subContainer.innerHTML = '';
                                     if (contentsData.files && contentsData.files.length > 0) {
-                                        window.renderFileTree(contentsData.files, listContainer, repo.full_name, storedToken);
+                                        window.renderFileTree(contentsData.files, subContainer, repo.full_name, storedToken);
                                     } else {
                                         const emptyMsg = document.createElement('div');
-                                        emptyMsg.style.padding = '20px';
-                                        emptyMsg.style.textAlign = 'center';
+                                        emptyMsg.style.padding = '8px 12px';
                                         emptyMsg.style.color = '#8b949e';
-                                        emptyMsg.innerText = 'Este repositorio está vacío.';
-                                        listContainer.appendChild(emptyMsg);
+                                        emptyMsg.style.fontSize = '12px';
+                                        emptyMsg.innerText = '(Vacío)';
+                                        subContainer.appendChild(emptyMsg);
                                     }
-                                    
-                                } catch (e) {
-                                    console.error('Error loading contents:', e);
-                                    listContainer.innerHTML = '<div class="ai-error">Error al cargar contenido</div>';
+                                } catch (err) {
+                                    subContainer.innerHTML = '<div class="ai-error" style="font-size:11px; padding:8px;">Error al cargar</div>';
                                 }
                             };
                             listContainer.appendChild(item);
@@ -725,23 +719,30 @@
                     window.currentRepo = repoFullName;
                     window.currentToken = token;
                 }
-                container.innerHTML = '';
+                // Si es la raíz (no un sub-tree), limpiamos. Si es un sub-tree, no.
+                if (!container.classList.contains('ai-sub-tree')) {
+                    container.innerHTML = '';
+                }
+                
                 if (!files || files.length === 0) {
-                    container.innerHTML = '<div style="padding:10px; color:#8b949e; font-size:13px;">Carpeta vacĂ­a</div>';
+                    if (!container.classList.contains('ai-sub-tree')) {
+                        container.innerHTML = '<div style="padding:10px; color:#8b949e; font-size:13px;">Repositorio vacío</div>';
+                    }
                     return;
                 }
                 files.forEach(item => {
                     const itemPath = parentPath ? `${parentPath}/${item.name}` : item.name;
-                    container.appendChild(createNode(item, 0, item.path || itemPath));
+                    container.appendChild(createNode(item, container.classList.contains('ai-sub-tree') ? 1 : 0, item.path || itemPath));
                 });
             };
 
             function createNode(item, level, fullPath) {
                 const div = document.createElement('div');
                 div.className = 'ai-file-item';
-                div.style.paddingLeft = (level * 16 + 10) + 'px';
+                div.style.paddingLeft = (level * 12 + 10) + 'px';
                 div.style.cursor = 'pointer';
-                div.style.padding = '4px 10px';
+                div.style.paddingTop = '4px';
+                div.style.paddingBottom = '4px';
                 div.style.display = 'flex';
                 div.style.alignItems = 'center';
                 div.style.color = '#c9d1d9';
@@ -749,11 +750,13 @@
                 div.style.gap = '6px';
                 div.style.userSelect = 'none';
                 div.dataset.level = level;
+                div.dataset.path = fullPath;
+                div.dataset.expanded = 'false';
 
                 div.onmouseenter = () => div.style.background = '#161b22';
                 div.onmouseleave = () => div.style.background = 'transparent';
 
-                const isFolder = item.type === 'folder';
+                const isFolder = item.type === 'folder' || item.type === 'dir';
 
                 let chevron = '';
                 if (isFolder) {
@@ -762,69 +765,53 @@
                     chevron = `<span style="width:14px; display:inline-block; min-width:14px;"></span>`;
                 }
 
-                // Icons
                 let icon = isFolder
-                    ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="#54aeff" stroke="currentColor" stroke-width="0" style="min-width:16px;"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`
+                    ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="#F0B90B" stroke="none" style="min-width:16px;"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`
                     : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8b949e" stroke-width="2" style="min-width:16px;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`;
-
-                // Specific file icons
-                if (!isFolder) {
-                    if (item.name.endsWith('.js')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#f1e05a" stroke="none"><path d="M3 3h18v18H3z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`; // Simplification
-                    else if (item.name.endsWith('.html')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#e34c26" stroke="none"><path d="M12 2L2 22h20L12 2z"/></svg>`;
-                    else if (item.name.endsWith('.css')) icon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#563d7c" stroke="none"><circle cx="12" cy="12" r="10"/></svg>`;
-                }
 
                 div.innerHTML = `${chevron}${icon} <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</span>`;
 
-                if (isFolder) {
-                    div.onclick = (e) => { e.stopPropagation(); toggleFolder(div, item, level, fullPath); };
-                } else {
-                    div.onclick = (e) => { e.stopPropagation(); openFileInTab(item, window.currentRepo, window.currentToken); };
-                }
-                div.dataset.path = fullPath;
-                div.dataset.type = item.type;
-                div.dataset.expanded = 'false';
-                return div;
-            }
+                div.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (isFolder) {
+                        const isExpanded = div.dataset.expanded === 'true';
+                        const chevronEl = div.querySelector('.folder-chevron');
 
-            async function toggleFolder(folderDiv, item, level, folderPath) {
-                const isExpanded = folderDiv.dataset.expanded === 'true';
-                const chevron = folderDiv.querySelector('.folder-chevron');
+                        if (isExpanded) {
+                            if (chevronEl) chevronEl.style.transform = 'rotate(0deg)';
+                            div.dataset.expanded = 'false';
+                            const sub = div.nextElementSibling;
+                            if (sub && sub.classList.contains('ai-sub-tree')) sub.remove();
+                        } else {
+                            if (chevronEl) chevronEl.style.transform = 'rotate(90deg)';
+                            div.dataset.expanded = 'true';
+                            
+                            const subContainer = document.createElement('div');
+                            subContainer.className = 'ai-sub-tree';
+                            subContainer.innerHTML = '<div style="padding:4px 30px; font-size:11px; color:#8b949e;">Cargando...</div>';
+                            div.after(subContainer);
 
-                if (isExpanded) {
-                    if (chevron) chevron.style.transform = 'rotate(0deg)';
-                    folderDiv.dataset.expanded = 'false';
-                    const currentLevel = parseInt(folderDiv.dataset.level);
-                    let nextSibling = folderDiv.nextElementSibling;
-                    while (nextSibling) {
-                        const siblingLevel = parseInt(nextSibling.dataset.level);
-                        if (!isNaN(siblingLevel) && siblingLevel > currentLevel) {
-                            const toRemove = nextSibling;
-                            nextSibling = nextSibling.nextElementSibling;
-                            toRemove.remove();
-                        } else { break; }
-                    }
-                } else {
-                    if (chevron) chevron.style.transform = 'rotate(90deg)';
-                    folderDiv.dataset.expanded = 'true';
-                    try {
-                        const response = await fetch(`/api/github/contents?repo=${window.currentRepo}&path=${folderPath}`, { headers: { 'Authorization': 'Bearer ' + window.currentToken } });
-                        const data = await response.json();
-                        if (data.files && data.files.length > 0) {
-                            const fragment = document.createDocumentFragment();
-                            data.files.forEach(child => {
-                                const childPath = folderPath ? `${folderPath}/${child.name}` : child.name;
-                                fragment.appendChild(createNode(child, level + 1, childPath));
-                            });
-                            folderDiv.parentNode.insertBefore(fragment, folderDiv.nextSibling);
+                            try {
+                                const response = await fetch(`/api/github/contents?repo=${window.currentRepo}&path=${fullPath}&token=${window.currentToken || ''}`);
+                                const data = await response.json();
+                                subContainer.innerHTML = '';
+                                if (data.files && data.files.length > 0) {
+                                    window.renderFileTree(data.files, subContainer, window.currentRepo, window.currentToken, fullPath);
+                                } else {
+                                    subContainer.innerHTML = '<div style="padding:4px 30px; font-size:11px; color:#8b949e;">(Vacio)</div>';
+                                }
+                            } catch (err) {
+                                subContainer.innerHTML = '<div style="padding:4px 30px; font-size:11px; color:#f85149;">Error</div>';
+                            }
                         }
-                    } catch (e) {
-                        // console.error('Error loading folder:', e);
-                        if (chevron) chevron.style.transform = 'rotate(0deg)';
-                        folderDiv.dataset.expanded = 'false';
+                    } else {
+                        if (typeof AIChat.openFile === 'function') {
+                            AIChat.openFile(window.currentRepo, fullPath);
+                        }
                     }
-                }
-            }
+                };
+                return div;
+            };
 
             async function openFileInTab(fileItem, repoFullName, token) {
                 const existingIndex = window.openTabs.findIndex(t => t.path === fileItem.path && t.repoFullName === repoFullName);
