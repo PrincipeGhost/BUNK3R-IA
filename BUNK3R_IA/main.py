@@ -103,21 +103,24 @@ def create_app(config_class=None):
         from BUNK3R_IA.models import User
         import uuid
         
-        # Create or get demo user
-        demo_user_id = "demo_" + str(uuid.uuid4())[:8]
-        user = User(
-            id=demo_user_id,
-            first_name="Usuario",
-            last_name="Demo",
-            email=f"demo@bunkr.local",
-            profile_image_url="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F0B90B'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E"
-        )
+        # Try to get existing demo user
+        user = User.query.filter_by(email="demo@bunkr.local").first()
         
-        db.session.add(user)
-        db.session.commit()
+        if not user:
+            # Create new demo user if doesn't exist
+            demo_user_id = "demo_" + str(uuid.uuid4())[:8]
+            user = User(
+                id=demo_user_id,
+                first_name="Usuario",
+                last_name="Demo",
+                email="demo@bunkr.local",
+                profile_image_url="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F0B90B'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E"
+            )
+            db.session.add(user)
+            db.session.commit()
+        
         login_user(user)
-        
-        return jsonify({"success": True, "user_id": demo_user_id})
+        return jsonify({"success": True, "user_id": user.id})
     
     @app.route('/preview/<session_id>')
     def serve_preview(session_id):
