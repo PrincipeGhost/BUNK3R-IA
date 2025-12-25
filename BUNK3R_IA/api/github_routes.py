@@ -6,10 +6,24 @@ github_bp = Blueprint('github', __name__, url_prefix='/api/github')
 @github_bp.route('/repos', methods=['GET'])
 def list_repos():
     """Lista los repositorios del usuario authenticated"""
-    if not github.authorized:
-        return jsonify({"error": "GitHub not authorized"}), 401
+    import os
+    
+    # Check if GitHub OAuth is configured
+    if not os.environ.get('GITHUB_CLIENT_ID'):
+        return jsonify({
+            "error": "GitHub not configured",
+            "message": "Configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to enable GitHub integration",
+            "repos": []
+        }), 200
     
     try:
+        if not github.authorized:
+            return jsonify({
+                "error": "GitHub not authorized",
+                "message": "Please login with GitHub to view your repositories",
+                "repos": []
+            }), 200
+        
         response = github.get("/user/repos?sort=updated&per_page=100")
         if response.ok:
             repos = response.json()
@@ -27,8 +41,15 @@ def list_repos():
         else:
             return jsonify({"error": "Failed to fetch repos from GitHub", "details": response.text}), response.status_code
             
+    except AttributeError:
+        # github.authorized not available - GitHub OAuth not initialized
+        return jsonify({
+            "error": "GitHub OAuth not initialized",
+            "message": "GitHub authentication is not configured. Please set up GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET",
+            "repos": []
+        }), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "repos": []}), 200
 
 @github_bp.route('/contents', methods=['GET'])
 def get_repo_contents():
