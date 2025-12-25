@@ -84,7 +84,17 @@ Files configured for Render deployment:
 
 Start command: `gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"`
 
+## Replit Environment
+- **Port**: 5000 (frontend and API)
+- **Host**: 0.0.0.0 (all interfaces)
+- **Workflow**: BUNK3R IA Server (`python -m BUNK3R_IA.main`)
+- **Deployment**: Autoscale with Gunicorn
+
 ## Recent Changes
+- 2025-12-25: Imported to Replit environment
+  - Configured workflow for port 5000
+  - Set up autoscale deployment with Gunicorn
+  - All dependencies installed via pip
 - 2025-12-17: Added mobile responsive design
   - Hamburger menu for mobile navigation
   - Chat panel is default view on mobile

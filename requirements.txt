@@ -19,3 +19,7 @@ python-dotenv>=1.0.0
 
 # Automation
 playwright>=1.40.0
+flask-cors
+playwright
+pyautogui
+pyperclip
