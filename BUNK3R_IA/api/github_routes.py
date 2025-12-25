@@ -54,8 +54,11 @@ def list_repos():
 @github_bp.route('/contents', methods=['GET'])
 def get_repo_contents():
     """Obtiene el contenido (archivos/carpetas) de un repositorio"""
-    if not github.authorized:
-        return jsonify({"error": "GitHub not authorized"}), 401
+    try:
+        if not github.authorized:
+            return jsonify({"error": "GitHub not authorized"}), 401
+    except AttributeError:
+        return jsonify({"error": "GitHub OAuth not initialized"}), 401
         
     repo_full_name = request.args.get('repo')
     path = request.args.get('path', '')
