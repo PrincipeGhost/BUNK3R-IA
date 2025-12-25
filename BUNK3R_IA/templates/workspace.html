@@ -393,7 +393,7 @@
                 </div>
 
                 <!-- Create Repo Section -->
-                <div id="project-create-repo-section" class="hidden" style="padding:15px; border-bottom:1px solid #30363d; background: rgba(240, 185, 11, 0.05);">
+                <div id="project-create-repo-section" class="hidden" style="display:none; padding:15px; border-bottom:1px solid #30363d; background: rgba(240, 185, 11, 0.05);">
                     <div style="font-size: 12px; color: #F0B90B; margin-bottom: 8px; font-weight: bold;">Nuevo Repositorio</div>
                     <input type="text" id="new-repo-name" placeholder="Nombre del repositorio..."
                         style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; margin-bottom:8px;">
@@ -661,8 +661,9 @@
             if (btnNewProject) {
                 btnNewProject.addEventListener('click', () => {
                     if (createRepoSection) {
-                        createRepoSection.classList.toggle('hidden');
-                        if (!createRepoSection.classList.contains('hidden')) {
+                        const isHidden = createRepoSection.style.display === 'none';
+                        createRepoSection.style.display = isHidden ? 'block' : 'none';
+                        if (isHidden) {
                             newRepoNameInput.focus();
                         }
                     }
@@ -671,7 +672,7 @@
 
             if (btnCancelCreate) {
                 btnCancelCreate.addEventListener('click', () => {
-                    if (createRepoSection) createRepoSection.classList.add('hidden');
+                    if (createRepoSection) createRepoSection.style.display = 'none';
                     if (newRepoNameInput) newRepoNameInput.value = '';
                 });
             }
@@ -687,7 +688,8 @@
                     }
                     if (!token) {
                         alert('Primero debes configurar tu Token de GitHub.');
-                        document.getElementById('project-github-auth-section')?.classList.remove('hidden');
+                        const authSection = document.getElementById('project-github-auth-section');
+                        if (authSection) authSection.style.display = 'block';
                         return;
                     }
 
@@ -711,7 +713,7 @@
                         if (response.ok) {
                             const repo = await response.json();
                             alert(`Repositorio "${repo.name}" creado con éxito.`);
-                            createRepoSection.classList.add('hidden');
+                            createRepoSection.style.display = 'none';
                             newRepoNameInput.value = '';
                             window.loadGitHubRepos(); // Recargar lista
                         } else {
