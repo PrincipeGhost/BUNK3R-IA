@@ -24,7 +24,7 @@ from BUNK3R_IA.api.project_routes import projects_bp
 from BUNK3R_IA.api.github_routes import github_bp
 from BUNK3R_IA.api.automation_routes import automation_bp
 from BUNK3R_IA.models import db
-from BUNK3R_IA.replit_auth import login_manager, make_replit_blueprint, require_login
+from BUNK3R_IA.replit_auth import login_manager, require_login
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,7 +50,9 @@ def create_app(config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
     
-    app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+    # app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+    from BUNK3R_IA.replit_auth import setup_github_auth
+    setup_github_auth(app)
     app.register_blueprint(ai_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(github_bp)
