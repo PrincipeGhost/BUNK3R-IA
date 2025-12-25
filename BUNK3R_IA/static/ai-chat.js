@@ -182,6 +182,22 @@ const AIChat = {
                 }
             });
         });
+
+        // Activar botones de la barra lateral (Landing Page, Dashboard, etc)
+        document.querySelectorAll('.ai-quick-btn-sidebar').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const prompt = btn.dataset.prompt;
+                if (prompt) {
+                    const input = document.getElementById('ai-chat-input');
+                    if (input) {
+                        input.value = prompt;
+                        // Forzar el redimensionamiento del textarea si existe la lógica
+                        input.dispatchEvent(new Event('input')); 
+                        this.sendCodeRequest();
+                    }
+                }
+            });
+        });
     },
     
     bindFileTabs() {
