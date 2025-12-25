@@ -431,8 +431,12 @@
         </div>
     </main>
 
+    <script src="/static/ai-chat.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar AIChat
+            AIChat.init();
+            
             // --- GLOBAL STATE ---
             window.currentRepo = null;
             window.currentToken = null;
