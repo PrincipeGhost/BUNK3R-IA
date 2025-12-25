@@ -23,3 +23,7 @@ flask-cors
 playwright
 pyautogui
 pyperclip
+flask-dance
+flask-login
+flask-sqlalchemy
+pyjwt

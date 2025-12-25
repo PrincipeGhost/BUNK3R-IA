@@ -12,15 +12,19 @@ import os
 import sys
 import logging
 from datetime import datetime
+from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, jsonify, render_template, Response, abort
+from flask import Flask, jsonify, render_template, Response, abort, session
 from BUNK3R_IA.config import get_config
 from BUNK3R_IA.api.routes import ai_bp, set_db_manager
 from BUNK3R_IA.api.project_routes import projects_bp
 from BUNK3R_IA.api.github_routes import github_bp
 from BUNK3R_IA.api.automation_routes import automation_bp
+from BUNK3R_IA.models import db
+from BUNK3R_IA.replit_auth import login_manager, make_replit_blueprint, require_login
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,34 +43,31 @@ def create_app(config_class=None):
         config_class = get_config()
     
     app.config.from_object(config_class)
+    app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+    # Database
+    db.init_app(app)
+    login_manager.init_app(app)
     
+    app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
     app.register_blueprint(ai_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(github_bp)
     app.register_blueprint(automation_bp)
     
-    # Habilitar CORS para permitir peticiones externas (necesario para integración)
-    from flask_cors import CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
+
+    with app.app_context():
+        db.create_all()
+        logger.info("Database tables created")
     
-    @app.after_request
-    def add_header(response):
-        # Cache control
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        
-        # Permitir Embedding (Iframe)
-        # Esto es crucial para que la página parezca "incrustada" en el otro sitio
-        response.headers['X-Frame-Options'] = 'ALLOWALL' 
-        response.headers['Content-Security-Policy'] = "frame-ancestors *;"
-        response.headers['Access-Control-Allow-Origin'] = "*"
-        response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
-        response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
-        
-        return response
-    
+    @app.before_request
+    def make_session_permanent():
+        session.permanent = True
+
     @app.route('/')
+    @require_login
     def index():
         return render_template('workspace.html')
     

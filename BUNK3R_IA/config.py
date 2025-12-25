@@ -13,7 +13,9 @@ class Config:
     HOST = os.getenv('BUNK3R_IA_HOST', '0.0.0.0')
     PORT = int(os.getenv('BUNK3R_IA_PORT', 5000))
     
-    DATABASE_URL = os.getenv('DATABASE_URL', '')
+    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///central.db')
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
     GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
