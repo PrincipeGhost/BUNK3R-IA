@@ -69,26 +69,31 @@
         display: none;
         /* Hidden by default */
         flex-direction: column;
+        overflow: hidden; /* Ensure container doesn't overflow */
     }
 
     #ai-projects-list {
         scrollbar-width: thin;
         scrollbar-color: #30363d #0d1117;
+        overflow-y: auto !important;
+        height: 100%; /* Force height for scrolling */
+        max-height: calc(100vh - 60px); /* Account for header */
     }
 
     #ai-projects-list::-webkit-scrollbar {
-        width: 6px;
+        width: 8px !important;
         display: block !important;
     }
     #ai-projects-list::-webkit-scrollbar-track {
-        background: #0d1117;
+        background: #0d1117 !important;
     }
     #ai-projects-list::-webkit-scrollbar-thumb {
-        background: #30363d;
-        border-radius: 10px;
+        background: #30363d !important;
+        border-radius: 10px !important;
+        border: 2px solid #0d1117 !important;
     }
     #ai-projects-list::-webkit-scrollbar-thumb:hover {
-        background: #484f58;
+        background: #484f58 !important;
     }
 
     .ai-panel-projects.active-view {
