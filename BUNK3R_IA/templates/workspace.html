@@ -385,7 +385,7 @@
                 </div>
 
                 <!-- Token Input Section -->
-                <div id="project-github-auth-section" class="hidden" style="padding:15px; border-bottom:1px solid #30363d;">
+                <div id="project-github-auth-section" style="display:none; padding:15px; border-bottom:1px solid #30363d;">
                     <input type="text" id="project-github-token-input" placeholder="Pegar Personal Access Token(ghp_...)"
                         style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; margin-bottom:8px;">
                     <button id="btn-project-save-token"
@@ -637,7 +637,10 @@
             const btnProjectSettings = document.getElementById('btn-project-github-settings');
             if (btnProjectSettings) {
                 btnProjectSettings.addEventListener('click', () => {
-                    projectAuthSection.classList.toggle('hidden');
+                    if (projectAuthSection) {
+                        const isHidden = projectAuthSection.style.display === 'none';
+                        projectAuthSection.style.display = isHidden ? 'block' : 'none';
+                    }
                 });
             }
 
