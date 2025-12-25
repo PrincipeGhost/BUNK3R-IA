@@ -471,29 +471,29 @@
                     btn.classList.add('active');
 
                     // Update panels
-                    panels.forEach(p => p.classList.add('hidden'));
-                    panels.forEach(p => p.classList.remove('active-panel'));
+                    panels.forEach(p => {
+                        p.classList.add('hidden');
+                        p.classList.remove('active-panel');
+                    });
 
-                    const target = document.getElementById(`panel-${view}`);
+                    // Forzar visibilidad del panel correcto
+                    let targetId = `panel-${view}`;
+                    let target = document.getElementById(targetId);
+                    
                     if (target) {
                         target.classList.remove('hidden');
                         target.classList.add('active-panel');
                         
                         // Si es el panel de GitHub, cargar los repositorios
-                        if (view === 'github' || view === 'projects') {
-                            if (typeof window.loadGitHubRepos === 'function') {
-                                window.loadGitHubRepos();
-                            }
+                        if (view === 'github' && typeof window.loadGitHubRepos === 'function') {
+                            window.loadGitHubRepos();
                         }
                     } else if (view === 'projects') {
-                        // Si el botón es 'projects' pero el panel es 'github', lo mostramos también
-                        const ghPanel = document.getElementById('panel-github');
-                        if (ghPanel) {
-                            ghPanel.classList.remove('hidden');
-                            ghPanel.classList.add('active-panel');
-                            if (typeof window.loadGitHubRepos === 'function') {
-                                window.loadGitHubRepos();
-                            }
+                        // Mapeo especial si el botón es 'projects' pero el panel es 'panel-projects'
+                        const projectPanel = document.getElementById('panel-projects');
+                        if (projectPanel) {
+                            projectPanel.classList.remove('hidden');
+                            projectPanel.classList.add('active-panel');
                         }
                     }
                 });
