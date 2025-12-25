@@ -575,7 +575,7 @@
                                         window.AIChat.setContext({ repo: repo.full_name });
                                     }
 
-                                    const contentsResp = await fetch(`/api/github/contents?repo=${repo.full_name}`);
+                                    const contentsResp = await fetch(`/api/github/contents?repo=${repo.full_name}&token=${storedToken || ''}`);
                                     const contentsData = await contentsResp.json();
                                     
                                     listContainer.innerHTML = '';

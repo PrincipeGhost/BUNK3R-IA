@@ -54,39 +54,58 @@ def list_repos():
 @github_bp.route('/contents', methods=['GET'])
 def get_repo_contents():
     """Obtiene el contenido (archivos/carpetas) de un repositorio"""
-    try:
-        if not github.authorized:
-            return jsonify({"error": "GitHub not authorized"}), 401
-    except AttributeError:
-        return jsonify({"error": "GitHub OAuth not initialized"}), 401
-        
     repo_full_name = request.args.get('repo')
     path = request.args.get('path', '')
+    manual_token = request.args.get('token')
     
     if not repo_full_name:
         return jsonify({"error": "Missing repo parameter"}), 400
 
     try:
         url_path = f"/{path}" if path else ""
-        url = f"/repos/{repo_full_name}/contents{url_path}"
+        url = f"https://api.github.com/repos/{repo_full_name}/contents{url_path}"
         
-        response = github.get(url)
+        headers = {
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        # Priorizar el token manual si se proporciona
+        if manual_token:
+            headers["Authorization"] = f"token {manual_token}"
+        else:
+            # Fallback a OAuth si no hay token manual
+            try:
+                if github.authorized:
+                    # En flask-dance con proxy_fix, github.get() maneja la auth
+                    response = github.get(f"/repos/{repo_full_name}/contents{url_path}")
+                    if response.ok:
+                        return process_github_contents(response.json())
+                    else:
+                        return jsonify({"error": "Failed to fetch contents", "details": response.text}), response.status_code
+            except (AttributeError, Exception):
+                pass
+                
+        # Si llegamos aquí es que usamos token manual o OAuth falló
+        import requests
+        response = requests.get(url, headers=headers)
         
         if response.ok:
-            items = response.json()
-            file_tree = []
-            if isinstance(items, list):
-                for item in items:
-                    file_tree.append({
-                        "name": item['name'],
-                        "type": "folder" if item['type'] == "dir" else "file",
-                        "path": item['path'],
-                        "download_url": item['download_url']
-                    })
-                file_tree.sort(key=lambda x: (x['type'] != 'folder', x['name']))
-            return jsonify({"files": file_tree})
+            return process_github_contents(response.json())
         else:
             return jsonify({"error": "Failed to fetch contents", "details": response.text}), response.status_code
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def process_github_contents(items):
+    file_tree = []
+    if isinstance(items, list):
+        for item in items:
+            file_tree.append({
+                "name": item['name'],
+                "type": "folder" if item['type'] == "dir" else "file",
+                "path": item['path'],
+                "download_url": item.get('download_url')
+            })
+        file_tree.sort(key=lambda x: (x['type'] != 'folder', x['name']))
+    return jsonify({"files": file_tree})
