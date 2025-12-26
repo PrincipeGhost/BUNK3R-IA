@@ -75,9 +75,18 @@ const AIChat = {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
             
-            // Forzar puntero y eventos
-            tabEl.style.pointerEvents = 'auto';
-            tabEl.style.zIndex = '1000';
+            // Estilos inline forzados para garantizar visibilidad
+            tabEl.style.padding = '0 15px';
+            tabEl.style.height = '100%';
+            tabEl.style.display = 'flex';
+            tabEl.style.alignItems = 'center';
+            tabEl.style.cursor = 'pointer';
+            tabEl.style.fontSize = '12px';
+            tabEl.style.borderRight = '1px solid #30363d';
+            tabEl.style.background = this.activeTabId === tab.id ? '#1e1e1e' : '#2d333b';
+            tabEl.style.color = this.activeTabId === tab.id ? '#fff' : '#8b949e';
+            tabEl.style.userSelect = 'none';
+            tabEl.style.zIndex = '1100';
             
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
@@ -85,14 +94,14 @@ const AIChat = {
                 const closeBtn = document.createElement('span');
                 closeBtn.innerHTML = '×';
                 closeBtn.style.padding = '0 5px';
-                closeBtn.onclick = (e) => {
+                closeBtn.style.marginLeft = '5px';
+                closeBtn.onmousedown = (e) => {
                     e.stopPropagation();
                     this.closeTab(tab.id);
                 };
                 tabEl.appendChild(closeBtn);
             }
             
-            // Usar mousedown en lugar de click para mayor rapidez
             tabEl.onmousedown = (e) => {
                 e.preventDefault();
                 this.switchTab(tab.id);
