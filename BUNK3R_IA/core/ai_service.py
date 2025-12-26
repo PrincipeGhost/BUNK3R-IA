@@ -42,10 +42,10 @@ class AIProvider(ABC):
 class OllamaProvider(AIProvider):
     """Local Ollama Provider"""
     
-    def __init__(self, base_url: str = "http://localhost:11434"):
+    def __init__(self, base_url: str = "http://127.0.0.1:11434"):
         super().__init__("local-ollama")
         self.name = "ollama"
-        self.model = "llama3" # O el que el usuario tenga
+        self.model = "llama3.2:1b" # Actualizado al modelo que descargamos
         self.base_url = f"{base_url}/api/chat"
     
     def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:

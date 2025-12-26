@@ -4,6 +4,8 @@ set -e
 echo "--- STARTING BUNK3R IA INFRASTRUCTURE ---"
 
 # Iniciar Ollama en segundo plano y redirigir logs a la consola de Render
+# Usamos OLLAMA_HOST para asegurarnos de que escuche en localhost
+export OLLAMA_HOST=127.0.0.1:11434
 ollama serve 2>&1 | stdbuf -oL tr '\r' '\n' &
 
 echo "Waiting for Ollama to wake up..."
