@@ -72,6 +72,10 @@ const AIChat = {
             console.error('[AI-ERROR] ai-tabs-container no encontrado');
             return;
         }
+        
+        container.style.display = 'flex';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         container.innerHTML = '';
         
         this.openTabs.forEach(tab => {
@@ -79,6 +83,7 @@ const AIChat = {
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
             tabEl.style.display = 'flex';
             tabEl.style.visibility = 'visible';
+            tabEl.style.opacity = '1';
             
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
