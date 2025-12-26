@@ -100,14 +100,13 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('[DEBUG] switchTab called for tabId:', tabId);
+        console.log('[AI-LOG] switchTab INICIO -> tabId:', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
-        // ELIMINAR físicamente el estado vacío y cualquier overlay
+        console.log('[AI-LOG] switchTab -> Limpiando overlays...');
         document.querySelectorAll('.ai-empty-state, .ai-preview-empty').forEach(el => {
-            el.style.display = 'none';
-            el.style.setProperty('display', 'none', 'important');
+            console.log('[AI-LOG] switchTab -> Eliminando elemento:', el.className);
             el.remove();
         });
 
@@ -118,18 +117,20 @@ const AIChat = {
             'toolbar': document.getElementById('editor-toolbar')
         };
 
-        // LIMPIEZA TOTAL: Ocultar todo y remover visibilidad
+        console.log('[AI-LOG] switchTab -> Paneles encontrados:', Object.keys(panels).filter(k => !!panels[k]));
+
         Object.keys(panels).forEach(key => {
             const panel = panels[key];
             if (panel) {
-                panel.style.display = 'none';
-                panel.style.visibility = 'hidden';
+                panel.style.setProperty('display', 'none', 'important');
+                panel.style.setProperty('visibility', 'hidden', 'important');
+                panel.style.setProperty('opacity', '0', 'important');
                 panel.classList.add('hidden-panel');
             }
         });
 
-        // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
+            console.log('[AI-LOG] switchTab -> Activando CONSOLA');
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
@@ -139,6 +140,7 @@ const AIChat = {
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
+            console.log('[AI-LOG] switchTab -> Activando PREVIEW');
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
@@ -146,9 +148,10 @@ const AIChat = {
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
+            console.log('[AI-LOG] switchTab -> Activando EDITOR para:', tabId);
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                console.log('[DEBUG] Showing editor for file tab');
+                console.log('[AI-LOG] switchTab -> Tab encontrado, contenido length:', tab.content ? tab.content.length : 0);
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
@@ -163,7 +166,7 @@ const AIChat = {
                 
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
-                    console.log('[DEBUG] Setting editor content, length:', tab.content ? tab.content.length : 0);
+                    console.log('[AI-LOG] switchTab -> Asignando contenido al textarea');
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
                     editor.style.setProperty('display', 'block', 'important');
@@ -171,12 +174,13 @@ const AIChat = {
                     editor.style.setProperty('opacity', '1', 'important');
                     editor.focus();
                 } else {
-                    console.error('[DEBUG] ai-real-editor element not found!');
+                    console.error('[AI-LOG] switchTab -> ERROR: No se encontró ai-real-editor');
                 }
             } else {
-                console.error('[DEBUG] Editor panel not found or tab missing');
+                console.error('[AI-LOG] switchTab -> ERROR: No se encontró tab o panel editor', { hasTab: !!tab, hasEditor: !!panels.editor });
             }
         }
+        console.log('[AI-LOG] switchTab FIN');
     },
 
     closeTab(tabId) {
@@ -192,35 +196,34 @@ const AIChat = {
     },
 
     async openFile(path, name) {
-        console.log('[DEBUG] openFile called with path:', path, 'name:', name);
+        console.log('[AI-LOG] openFile INICIO -> path:', path, 'name:', name);
         
-        // Normalización: si la ruta empieza con ./ o BUNK3R-W3B/, limpiarla para el ID de pestaña
         let cleanIdPath = path;
         if (path.startsWith('./')) cleanIdPath = path.substring(2);
         
         const tabId = `file-${cleanIdPath}`;
-        console.log('[DEBUG] Generated tabId:', tabId);
+        console.log('[AI-LOG] openFile -> tabId:', tabId);
         
         const existingTab = this.openTabs.find(t => t.id === tabId);
         if (existingTab) {
-            console.log('[DEBUG] Tab already exists, switching to it');
+            console.log('[AI-LOG] openFile -> Tab ya existe, activando...');
             this.switchTab(tabId);
             return;
         }
 
-        console.log('[DEBUG] Loading file content from API for path:', path);
+        console.log('[AI-LOG] openFile -> Cargando contenido desde API...');
         try {
             const url = `/api/projects/file/content?path=${encodeURIComponent(path)}`;
-            console.log('[DEBUG] Fetch URL:', url);
+            console.log('[AI-LOG] openFile -> URL:', url);
             
             const response = await fetch(url);
-            console.log('[DEBUG] API Response status:', response.status);
+            console.log('[AI-LOG] openFile -> Status API:', response.status);
             
             const data = await response.json();
-            console.log('[DEBUG] API Data received:', data);
+            console.log('[AI-LOG] openFile -> Datos recibidos:', data);
             
             if (data.success) {
-                console.log('[DEBUG] File content loaded successfully. Length:', data.content ? data.content.length : 0);
+                console.log('[AI-LOG] openFile -> ÉXITO, contenido recibido, length:', data.content ? data.content.length : 0);
                 const newTab = {
                     id: tabId,
                     name: name || path.split('/').pop(),
@@ -231,15 +234,14 @@ const AIChat = {
                 this.openTabs.push(newTab);
                 this.activeTabId = tabId;
                 
-                console.log('[DEBUG] New tab added to openTabs. Total tabs:', this.openTabs.length);
                 this.renderTabs();
                 this.switchTab(tabId);
             } else {
-                console.error('[DEBUG] API Error:', data.error);
+                console.error('[AI-LOG] openFile -> ERROR API:', data.error);
                 alert('Error al cargar archivo: ' + data.error);
             }
         } catch (e) {
-            console.error('[DEBUG] Fetch Exception:', e);
+            console.error('[AI-LOG] openFile -> EXCEPCIÓN FETCH:', e);
         }
     },
 

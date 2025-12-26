@@ -117,18 +117,23 @@ def manage_file_content():
     # Si sigue sin existir y es un archivo (tiene extensión), buscarlo recursivamente en TODO el proyecto
     if not full_path and "." in os.path.basename(clean_path):
         filename = os.path.basename(clean_path)
-        search_root = os.path.abspath(os.path.join(os.getcwd(), "..")) # Subir un nivel para buscar en todo el espacio de Replit
+        print(f"[AI-LOG] File not found by direct path, searching recursively for: {filename}")
+        search_root = os.path.abspath(os.path.join(os.getcwd())) 
         for root, dirs, files in os.walk(search_root):
             if filename in files:
                 full_path = os.path.join(root, filename)
+                print(f"[AI-LOG] Found file at: {full_path}")
                 break
 
     if not full_path:
+        print(f"[AI-LOG] ERROR: File NOT found: {file_path}")
         return jsonify({"success": False, "error": f"File not found: {file_path} (cleaned: {clean_path})"}), 404
 
+    print(f"[AI-LOG] File found, proceeding to read/write: {full_path}")
     # Seguridad: asegurar que el archivo está dentro de la raíz permitida
     # En Replit, permitimos leer cualquier cosa dentro de /home/runner/
     if not full_path.startswith('/home/runner/'):
+         print(f"[AI-LOG] ERROR: Access denied for path: {full_path}")
          return jsonify({"success": False, "error": "Access denied"}), 403
 
     if request.method == 'GET':
