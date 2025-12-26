@@ -49,34 +49,52 @@ class OllamaProvider(AIProvider):
         self.base_url = f"{base_url}/api/chat"
     
     def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
-        try:
-            import requests
-            
-            chat_messages = []
-            if system_prompt:
-                chat_messages.append({"role": "system", "content": system_prompt})
-            chat_messages.extend(messages)
-            
-            response = requests.post(
-                self.base_url,
-                json={
-                    "model": self.model,
-                    "messages": chat_messages,
-                    "stream": False
-                },
-                timeout=120
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                text = result.get("message", {}).get("content", "")
-                return {"success": True, "response": text, "provider": self.name}
-            else:
-                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+        import requests
+        from requests.exceptions import ConnectionError, Timeout
+        
+        chat_messages = []
+        if system_prompt:
+            chat_messages.append({"role": "system", "content": system_prompt})
+        chat_messages.extend(messages)
+        
+        # Implementar reintentos para Ollama (especialmente útil en el primer arranque)
+        max_retries = 3
+        retry_delay = 5
+        
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    self.base_url,
+                    json={
+                        "model": self.model,
+                        "messages": chat_messages,
+                        "stream": False
+                    },
+                    timeout=120
+                )
                 
-        except Exception as e:
-            logger.error(f"Ollama error: {e}")
-            return {"success": False, "error": str(e), "provider": self.name}
+                if response.status_code == 200:
+                    result = response.json()
+                    text = result.get("message", {}).get("content", "")
+                    return {"success": True, "response": text, "provider": self.name}
+                else:
+                    error_msg = f"HTTP {response.status_code}"
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Ollama busy (HTTP {response.status_code}), retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+                        time.sleep(retry_delay)
+                        continue
+                    return {"success": False, "error": error_msg, "provider": self.name}
+                    
+            except (ConnectionError, Timeout) as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"Ollama connection issue, retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    continue
+                logger.error(f"Ollama final error after {max_retries} attempts: {e}")
+                return {"success": False, "error": str(e), "provider": self.name}
+            except Exception as e:
+                logger.error(f"Ollama unexpected error: {e}")
+                return {"success": False, "error": str(e), "provider": self.name}
 
 class DeepSeekV32Provider(AIProvider):
     """DeepSeek V3.2 via Hugging Face - Main AI Model"""
