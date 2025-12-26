@@ -68,23 +68,12 @@ const AIChat = {
 
     renderTabs() {
         const container = document.getElementById('ai-tabs-container');
-        if (!container) {
-            console.error('[AI-ERROR] ai-tabs-container no encontrado');
-            return;
-        }
+        if (!container) return;
         
-        container.style.display = 'flex';
-        container.style.visibility = 'visible';
-        container.style.opacity = '1';
         container.innerHTML = '';
-        
         this.openTabs.forEach(tab => {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
-            tabEl.style.display = 'flex';
-            tabEl.style.visibility = 'visible';
-            tabEl.style.opacity = '1';
-            
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
             if (tab.type === 'file') {
@@ -100,7 +89,8 @@ const AIChat = {
             
             tabEl.onclick = (e) => {
                 e.preventDefault();
-                console.log('Tab clicked:', tab.id);
+                e.stopPropagation();
+                console.log('[AI-LOG] Click en pestaña:', tab.id);
                 this.switchTab(tab.id);
             };
             
@@ -112,49 +102,45 @@ const AIChat = {
         console.log('[AI-LOG] AIChat init()');
         this.renderTabs();
         
-        // Vincular eventos de pestañas globales si no están
-        const consoleTab = this.openTabs.find(t => t.id === 'console');
-        const previewTab = this.openTabs.find(t => t.id === 'preview');
-        
-        // Asegurar que al inicio se renderice el estado correcto
-        this.switchTab(this.activeTabId);
+        // Sincronizar estado inicial
+        setTimeout(() => {
+            this.switchTab(this.activeTabId);
+        }, 100);
     },
 
     switchTab(tabId) {
-        console.log('[AI-LOG] switchTab INICIO -> tabId:', tabId);
+        console.log('[AI-LOG] switchTab ->', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
-        // Seleccionar todos los posibles paneles
         const consolePanel = document.getElementById('ai-console');
         const editorWrapper = document.getElementById('editor-wrapper');
         const previewPanel = document.getElementById('ai-preview-panel');
         const toolbar = document.getElementById('editor-toolbar');
+        const emptyState = document.querySelector('.ai-empty-state');
 
-        // OCULTAR TODO PRIMERO
-        [consolePanel, editorWrapper, previewPanel, toolbar].forEach(p => {
+        // Reset all panels
+        [consolePanel, editorWrapper, previewPanel, toolbar, emptyState].forEach(p => {
             if (p) {
-                p.style.setProperty('display', 'none', 'important');
-                p.style.setProperty('visibility', 'hidden', 'important');
+                p.style.display = 'none';
                 p.classList.add('hidden-panel');
             }
         });
 
-        // MOSTRAR EL SELECCIONADO
         if (tabId === 'console') {
             if (consolePanel) {
-                console.log('[AI-LOG] Mostrando Terminal');
                 consolePanel.style.setProperty('display', 'flex', 'important');
                 consolePanel.style.setProperty('visibility', 'visible', 'important');
                 consolePanel.style.setProperty('opacity', '1', 'important');
                 consolePanel.style.setProperty('z-index', '10000', 'important');
                 consolePanel.classList.remove('hidden-panel');
-                const input = document.getElementById('ai-console-input');
-                if (input) setTimeout(() => input.focus(), 50);
+                setTimeout(() => {
+                    const input = document.getElementById('ai-console-input');
+                    if (input) input.focus();
+                }, 150);
             }
         } else if (tabId === 'preview') {
             if (previewPanel) {
-                console.log('[AI-LOG] Mostrando Preview');
                 previewPanel.style.setProperty('display', 'flex', 'important');
                 previewPanel.style.setProperty('visibility', 'visible', 'important');
                 previewPanel.style.setProperty('opacity', '1', 'important');
@@ -163,13 +149,23 @@ const AIChat = {
             }
         } else if (tabId.startsWith('file-')) {
             if (editorWrapper) {
-                console.log('[AI-LOG] Mostrando Editor para:', tabId);
                 editorWrapper.style.setProperty('display', 'block', 'important');
                 editorWrapper.style.setProperty('visibility', 'visible', 'important');
                 editorWrapper.style.setProperty('opacity', '1', 'important');
                 editorWrapper.style.setProperty('z-index', '10000', 'important');
                 editorWrapper.classList.remove('hidden-panel');
-                if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
+                if (toolbar) {
+                    toolbar.style.setProperty('display', 'flex', 'important');
+                    toolbar.style.setProperty('visibility', 'visible', 'important');
+                }
+                
+                const tab = this.openTabs.find(t => t.id === tabId);
+                if (tab) {
+                    const editor = document.getElementById('ai-real-editor');
+                    if (editor) {
+                        editor.value = tab.content || '';
+                    }
+                }
             }
         }
     },
