@@ -127,31 +127,28 @@ const AIChat = {
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             if (panels.console) {
-                panels.console.style.setProperty('display', 'flex', 'important');
-                panels.console.style.setProperty('visibility', 'visible', 'important');
-                panels.console.style.setProperty('z-index', '100', 'important');
+                panels.console.style.display = 'flex';
+                panels.console.style.visibility = 'visible';
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
             if (panels.preview) {
-                panels.preview.style.setProperty('display', 'block', 'important');
-                panels.preview.style.setProperty('visibility', 'visible', 'important');
-                panels.preview.style.setProperty('z-index', '100', 'important');
+                panels.preview.style.display = 'block';
+                panels.preview.style.visibility = 'visible';
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                panels.editor.style.setProperty('display', 'flex', 'important');
-                panels.editor.style.setProperty('visibility', 'visible', 'important');
-                panels.editor.style.setProperty('z-index', '999', 'important');
+                panels.editor.style.display = 'flex';
+                panels.editor.style.visibility = 'visible';
                 panels.editor.classList.remove('hidden-panel');
                 
                 if (panels.toolbar) {
-                    panels.toolbar.style.setProperty('display', 'flex', 'important');
-                    panels.toolbar.style.setProperty('visibility', 'visible', 'important');
+                    panels.toolbar.style.display = 'flex';
+                    panels.toolbar.style.visibility = 'visible';
                     panels.toolbar.classList.remove('hidden-panel');
                 }
                 
@@ -159,8 +156,8 @@ const AIChat = {
                 if (editor) {
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
-                    editor.style.setProperty('display', 'block', 'important');
-                    editor.style.setProperty('visibility', 'visible', 'important');
+                    editor.style.display = 'block';
+                    editor.style.visibility = 'visible';
                     editor.focus();
                 }
             }
