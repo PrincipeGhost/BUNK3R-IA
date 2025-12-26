@@ -159,7 +159,9 @@ const AIChat = {
                 // ELIMINAR CUALQUER EDITOR PREVIO
                 const oldEditor = document.getElementById('ai-real-editor');
                 if (oldEditor) oldEditor.remove();
-
+            }
+        }
+    },
 
     closeTab(tabId) {
         const index = this.openTabs.findIndex(t => t.id === tabId);

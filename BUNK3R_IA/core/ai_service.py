@@ -28,7 +28,7 @@ class AIProvider(ABC):
         self.available = bool(api_key)
     
     @abstractmethod
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         """Send chat request and return response"""
         pass
     
@@ -45,7 +45,7 @@ class OllamaProvider(AIProvider):
         self.model = "llama3" # O el que el usuario tenga
         self.base_url = f"{base_url}/api/chat"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -84,7 +84,7 @@ class DeepSeekV32Provider(AIProvider):
         self.model = "deepseek-ai/DeepSeek-V3.2"
         self.base_url = "https://router.huggingface.co/hf"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -144,7 +144,7 @@ class HuggingFaceProvider(AIProvider):
         self.model = "meta-llama/Meta-Llama-3-8B-Instruct"
         self.base_url = "https://router.huggingface.co/hf"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -199,7 +199,7 @@ class GroqProvider(AIProvider):
         self.model = "llama-3.3-70b-versatile"
         self.base_url = "https://api.groq.com/openai/v1/chat/completions"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -244,7 +244,7 @@ class GeminiProvider(AIProvider):
         self.model = "gemini-2.0-flash"
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -297,7 +297,7 @@ class CerebrasProvider(AIProvider):
         self.model = "llama-3.3-70b"
         self.base_url = "https://api.cerebras.ai/v1/chat/completions"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -342,7 +342,7 @@ class OpenAIProvider(AIProvider):
         self.model = "gpt-4o-mini"
         self.base_url = "https://api.openai.com/v1/chat/completions"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -387,7 +387,7 @@ class BaiduProvider(AIProvider):
         self.model = "ernie-3.5-8k"
         self.base_url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-3.5-8k"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -426,7 +426,7 @@ class DeepSeekProvider(AIProvider):
         self.model = "deepseek-chat"
         self.base_url = "https://api.deepseek.com/chat/completions"
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
             import requests
             
@@ -565,7 +565,7 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
             try:
                 antigravity_provider = AntigravityBridgeProvider()
                 if antigravity_provider.available:
-                    self.providers.append(antigravity_provider)
+                    self.providers.append(antigravity_provider) # type: ignore
                     logger.info("Antigravity Bridge provider initialized (Priority 0 - Primary)")
             except Exception as e:
                 logger.warning(f"Could not initialize Antigravity provider: {e}")
