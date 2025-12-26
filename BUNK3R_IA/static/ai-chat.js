@@ -153,15 +153,17 @@ const AIChat = {
                 panels.editor.style.setProperty('display', 'block', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
-                panels.editor.style.setProperty('z-index', '1000', 'important');
+                panels.editor.style.setProperty('z-index', '999999', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
-                let realEditor = document.getElementById('ai-real-editor');
-                if (!realEditor) {
-                    realEditor = document.createElement('textarea');
-                    realEditor.id = 'ai-real-editor';
-                    panels.editor.appendChild(realEditor);
-                }
+                // ELIMINAR CUALQUER EDITOR PREVIO
+                const oldEditor = document.getElementById('ai-real-editor');
+                if (oldEditor) oldEditor.remove();
+
+                const realEditor = document.createElement('textarea');
+                realEditor.id = 'ai-real-editor';
+                // INYECTAR DIRECTAMENTE AL BODY PARA EVITAR CUALQUIER RESTRICCIÓN DE CONTENEDOR
+                document.body.appendChild(realEditor);
 
                 realEditor.value = tab.content || '';
                 window.currentEditingFile = tab.path;
@@ -170,31 +172,37 @@ const AIChat = {
                     display: 'block',
                     visibility: 'visible',
                     opacity: '1',
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    width: '100%',
-                    height: '100%',
+                    position: 'fixed',
+                    top: '10%',
+                    left: '10%',
+                    width: '80%',
+                    height: '80%',
                     background: '#1e1e1e',
-                    color: '#ffffff',
+                    color: '#00ff00',
                     padding: '20px',
-                    border: 'none',
+                    border: '10px solid #F0B90B',
                     outline: 'none',
-                    zIndex: '1001',
+                    zIndex: '2147483647',
                     fontFamily: 'monospace',
-                    fontSize: '14px'
+                    fontSize: '18px',
+                    boxShadow: '0 0 100px rgba(0,0,0,1)',
+                    overflow: 'auto'
                 };
 
                 for (let prop in styles) {
                     realEditor.style.setProperty(prop, styles[prop], 'important');
                 }
 
-                // Forzar refresco visual
-                realEditor.style.display = 'none';
-                setTimeout(() => {
-                    realEditor.style.setProperty('display', 'block', 'important');
-                    realEditor.focus();
-                }, 10);
+                console.log('[AI-DIAG] Editor inyectado en BODY con estilos de EMERGENCIA');
+                
+                // Botón de cerrar para este editor de emergencia
+                const closeBtn = document.createElement('button');
+                closeBtn.innerText = 'CERRAR EDITOR';
+                closeBtn.style.cssText = 'position:fixed; top:5%; right:10%; z-index:2147483647; padding:15px; background:red; color:white; border:none; cursor:pointer; font-weight:bold;';
+                closeBtn.onclick = () => { realEditor.remove(); closeBtn.remove(); };
+                document.body.appendChild(closeBtn);
+
+                realEditor.focus();
             }
         }
         console.log('[AI-LOG] switchTab FIN');
