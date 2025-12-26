@@ -128,19 +128,24 @@ const AIChat = {
         const emptyState = document.querySelector('.ai-empty-state');
         const toolbar = document.getElementById('editor-toolbar');
         
-        // Ocultar todo
-        if (consoleEl) consoleEl.classList.add('hidden');
+        // Ocultar todo por defecto
+        if (consoleEl) {
+            consoleEl.style.display = 'none';
+            consoleEl.classList.add('hidden');
+        }
         if (editorWrapper) editorWrapper.style.display = 'none';
         if (emptyState) emptyState.style.display = 'none';
         if (toolbar) toolbar.style.display = 'none';
         
         if (tabId === 'console') {
-            if (consoleEl) consoleEl.classList.remove('hidden');
+            if (consoleEl) {
+                consoleEl.style.display = 'flex';
+                consoleEl.classList.remove('hidden');
+            }
         } else if (tabId === 'preview') {
-            // Lógica de preview (podría mostrar un iframe)
             if (emptyState) {
                 emptyState.style.display = 'flex';
-                emptyState.querySelector('p').textContent = 'Vista previa en desarrollo';
+                emptyState.querySelector('p').textContent = 'Selecciona un archivo o espera a que se genere la vista previa';
             }
         } else {
             // Es un archivo
@@ -270,8 +275,17 @@ const AIChat = {
         this.bindCodeEditor();
         this.bindConsole();
         this.bindSidebarToggle();
+        
+        // CORRECCIÓN: Inicializar pestañas pero ocultar consola si no hay archivos abiertos
         this.renderTabs();
-        this.switchTab('console');
+        
+        if (this.openTabs.length > 2) {
+            // Si hay archivos abiertos (más que consola y preview), ir al último
+            this.switchTab(this.openTabs[this.openTabs.length - 1].id);
+        } else {
+            // Si no hay archivos, ir a preview o estado vacío, NO a consola por defecto
+            this.switchTab('preview');
+        }
         
         // Configurar el botón de guardar si no se ha hecho
         const saveBtn = document.getElementById('btn-save-file');
