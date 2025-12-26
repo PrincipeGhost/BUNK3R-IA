@@ -48,7 +48,15 @@ def create_app(config_class=None):
 
     # Database
     db.init_app(app)
-    login_manager.init_app(app)
+    
+    # GitHub Auth setup
+    from BUNK3R_IA.replit_auth import setup_github_auth
+    setup_github_auth(app)
+    
+    app.register_blueprint(ai_bp)
+    app.register_blueprint(projects_bp)
+    app.register_blueprint(github_bp)
+    app.register_blueprint(automation_bp)
     
     @app.before_request
     def make_session_permanent():
