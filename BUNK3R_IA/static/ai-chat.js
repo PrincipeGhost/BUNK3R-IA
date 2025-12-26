@@ -143,11 +143,11 @@ const AIChat = {
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                console.log('[AI-LOG] switchTab -> Forzando visualización de archivo:', tabId);
+                console.log('[AI-LOG] switchTab -> RE-FORZANDO EDITOR:', tabId);
                 
-                // Ocultar TODO lo demás agresivamente
-                document.getElementById('ai-preview-panel').style.display = 'none';
-                document.getElementById('ai-console').style.display = 'none';
+                // Ocultar TODO lo demás agresivamente con estilos directos
+                if (panels.preview) panels.preview.style.display = 'none';
+                if (panels.console) panels.console.style.display = 'none';
                 
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
@@ -159,11 +159,10 @@ const AIChat = {
                 if (editor) {
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
-                    editor.style.setProperty('display', 'block', 'important');
-                    editor.style.setProperty('visibility', 'visible', 'important');
-                    editor.style.setProperty('opacity', '1', 'important');
+                    editor.style.display = 'block';
+                    editor.style.visibility = 'visible';
                     editor.focus();
-                    console.log('[AI-LOG] FINAL: Editor forzado al frente con éxito');
+                    console.log('[AI-LOG] Editor inyectado y enfocado');
                 }
             }
         }
