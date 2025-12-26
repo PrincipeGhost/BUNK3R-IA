@@ -81,14 +81,23 @@
             display: none !important;
         }
         .panel-resizer {
-            width: 8px !important;
-            background: rgba(240, 185, 11, 0.1) !important;
+            width: 10px !important;
+            margin: 0 -5px !important;
+            background: rgba(240, 185, 11, 0.05) !important;
             cursor: col-resize !important;
             transition: background 0.2s !important;
-            z-index: 9999 !important;
+            z-index: 99999 !important;
             flex-shrink: 0 !important;
-            border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+            position: relative !important;
+        }
+        .panel-resizer::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.1);
         }
         .panel-resizer:hover, .panel-resizer.resizing {
             background: #F0B90B !important;

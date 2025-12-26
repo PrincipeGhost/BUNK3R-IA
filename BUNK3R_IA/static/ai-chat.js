@@ -599,26 +599,29 @@ const AIChat = {
             isResizing = true;
             document.body.style.cursor = 'col-resize';
             resizer.classList.add('resizing');
-            // Evitar selección de texto durante el arrastre
             document.body.style.userSelect = 'none';
+            // Prevenir comportamientos por defecto que puedan interrumpir el arrastre
+            e.preventDefault();
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
 
-            const activityBar = document.querySelector('.activity-bar');
-            const offset = activityBar ? activityBar.offsetWidth : 50;
-            const newWidth = e.clientX - offset;
+            // Usar requestAnimationFrame para suavizar el movimiento
+            requestAnimationFrame(() => {
+                if (!isResizing) return;
+                
+                const activityBar = document.querySelector('.activity-bar');
+                const offset = activityBar ? activityBar.offsetWidth : 50;
+                const newWidth = e.clientX - offset;
 
-            // Log para depuración
-            console.log('[RESIZER] ClientX:', e.clientX, 'Offset:', offset, 'NewWidth:', newWidth);
-
-            if (newWidth >= 100 && newWidth <= window.innerWidth * 0.8) {
-                leftPanel.style.setProperty('flex', `0 0 ${newWidth}px`, 'important');
-                leftPanel.style.setProperty('width', `${newWidth}px`, 'important');
-                leftPanel.style.setProperty('min-width', `${newWidth}px`, 'important');
-                leftPanel.style.setProperty('max-width', `${newWidth}px`, 'important');
-            }
+                if (newWidth >= 150 && newWidth <= window.innerWidth * 0.7) {
+                    leftPanel.style.setProperty('flex', `0 0 ${newWidth}px`, 'important');
+                    leftPanel.style.setProperty('width', `${newWidth}px`, 'important');
+                    leftPanel.style.setProperty('min-width', `${newWidth}px`, 'important');
+                    leftPanel.style.setProperty('max-width', `${newWidth}px`, 'important');
+                }
+            });
         });
 
         document.addEventListener('mouseup', () => {
