@@ -506,10 +506,6 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         if groq_key:
             self.providers.append(GroqProvider(groq_key))
             logger.info("Groq provider initialized (Priority 1)")
-        groq_key = os.environ.get('GROQ_API_KEY', '')
-        if groq_key:
-            self.providers.append(GroqProvider(groq_key))
-            logger.info("Groq provider initialized (Priority 1)")
         
         # Priority 2: Cerebras (fast, Llama 3.3 70B)
         cerebras_key = os.environ.get('CEREBRAS_API_KEY', '')
