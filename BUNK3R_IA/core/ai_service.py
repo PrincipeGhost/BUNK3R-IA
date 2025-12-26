@@ -477,8 +477,8 @@ class AntigravityBridgeProvider:
     def is_available(self) -> bool:
         return self._provider.is_available()
     
-    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
-        return self._provider.chat(messages, system_prompt)
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        return self._provider.chat(messages, system_prompt) # type: ignore
     
     def refresh(self):
         self._provider.refresh_availability()
@@ -744,8 +744,8 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
         except Exception as e:
             return f"[TOOL EXECUTION EXCEPTION] {str(e)}"
 
-    def chat(self, user_id: str, message: str, system_prompt: str = None, 
-             preferred_provider: str = None, user_context: Dict = None,
+    def chat(self, user_id: str, message: str, system_prompt: Optional[str] = None, 
+             preferred_provider: Optional[str] = None, user_context: Optional[Dict] = None,
              enable_auto_rectify: bool = True) -> Dict:
         """
         Send a chat message and get response with Agentic Tool Loop
@@ -906,6 +906,8 @@ Nivel: ESTANDAR - Responde claro y amigable, evita jerga tecnica, tono servicial
     def _load_conversation_from_db(self, user_id: str) -> List[Dict]:
         """Load conversation history from database"""
         try:
+            if not self.db_manager:
+                return []
             with self.db_manager.get_connection() as conn:
                 with conn.cursor() as cur:
                     cur.execute("""
@@ -923,7 +925,7 @@ Nivel: ESTANDAR - Responde claro y amigable, evita jerga tecnica, tono servicial
     def _save_conversation_to_db(self, user_id: str, conversation: List[Dict]):
         """Save latest messages to database"""
         try:
-            if len(conversation) < 2:
+            if not self.db_manager or len(conversation) < 2:
                 return
             
             last_two = conversation[-2:]
@@ -946,10 +948,12 @@ Nivel: ESTANDAR - Responde claro y amigable, evita jerga tecnica, tono servicial
                 del self.conversations[user_id]
             
             if self.db_manager:
-                with self.db_manager.get_connection() as conn:
-                    with conn.cursor() as cur:
-                        cur.execute("DELETE FROM ai_chat_messages WHERE user_id = %s", (user_id,))
-                    conn.commit()
+                conn = self.db_manager.get_connection()
+                if conn:
+                    with conn as c:
+                        with c.cursor() as cur:
+                            cur.execute("DELETE FROM ai_chat_messages WHERE user_id = %s", (user_id,))
+                        c.commit()
             
             return True
         except Exception as e:
