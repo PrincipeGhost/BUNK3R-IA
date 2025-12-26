@@ -131,11 +131,13 @@ const AIChat = {
             if (panels.empty) {
                 panels.empty.style.setProperty('display', 'none', 'important');
                 panels.empty.style.setProperty('z-index', '-1', 'important');
+                panels.empty.style.setProperty('visibility', 'hidden', 'important');
             }
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
                 panels.console.style.setProperty('opacity', '1', 'important');
+                panels.console.style.setProperty('z-index', '100', 'important');
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
@@ -145,11 +147,13 @@ const AIChat = {
             if (panels.empty) {
                 panels.empty.style.setProperty('display', 'none', 'important');
                 panels.empty.style.setProperty('z-index', '-1', 'important');
+                panels.empty.style.setProperty('visibility', 'hidden', 'important');
             }
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
                 panels.preview.style.setProperty('opacity', '1', 'important');
+                panels.preview.style.setProperty('z-index', '100', 'important');
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
