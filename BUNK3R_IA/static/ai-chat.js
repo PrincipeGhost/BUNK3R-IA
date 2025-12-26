@@ -107,6 +107,7 @@ const AIChat = {
             alert('Error al conectar con el servidor');
         }
     },
+
     async saveCurrentFile() {
         if (!window.currentEditingFile) return;
         const editor = document.getElementById('ai-real-editor');
