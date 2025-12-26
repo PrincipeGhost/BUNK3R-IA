@@ -6,6 +6,8 @@ services:
     envVars:
       - key: OLLAMA_URL
         value: "http://localhost:11434"
+      - key: DATABASE_URL
+        value: "postgresql://neondb_owner:npg_IDhalvO17Apb@ep-wild-sea-advimph5-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
       - key: FLASK_ENV
         value: production
     disk:
