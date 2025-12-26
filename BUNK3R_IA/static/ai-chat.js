@@ -61,32 +61,21 @@ const AIChat = {
     },
 
     openTabs: [
-        { id: 'console', name: 'Consola', type: 'console' },
+        { id: 'console', name: 'Terminal', type: 'console' },
         { id: 'preview', name: 'Preview', type: 'preview' }
     ],
-    activeTabId: 'console',
+    activeTabId: 'preview',
 
     renderTabs() {
         const container = document.querySelector('.ai-tabs');
-        if (!container) {
-            console.error('Tabs container not found in DOM');
-            return;
-        }
+        if (!container) return;
         container.innerHTML = '';
         
-        console.log('Rendering tabs:', this.openTabs);
-        
         this.openTabs.forEach(tab => {
-            // No mostrar la pestaña de consola si no está activa y no es el tipo actual
-            if (tab.id === 'console' && this.activeTabId !== 'console') {
-                // Verificar si hay otras pestañas, si no hay ninguna más (improbable) la dejamos
-                if (this.openTabs.length > 1) return;
-            }
-
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
             
-            // Estilos directos para asegurar visibilidad
+            // Estilos directos
             tabEl.style.padding = '8px 15px';
             tabEl.style.cursor = 'pointer';
             tabEl.style.fontSize = '12px';
@@ -276,16 +265,9 @@ const AIChat = {
         this.bindConsole();
         this.bindSidebarToggle();
         
-        // CORRECCIÓN: Inicializar pestañas pero ocultar consola si no hay archivos abiertos
+        // Mantener las pestañas visibles pero iniciar en preview
         this.renderTabs();
-        
-        if (this.openTabs.length > 2) {
-            // Si hay archivos abiertos (más que consola y preview), ir al último
-            this.switchTab(this.openTabs[this.openTabs.length - 1].id);
-        } else {
-            // Si no hay archivos, ir a preview o estado vacío, NO a consola por defecto
-            this.switchTab('preview');
-        }
+        this.switchTab('preview');
         
         // Configurar el botón de guardar si no se ha hecho
         const saveBtn = document.getElementById('btn-save-file');
