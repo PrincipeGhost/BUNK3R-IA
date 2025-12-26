@@ -200,7 +200,11 @@ const AIChat = {
     },
 
     async openFile(path, name) {
-        const tabId = `file-${path}`;
+        // Normalización: si la ruta empieza con ./ o BUNK3R-W3B/, limpiarla para el ID de pestaña
+        let cleanIdPath = path;
+        if (path.startsWith('./')) cleanIdPath = path.substring(2);
+        
+        const tabId = `file-${cleanIdPath}`;
         const existingTab = this.openTabs.find(t => t.id === tabId);
         
         if (existingTab) {
@@ -209,13 +213,10 @@ const AIChat = {
             return;
         }
 
-        console.log('Loading file content for:', path);
+        console.log('Loading file content for path:', path);
         try {
-            // Limpiar la ruta para el API
-            let apiPath = path;
-            if (path.startsWith('./')) apiPath = path.substring(2);
-            
-            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(apiPath)}`);
+            // No limpiar el path para el fetch, dejar que el servidor lo resuelva
+            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
             const data = await response.json();
             
             if (data.success) {
