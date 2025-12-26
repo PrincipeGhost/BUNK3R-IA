@@ -104,8 +104,12 @@ const AIChat = {
         this.activeTabId = tabId;
         this.renderTabs();
         
-        // ELIMINAR físicamente el estado vacío si existe para que no bloquee nada
-        document.querySelectorAll('.ai-empty-state').forEach(el => el.remove());
+        // ELIMINAR físicamente el estado vacío y cualquier overlay
+        document.querySelectorAll('.ai-empty-state, .ai-preview-empty').forEach(el => {
+            el.style.display = 'none';
+            el.style.setProperty('display', 'none', 'important');
+            el.remove();
+        });
 
         const panels = {
             'console': document.getElementById('ai-console'),
