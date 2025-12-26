@@ -100,7 +100,7 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('--- SWITCH TAB START ---', tabId);
+        console.log('[DEBUG] switchTab called for tabId:', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
@@ -111,6 +111,8 @@ const AIChat = {
             'empty': document.querySelector('.ai-empty-state'),
             'toolbar': document.getElementById('editor-toolbar')
         };
+
+        console.log('[DEBUG] Panels found in DOM:', Object.keys(panels).map(k => `${k}: ${!!panels[k]}`));
 
         // LIMPIEZA TOTAL: Ocultar todo y remover visibilidad
         Object.keys(panels).forEach(key => {
@@ -125,6 +127,7 @@ const AIChat = {
 
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
+            console.log('[DEBUG] Activating console panel');
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
@@ -134,6 +137,7 @@ const AIChat = {
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
+            console.log('[DEBUG] Activating preview panel');
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
@@ -142,8 +146,10 @@ const AIChat = {
             }
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
+            console.log('[DEBUG] File tab data found:', !!tab);
+            
             if (tab && panels.editor) {
-                console.log('Rendering Editor for:', tab.path);
+                console.log('[DEBUG] Rendering Editor for:', tab.path);
                 
                 // ASEGURAR que el estado vacío se oculte PRIMERO
                 if (panels.empty) {
@@ -170,14 +176,19 @@ const AIChat = {
                 // Setear contenido
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
+                    console.log('[DEBUG] Setting editor value. Content length:', tab.content ? tab.content.length : 0);
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
                     // Forzar reflow para asegurar que el contenido se renderice
                     editor.scrollTop = 0;
+                } else {
+                    console.error('[DEBUG] #ai-real-editor NOT FOUND in DOM');
                 }
+            } else {
+                console.error('[DEBUG] Tab data or editor panel MISSING for file tab');
             }
         } else {
-            // Solo si no hay pestañas abiertas o ID no válido
+            console.log('[DEBUG] Showing empty state');
             if (panels.empty) {
                 panels.empty.style.setProperty('display', 'flex', 'important');
                 panels.empty.style.setProperty('visibility', 'visible', 'important');
@@ -200,24 +211,56 @@ const AIChat = {
     },
 
     async openFile(path, name) {
+        console.log('[DEBUG] openFile called with path:', path, 'name:', name);
+        
         // Normalización: si la ruta empieza con ./ o BUNK3R-W3B/, limpiarla para el ID de pestaña
         let cleanIdPath = path;
         if (path.startsWith('./')) cleanIdPath = path.substring(2);
         
         const tabId = `file-${cleanIdPath}`;
-        const existingTab = this.openTabs.find(t => t.id === tabId);
+        console.log('[DEBUG] Generated tabId:', tabId);
         
+        const existingTab = this.openTabs.find(t => t.id === tabId);
         if (existingTab) {
-            console.log('Switching to existing tab:', tabId);
+            console.log('[DEBUG] Tab already exists, switching to it');
             this.switchTab(tabId);
             return;
         }
 
-        console.log('Loading file content for path:', path);
+        console.log('[DEBUG] Loading file content from API for path:', path);
         try {
-            // No limpiar el path para el fetch, dejar que el servidor lo resuelva
-            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
+            const url = `/api/projects/file/content?path=${encodeURIComponent(path)}`;
+            console.log('[DEBUG] Fetch URL:', url);
+            
+            const response = await fetch(url);
+            console.log('[DEBUG] API Response status:', response.status);
+            
             const data = await response.json();
+            console.log('[DEBUG] API Data received:', data);
+            
+            if (data.success) {
+                console.log('[DEBUG] File content loaded successfully. Length:', data.content ? data.content.length : 0);
+                const newTab = {
+                    id: tabId,
+                    name: name || path.split('/').pop(),
+                    type: 'file',
+                    path: path,
+                    content: data.content
+                };
+                this.openTabs.push(newTab);
+                this.activeTabId = tabId;
+                
+                console.log('[DEBUG] New tab added to openTabs. Total tabs:', this.openTabs.length);
+                this.renderTabs();
+                this.switchTab(tabId);
+            } else {
+                console.error('[DEBUG] API Error:', data.error);
+                alert('Error al cargar archivo: ' + data.error);
+            }
+        } catch (e) {
+            console.error('[DEBUG] Fetch Exception:', e);
+        }
+    },
             
             if (data.success) {
                 console.log('File content loaded successfully');
