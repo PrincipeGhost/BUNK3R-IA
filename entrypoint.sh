@@ -24,5 +24,6 @@ ollama pull llama3.2:1b 2>&1 | stdbuf -oL tr '\r' '\n'
 
 echo "--- MODEL READY, STARTING WEB SERVER ---"
 
-# Iniciar la aplicación Flask con Gunicorn
-exec gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"
+# Iniciar la aplicación Flask con Gunicorn en el puerto que Render espera
+PORT=${PORT:-5000}
+exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"
