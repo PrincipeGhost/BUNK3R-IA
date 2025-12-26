@@ -1,7 +1,7 @@
-FROM ollama/ollama:latest
+FROM python:3.11-slim
 
-# Instalar Python y dependencias necesarias
-RUN apt-get update && apt-get install -y python3 python3-pip curl
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copiar el proyecto
 WORKDIR /app
@@ -10,7 +10,7 @@ COPY . .
 # Instalar dependencias de Python
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Script de inicio para arrancar Ollama y la App
+# Script de inicio
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
