@@ -802,6 +802,7 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
             system = f"{system}\n\n{repo_context}"
         
         if brain and brain.is_available():
+            logger.info("🧠 Cerebro (Ollama) activado para analizar la petición...")
         
         if user_context:
             context_info = self._build_user_context(user_context)
