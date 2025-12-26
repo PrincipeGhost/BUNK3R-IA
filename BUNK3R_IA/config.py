@@ -17,6 +17,12 @@ class Config:
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # Session configuration
+    PERMANENT_SESSION_LIFETIME = 604800  # 7 days
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
     GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')

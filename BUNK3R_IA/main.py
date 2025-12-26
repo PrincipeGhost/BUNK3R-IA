@@ -118,7 +118,8 @@ def create_app(config_class=None):
             db.session.add(user)
             db.session.commit()
         
-        login_user(user)
+        session.permanent = True
+        login_user(user, remember=True)
         return jsonify({"success": True, "user_id": user.id})
     
     @app.route('/preview/<session_id>')
