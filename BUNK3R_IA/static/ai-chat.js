@@ -100,7 +100,7 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('Final switch attempt to:', tabId);
+        console.log('--- SWITCH TAB START ---', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
@@ -112,21 +112,23 @@ const AIChat = {
             'toolbar': document.getElementById('editor-toolbar')
         };
 
-        // Ocultar todo de forma radical
+        // LIMPIEZA TOTAL: Ocultar todo y remover visibilidad
         Object.keys(panels).forEach(key => {
             const panel = panels[key];
             if (panel) {
                 panel.style.setProperty('display', 'none', 'important');
                 panel.style.setProperty('visibility', 'hidden', 'important');
+                panel.style.setProperty('opacity', '0', 'important');
                 panel.classList.add('hidden-panel');
             }
         });
 
-        // Mostrar solo el panel seleccionado
+        // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
+                panels.console.style.setProperty('opacity', '1', 'important');
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
@@ -135,33 +137,51 @@ const AIChat = {
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
+                panels.preview.style.setProperty('opacity', '1', 'important');
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                console.log('Activating editor for file:', tab.path);
+                console.log('Rendering Editor for:', tab.path);
+                
+                // ASEGURAR que el estado vacío se oculte PRIMERO
+                if (panels.empty) {
+                    panels.empty.style.setProperty('display', 'none', 'important');
+                    panels.empty.style.setProperty('visibility', 'hidden', 'important');
+                    panels.empty.classList.add('hidden-panel');
+                }
+
+                // Activar editor wrapper con Z-INDEX ALTO
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
+                panels.editor.style.setProperty('opacity', '1', 'important');
+                panels.editor.style.setProperty('z-index', '100', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
+                // Activar toolbar
                 if (panels.toolbar) {
                     panels.toolbar.style.setProperty('display', 'flex', 'important');
                     panels.toolbar.style.setProperty('visibility', 'visible', 'important');
+                    panels.toolbar.style.setProperty('opacity', '1', 'important');
                     panels.toolbar.classList.remove('hidden-panel');
                 }
                 
+                // Setear contenido
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
                     editor.value = tab.content || '';
-                    console.log('Editor content set:', (tab.content ? tab.content.substring(0, 20) + '...' : 'empty'));
                     window.currentEditingFile = tab.path;
+                    // Forzar reflow para asegurar que el contenido se renderice
+                    editor.scrollTop = 0;
                 }
             }
         } else {
+            // Solo si no hay pestañas abiertas o ID no válido
             if (panels.empty) {
                 panels.empty.style.setProperty('display', 'flex', 'important');
                 panels.empty.style.setProperty('visibility', 'visible', 'important');
+                panels.empty.style.setProperty('opacity', '1', 'important');
                 panels.empty.classList.remove('hidden-panel');
             }
         }
