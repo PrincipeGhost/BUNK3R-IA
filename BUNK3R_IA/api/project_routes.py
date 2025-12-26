@@ -89,6 +89,29 @@ def manage_file_content():
 
     full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
     
+    # Intento de encontrar el archivo si la ruta incluye el nombre del repo (para compatibilidad con GitHub UI)
+    if not os.path.exists(full_path):
+        # Limpieza de la ruta para evitar problemas con nombres de repo
+        # Si la ruta empieza con PrincipeGhost/BUNK3R-W3B/, lo quitamos
+        if "PrincipeGhost/BUNK3R-W3B/" in file_path:
+            file_path = file_path.replace("PrincipeGhost/BUNK3R-W3B/", "")
+        elif "PrincipeGhost/BUNK3R-IA/" in file_path:
+            file_path = file_path.replace("PrincipeGhost/BUNK3R-IA/", "")
+            
+        full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
+
+    # Intento agresivo si sigue sin existir
+    if not os.path.exists(full_path):
+        parts = file_path.split('/')
+        # Si tiene más de 2 partes (owner/repo/archivo)
+        if len(parts) >= 2:
+            # Probar buscando solo el nombre del archivo en el directorio actual
+            filename = parts[-1]
+            for root, dirs, files in os.walk(os.getcwd()):
+                if filename in files:
+                    full_path = os.path.join(root, filename)
+                    break
+    
     # Seguridad básica: no salir del directorio actual
     if not full_path.startswith(os.getcwd()):
         return jsonify({"success": False, "error": "Access denied"}), 403
