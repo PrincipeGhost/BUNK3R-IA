@@ -77,7 +77,7 @@ def create_app(config_class=None):
         
         # Permitir Embedding (Iframe)
         response.headers['X-Frame-Options'] = 'ALLOWALL' 
-        response.headers['Content-Security-Policy'] = "frame-ancestors *;"
+        response.headers['Content-Security-Policy'] = "frame-ancestors *; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';"
         response.headers['Access-Control-Allow-Origin'] = "*"
         response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
         response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
