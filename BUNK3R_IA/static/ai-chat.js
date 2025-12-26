@@ -253,7 +253,7 @@ const AIChat = {
         try {
             const headers = App.getAuthHeaders ? App.getAuthHeaders() : { 'Content-Type': 'application/json' };
             
-            const response = await fetch('/api/ai-toolkit/command/run', {
+            const response = await fetch('/api/projects/command/run', {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ command, timeout: 30 })

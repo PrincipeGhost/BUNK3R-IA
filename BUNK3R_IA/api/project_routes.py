@@ -150,13 +150,36 @@ def manage_file_content():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
 
-@projects_bp.route('/<project_id>/env', methods=['GET', 'POST'])
-def manage_env(project_id):
-    """Leer o actualizar variables de entorno (Vault)"""
-    if request.method == 'GET':
-        # Retornar variables de DB desencriptadas
-        return jsonify({"env": {"DATABASE_URL": "postgres://...", "API_KEY": "****"}})
+import subprocess
+
+@projects_bp.route('/command/run', methods=['POST'])
+def run_command():
+    """Ejecutar un comando en el sistema"""
+    data = request.json
+    command = data.get('command')
+    timeout = data.get('timeout', 30)
     
-    if request.method == 'POST':
-        # Guardar cambios
-        return jsonify({"success": True})
+    if not command:
+        return jsonify({"success": False, "error": "No command provided"}), 400
+        
+    try:
+        # Ejecutar comando de forma segura
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=os.getcwd()
+        )
+        
+        return jsonify({
+            "success": True,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "exit_code": result.returncode
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Command timeout"}), 408
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
