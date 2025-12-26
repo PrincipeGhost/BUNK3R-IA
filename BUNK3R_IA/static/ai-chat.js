@@ -71,25 +71,31 @@ const AIChat = {
             return;
         }
 
-        // Si path es un objeto (evento de click) o no viene, ignorar
-        if (typeof path === 'object' || !path) {
+        // Manejar el caso donde se pasan (repo, path) o solo (path)
+        let finalPath = path;
+        if (typeof name === 'string' && name.includes('/')) {
+            finalPath = name;
+        } else if (typeof path === 'object') {
+            // Ignorar eventos accidentales
             return;
         }
 
+        if (!finalPath || typeof finalPath !== 'string') return;
+
         // Si el path parece ser solo el nombre del repo o usuario (sin extensión de archivo)
-        const parts = path.split('/').filter(p => p);
+        const parts = finalPath.split('/').filter(p => p);
         const lastPart = parts[parts.length - 1] || "";
         
         // Si no tiene punto y es corto (ej: PrincipeGhost/BUNK3R), es el repo, no un archivo
         if (!lastPart.includes('.') && parts.length <= 2) {
-            console.log('Skipping repo-level path:', path);
+            console.log('Skipping repo-level path:', finalPath);
             return;
         }
 
-        console.log('Opening file:', path);
+        console.log('Opening file:', finalPath);
 
         try {
-            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
+            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(finalPath)}`);
             const data = await response.json();
             
             if (data.success) {
@@ -98,12 +104,14 @@ const AIChat = {
                 if (toolbar) toolbar.style.display = 'flex';
                 if (emptyState) emptyState.style.display = 'none';
                 
-                window.currentEditingFile = path;
+                window.currentEditingFile = finalPath;
                 editor.scrollTop = 0;
             } else {
+                console.error('API Error:', data.error);
                 alert('Error: ' + data.error);
             }
         } catch (e) {
+            console.error('Fetch error:', e);
             alert('Error al conectar con el servidor');
         }
     },

@@ -819,7 +819,8 @@
                         }
                     } else {
                         if (typeof AIChat.openFile === 'function') {
-                            AIChat.openFile(window.currentRepo, fullPath);
+                            // Enviar fullPath directamente como primer argumento
+                            AIChat.openFile(fullPath);
                         }
                     }
                 };
