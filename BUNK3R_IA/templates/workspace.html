@@ -362,7 +362,7 @@
             <div class="panel-resizer" id="resizer-left"></div>
 
             <!-- PANEL DE PROYECTOS (UNIFICADO) -->
-            <div class="ai-panel ai-panel-projects hidden" id="panel-projects" style="background:#0d1117; display: flex; flex-direction: column; height: 100%;">
+            <div class="ai-panel ai-panel-projects hidden" id="panel-projects" style="background:#0d1117; display: none; flex-direction: column; height: 100%;">
                 <div class="ai-projects-header" style="background:#161b22; border-bottom:1px solid #30363d; padding: 12px; flex-shrink: 0;">
                     <span class="ai-projects-title" style="color:#c9d1d9; font-weight: 600;">Explorador</span>
                     <div style="display:flex; gap:8px;">
@@ -517,25 +517,28 @@
                     // Mapeo unificado: todo lo que sea github o projects va al mismo panel
                     let targetId = (view === 'github' || view === 'projects') ? 'panel-projects' : `panel-${view}`;
                     
-                    if (view === 'projects') {
-                        if (window.AIChat && typeof window.AIChat.loadProjectFiles === 'function') {
-                            window.AIChat.loadProjectFiles('current');
-                        }
-                    }
-                    
                     const target = document.getElementById(targetId);
+                    const toggleBtn = document.getElementById('toggle-sidebar-btn');
+
                     if (target) {
                         console.log('Panel found:', targetId);
                         target.style.display = 'flex';
                         target.classList.remove('hidden');
                         target.classList.add('active-panel');
                         
+                        // Solo mostrar el botón de colapsar si estamos en proyectos
+                        if (toggleBtn) {
+                            toggleBtn.style.display = (view === 'projects' || view === 'github') ? 'flex' : 'none';
+                        }
+
                         // Carga de datos unificada
                         if ((view === 'github' || view === 'projects') && typeof window.loadGitHubRepos === 'function') {
                             window.loadGitHubRepos();
                         }
                     } else {
                         console.error('Panel not found:', targetId);
+                        // Asegurar que el botón de toggle se oculte en otros paneles
+                        if (toggleBtn) toggleBtn.style.display = 'none';
                     }
                 });
             });
