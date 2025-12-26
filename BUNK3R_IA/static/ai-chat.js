@@ -274,15 +274,16 @@ const AIChat = {
     initPageMode() {
         const input = document.getElementById('ai-chat-input');
         const send = document.getElementById('ai-chat-send');
+        const sendArrow = document.getElementById('ai-chat-send-arrow');
         
-        if (!input || !send) return;
+        if (!input) return;
         
         input.removeEventListener('input', this.handleInputChange);
         input.removeEventListener('keydown', this.handleKeyDown);
-        send.removeEventListener('click', this.handleSendClick);
         
         this.handleInputChange = () => {
-            send.disabled = !input.value.trim();
+            if (send) send.disabled = !input.value.trim();
+            if (sendArrow) sendArrow.disabled = !input.value.trim();
             this.autoResize(input);
         };
         
@@ -297,7 +298,9 @@ const AIChat = {
         
         input.addEventListener('input', this.handleInputChange);
         input.addEventListener('keydown', this.handleKeyDown);
-        send.addEventListener('click', this.handleSendClick);
+        
+        if (send) send.addEventListener('click', this.handleSendClick);
+        if (sendArrow) sendArrow.addEventListener('click', this.handleSendClick);
         
         this.bindQuickActions();
         this.bindFileTabs();
