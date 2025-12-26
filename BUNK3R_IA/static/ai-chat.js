@@ -512,22 +512,22 @@ const AIChat = {
     },
     
     bindSidebarToggle() {
-        // Usar delegación de eventos o selector directo más robusto
-        const btn = document.getElementById('toggle-sidebar-btn');
-        const projectsPanel = document.getElementById('panel-projects');
-        
-        console.log('BIND SIDEBAR:', { btn, projectsPanel });
-        
-        if (!btn) return;
-
-        btn.onclick = (e) => {
-            console.log('SIDEBAR CLICK');
+        // Selector más robusto que no dependa solo del ID si hay duplicados o problemas de carga
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#toggle-sidebar-btn');
+            if (!btn) return;
+            
+            console.log('SIDEBAR TOGGLE CLICK DETECTED');
             e.preventDefault();
             e.stopPropagation();
             
             const panel = document.getElementById('panel-projects');
-            if (!panel) return;
+            if (!panel) {
+                console.error('Panel projects not found');
+                return;
+            }
 
+            // Cambiar estado
             const isHidden = panel.style.display === 'none' || panel.classList.contains('hidden');
             
             if (isHidden) {
@@ -539,7 +539,7 @@ const AIChat = {
                 panel.classList.add('hidden');
                 btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
             }
-        };
+        });
     },
 
     autoResize(textarea) {
