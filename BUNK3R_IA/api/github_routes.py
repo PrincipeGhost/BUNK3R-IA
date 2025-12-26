@@ -79,7 +79,7 @@ def get_repo_contents():
                     # En flask-dance con proxy_fix, github.get() maneja la auth
                     response = github.get(f"/repos/{repo_full_name}/contents{url_path}")
                     if response.ok:
-                        return process_github_contents(response.json())
+                        return process_github_contents(response.json(), repo_full_name)
                     else:
                         return jsonify({"error": "Failed to fetch contents", "details": response.text}), response.status_code
             except (AttributeError, Exception):
@@ -90,14 +90,14 @@ def get_repo_contents():
         response = requests.get(url, headers=headers)
         
         if response.ok:
-            return process_github_contents(response.json())
+            return process_github_contents(response.json(), repo_full_name)
         else:
             return jsonify({"error": "Failed to fetch contents", "details": response.text}), response.status_code
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def process_github_contents(items):
+def process_github_contents(items, repo_full_name=None):
     file_tree = []
     if isinstance(items, list):
         for item in items:
@@ -105,7 +105,14 @@ def process_github_contents(items):
                 "name": item['name'],
                 "type": "folder" if item['type'] == "dir" else "file",
                 "path": item['path'],
-                "download_url": item.get('download_url')
+                "download_url": item.get('download_url'),
+                "repo": repo_full_name
             })
         file_tree.sort(key=lambda x: (x['type'] != 'folder', x['name']))
+        
+        # Logica simple para "analizar" el repo: 
+        # Si estamos en la raiz, podriamos guardar en DB que estamos viendo este repo
+        if items and repo_full_name:
+            print(f"[IA-INDEX] Analizando estructura de {repo_full_name}...")
+            
     return jsonify({"files": file_tree})
