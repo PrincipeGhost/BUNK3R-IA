@@ -156,16 +156,45 @@ const AIChat = {
                 panels.editor.style.setProperty('z-index', '999999', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
-                const editor = document.getElementById('ai-real-editor');
-                if (editor) {
-                    editor.value = tab.content || '';
-                    window.currentEditingFile = tab.path;
-                    editor.style.setProperty('display', 'block', 'important');
-                    editor.style.setProperty('visibility', 'visible', 'important');
-                    editor.style.setProperty('opacity', '1', 'important');
-                    editor.focus();
-                    console.log('[AI-LOG] Editor inyectado, visible y enfocado');
+                // INYECCIÓN DE EMERGENCIA: Si el editor no se ve, lo creamos de nuevo
+                let realEditor = document.getElementById('ai-real-editor');
+                if (!realEditor) {
+                    console.log('[AI-LOG] Editor no encontrado, creando uno nuevo...');
+                    realEditor = document.createElement('textarea');
+                    realEditor.id = 'ai-real-editor';
+                    panels.editor.appendChild(realEditor);
                 }
+
+                realEditor.value = tab.content || '';
+                window.currentEditingFile = tab.path;
+                
+                // Estilos ultra-forzados
+                const emergencyStyles = {
+                    display: 'block',
+                    visibility: 'visible',
+                    opacity: '1',
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    width: '100%',
+                    height: '100%',
+                    background: '#1e1e1e',
+                    color: '#ffffff',
+                    padding: '20px',
+                    border: 'none',
+                    outline: 'none',
+                    zIndex: '1000000',
+                    fontFamily: 'monospace',
+                    fontSize: '14px'
+                };
+
+                Object.assign(realEditor.style, emergencyStyles);
+                for (let prop in emergencyStyles) {
+                    realEditor.style.setProperty(prop, emergencyStyles[prop], 'important');
+                }
+
+                realEditor.focus();
+                console.log('[AI-LOG] Editor inyectado con estilos de emergencia');
             }
         }
         console.log('[AI-LOG] switchTab FIN');
