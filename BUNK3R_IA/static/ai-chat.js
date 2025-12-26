@@ -111,7 +111,7 @@ const AIChat = {
             'toolbar': document.getElementById('editor-toolbar')
         };
 
-        // OCULTAR TODOS LOS PANELES
+        // OCULTAR TODOS LOS PANELES Y LIMPIAR CLASES AGRESIVAMENTE
         Object.values(panels).forEach(panel => {
             if (panel) {
                 panel.style.display = 'none';
@@ -146,8 +146,8 @@ const AIChat = {
                 console.log('[AI-LOG] switchTab -> RE-FORZANDO EDITOR:', tabId);
                 
                 // Ocultar TODO lo demás agresivamente con estilos directos
-                if (panels.preview) panels.preview.style.display = 'none';
-                if (panels.console) panels.console.style.display = 'none';
+                if (panels.preview) panels.preview.style.setProperty('display', 'none', 'important');
+                if (panels.console) panels.console.style.setProperty('display', 'none', 'important');
                 
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
@@ -159,8 +159,9 @@ const AIChat = {
                 if (editor) {
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
-                    editor.style.display = 'block';
-                    editor.style.visibility = 'visible';
+                    editor.style.setProperty('display', 'block', 'important');
+                    editor.style.setProperty('visibility', 'visible', 'important');
+                    editor.style.setProperty('opacity', '1', 'important');
                     editor.focus();
                     console.log('[AI-LOG] Editor inyectado y enfocado');
                 }
