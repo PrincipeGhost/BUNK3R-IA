@@ -433,8 +433,8 @@ body {
 }
 
 .ai-chat-sidebar-logo svg {
-    width: 32px;
-    height: 32px;
+    width: 32px !important;
+    height: 32px !important;
     color: #F0B90B;
     filter: drop-shadow(0 0 8px rgba(240, 185, 11, 0.4));
 }
