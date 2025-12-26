@@ -103,16 +103,23 @@ def manage_file_content():
         os.path.abspath(os.path.join(os.getcwd(), "..", clean_path))
     ]
     
+    # Añadir rutas de carpetas comunes si no se encuentra
+    if not any(os.path.exists(p) for p in possible_paths):
+        common_dirs = ["api", "core", "static", "templates", "tests", "docs", "prompts"]
+        for d in common_dirs:
+            possible_paths.append(os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", d, clean_path)))
+
     full_path = None
     for p in possible_paths:
         if os.path.exists(p) and os.path.isfile(p):
             full_path = p
             break
             
-    # Si sigue sin existir y es un archivo (tiene extensión), buscarlo recursivamente
+    # Si sigue sin existir y es un archivo (tiene extensión), buscarlo recursivamente en TODO el proyecto
     if not full_path and "." in os.path.basename(clean_path):
         filename = os.path.basename(clean_path)
-        for root, dirs, files in os.walk(os.getcwd()):
+        search_root = os.path.abspath(os.path.join(os.getcwd(), "..")) # Subir un nivel para buscar en todo el espacio de Replit
+        for root, dirs, files in os.walk(search_root):
             if filename in files:
                 full_path = os.path.join(root, filename)
                 break
