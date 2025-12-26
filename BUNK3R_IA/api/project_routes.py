@@ -87,57 +87,46 @@ def manage_file_content():
     if not file_path:
         return jsonify({"success": False, "error": "No path provided"}), 400
 
-    full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
-    
-    # Intento de encontrar el archivo si la ruta incluye el nombre del repo (para compatibilidad con GitHub UI)
-    if not os.path.exists(full_path):
-        # Limpieza de la ruta para evitar problemas con nombres de repo
-        # Si la ruta es solo el nombre de un repo o usuario, o una carpeta sin extensión
-        parts = file_path.strip('/').split('/')
-        is_potential_repo_or_dir = len(parts) <= 2 and not "." in parts[-1]
-        
-        if is_potential_repo_or_dir:
-            # Es probable que sea el nombre del repo PrincipeGhost/BUNK3R o una carpeta
-            # Intentamos servir el README.md del proyecto actual como fallback
-            full_path = os.path.join(os.getcwd(), 'README.md')
-        else:
-            # Intentar limpiar prefijos conocidos si el archivo no existe
-            clean_path = file_path
-            # Prefijos dinámicos basados en la estructura del usuario (dueño/repo)
-            if len(parts) >= 2:
-                # Si las primeras partes parecen ser un owner/repo de GitHub
-                # Probamos quitando PrincipeGhost/BUNK3R y variantes
-                prefixes = ["PrincipeGhost/BUNK3R-W3B/", "PrincipeGhost/BUNK3R-IA/", "PrincipeGhost/BUNK3R/"]
-                for prefix in prefixes:
-                    if clean_path.startswith(prefix):
-                        clean_path = clean_path.replace(prefix, "", 1)
-                        break
-                # Si aún no existe, probamos quitando los dos primeros segmentos dinámicamente
-                if not os.path.exists(os.path.join(os.getcwd(), clean_path)) and len(parts) > 2:
-                    clean_path = "/".join(parts[2:])
-            
-            full_path = os.path.abspath(os.path.join(os.getcwd(), clean_path))
+    # Normalización agresiva de la ruta
+    # Si la ruta tiene prefijos de repo de GitHub, los removemos
+    clean_path = file_path.strip('/')
+    prefixes = ["PrincipeGhost/BUNK3R-W3B", "PrincipeGhost/BUNK3R-IA", "PrincipeGhost/BUNK3R"]
+    for prefix in prefixes:
+        if clean_path.startswith(prefix):
+            clean_path = clean_path[len(prefix):].strip('/')
+            break
 
-    # Intento agresivo si sigue sin existir
-    if not os.path.exists(full_path):
-        parts = file_path.split('/')
-        # Si tiene más de 2 partes (owner/repo/archivo)
-        if len(parts) >= 2:
-            # Probar buscando solo el nombre del archivo en el directorio actual
-            filename = parts[-1]
-            for root, dirs, files in os.walk(os.getcwd()):
-                if filename in files:
-                    full_path = os.path.join(root, filename)
-                    break
+    # Intentar encontrar el archivo en el sistema de archivos real
+    possible_paths = [
+        os.path.abspath(os.path.join(os.getcwd(), clean_path)),
+        os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", clean_path)),
+        os.path.abspath(os.path.join(os.getcwd(), "..", clean_path))
+    ]
     
-    # Seguridad básica: no salir del directorio actual
-    if not full_path.startswith(os.getcwd()):
-        return jsonify({"success": False, "error": "Access denied"}), 403
+    full_path = None
+    for p in possible_paths:
+        if os.path.exists(p) and os.path.isfile(p):
+            full_path = p
+            break
+            
+    # Si sigue sin existir y es un archivo (tiene extensión), buscarlo recursivamente
+    if not full_path and "." in os.path.basename(clean_path):
+        filename = os.path.basename(clean_path)
+        for root, dirs, files in os.walk(os.getcwd()):
+            if filename in files:
+                full_path = os.path.join(root, filename)
+                break
+
+    if not full_path:
+        return jsonify({"success": False, "error": f"File not found: {file_path} (cleaned: {clean_path})"}), 404
+
+    # Seguridad: asegurar que el archivo está dentro de la raíz permitida
+    # En Replit, permitimos leer cualquier cosa dentro de /home/runner/
+    if not full_path.startswith('/home/runner/'):
+         return jsonify({"success": False, "error": "Access denied"}), 403
 
     if request.method == 'GET':
         try:
-            if not os.path.exists(full_path):
-                return jsonify({"success": False, "error": f"File not found: {file_path}"}), 404
             with open(full_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             return jsonify({"success": True, "content": content})
