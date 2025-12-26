@@ -575,7 +575,7 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
         """Initialize all available AI providers - ordered by reliability"""
         
         # Priority 0: Ollama Local (Requested by user)
-        ollama_url = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
+        ollama_url = os.environ.get('OLLAMA_URL', 'http://127.0.0.1:11434')
         if ollama_url:
             self.providers.append(OllamaProvider(ollama_url))
             logger.info(f"Ollama provider initialized as PRIMARY at {ollama_url}")
