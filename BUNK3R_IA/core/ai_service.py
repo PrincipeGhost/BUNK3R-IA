@@ -753,7 +753,7 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
              preferred_provider: Optional[str] = None, user_context: Optional[Dict] = None,
              enable_auto_rectify: bool = True) -> Dict:
         """
-        Send a chat message and get response with Agentic Tool Loop
+        Flujo de Chat: El Cerebro (Ollama) analiza y delega.
         """
         if not self.providers:
             return {
@@ -762,8 +762,15 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
                 "provider": None
             }
         
+        # 1. Obtener historial
         conversation = self._get_conversation(user_id)
         conversation.append({"role": "user", "content": message})
+        
+        # 2. El Cerebro (Ollama) analiza la petición (Prioridad 0)
+        brain = next((p for p in self.providers if p.name == "ollama"), None)
+        if brain and brain.is_available():
+            logger.info("🧠 Cerebro (Ollama) activado para analizar la petición...")
+            # Aquí podrías inyectar lógica de pensamiento previa de Ollama
         
         system = system_prompt or self.DEFAULT_SYSTEM_PROMPT
         
@@ -781,7 +788,6 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
         provider_used = "unknown"
         
         for step in range(MAX_TOOL_STEPS + 1):
-            
             # 1. Obtener respuesta de la IA
             response_success = False
             current_response_text = ""
@@ -819,7 +825,6 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
                 tool_output = ""
                 
                 try:
-                    # Intentar parsear JSON (incluso si la IA puso markdown dentro)
                     if "```" in tool_json_str:
                          tool_json_str = tool_json_str.replace("```json", "").replace("```", "")
                     
@@ -834,11 +839,9 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
                     tool_output = f"[SYSTEM ERROR] JSON inválido en <TOOL>: {e}"
                 
                 # 2b. Añadir al historial y continuar el bucle
-                # Guardamos lo que la IA "pensó" (la llamada a la herramienta)
                 conversation.append({"role": "assistant", "content": current_response_text})
                 self._save_conversation(user_id, conversation)
                 
-                # Devolvemos el resultado como un mensaje de "sistema" o "user" con el output
                 tool_feedback_msg = f"[SISTEMA] Resultado de la herramienta:\n{tool_output}\n\nContinúa tu tarea."
                 conversation.append({"role": "user", "content": tool_feedback_msg})
                 
@@ -846,20 +849,9 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
                 continue 
             
             else:
-                # 3. Respuesta final (texto normal o fin de pasos)
+                # 3. Respuesta final
                 final_response = current_response_text
                 
-                # Auto-rectificación (solo para la respuesta final)
-                was_rectified = False
-                original_issues = []
-                
-                if enable_auto_rectify:
-                    issue_check = self._detect_response_issues(final_response, message)
-                    if issue_check["needs_fix"]:
-                        # Lógica de rectificación simplificada para no duplicar código
-                        # (Aquí podrías llamar a _auto_rectify si fuera necesario)
-                        pass
-
                 conversation.append({"role": "assistant", "content": final_response})
                 self._save_conversation(user_id, conversation)
                 
