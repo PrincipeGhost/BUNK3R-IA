@@ -61,32 +61,19 @@ const AIChat = {
     },
 
     async openFile(path, name) {
-        const editor = document.getElementById('real-file-editor');
+        const editor = document.getElementById('ai-real-editor');
+        const wrapper = document.getElementById('editor-wrapper');
         const toolbar = document.getElementById('editor-toolbar');
         const emptyState = document.querySelector('.ai-empty-state');
         
-        if (!editor) return;
+        if (!editor || !wrapper) {
+            console.error('Editor elements not found');
+            return;
+        }
 
         // Si path es un objeto (evento de click) o no viene, ignorar
         if (typeof path === 'object' || !path) {
-            console.error('Invalid path for openFile:', path);
             return;
-        }
-
-        // Si el path parece ser solo el nombre del repo (sin extensión de archivo), ignorar el error 404
-        const parts = path.split('/');
-        const lastPart = parts[parts.length - 1];
-        if (!lastPart.includes('.') && !path.endsWith('.md')) {
-            console.log('Skipping non-file path:', path);
-            return;
-        }
-
-        console.log('Opening file:', path);
-        
-        // Asegurarnos de que el panel central sea visible
-        const centerView = document.querySelector('.ai-center-view');
-        if (centerView) {
-            centerView.style.display = 'flex';
         }
 
         try {
@@ -95,28 +82,24 @@ const AIChat = {
             
             if (data.success) {
                 editor.value = data.content;
-                editor.style.display = 'block';
-                toolbar.style.display = 'flex';
+                wrapper.style.display = 'flex';
+                if (toolbar) toolbar.style.display = 'flex';
                 if (emptyState) emptyState.style.display = 'none';
                 
-                // Guardar path actual para el botón de guardar
                 window.currentEditingFile = path;
-                
-                // Forzar scroll al principio del editor
                 editor.scrollTop = 0;
             } else {
-                console.error('API Error:', data.error);
                 alert('Error: ' + data.error);
             }
         } catch (e) {
-            console.error('Fetch Error:', e);
             alert('Error al conectar con el servidor');
         }
     },
 
     async saveCurrentFile() {
         if (!window.currentEditingFile) return;
-        const editor = document.getElementById('real-file-editor');
+        const editor = document.getElementById('ai-real-editor');
+        if (!editor) return;
         const content = editor.value;
 
         try {
