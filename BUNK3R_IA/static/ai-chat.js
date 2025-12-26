@@ -119,45 +119,47 @@ const AIChat = {
         const toolbar = document.getElementById('editor-toolbar');
         const emptyState = document.querySelector('.ai-empty-state');
 
-        // Reset all panels
+        // Reset all panels with absolute force
         [consolePanel, editorWrapper, previewPanel, toolbar, emptyState].forEach(p => {
             if (p) {
-                p.style.display = 'none';
+                p.style.setProperty('display', 'none', 'important');
+                p.style.setProperty('visibility', 'hidden', 'important');
+                p.style.setProperty('z-index', '1', 'important');
                 p.classList.add('hidden-panel');
             }
         });
 
         if (tabId === 'console') {
             if (consolePanel) {
+                console.log('[AI-LOG] Mostrando Terminal Panel');
                 consolePanel.style.setProperty('display', 'flex', 'important');
                 consolePanel.style.setProperty('visibility', 'visible', 'important');
-                consolePanel.style.setProperty('opacity', '1', 'important');
-                consolePanel.style.setProperty('z-index', '10000', 'important');
+                consolePanel.style.setProperty('z-index', '30000', 'important');
                 consolePanel.classList.remove('hidden-panel');
                 setTimeout(() => {
                     const input = document.getElementById('ai-console-input');
-                    if (input) input.focus();
-                }, 150);
+                    if (input) {
+                        input.focus();
+                        console.log('[AI-LOG] Terminal focused');
+                    }
+                }, 200);
             }
         } else if (tabId === 'preview') {
             if (previewPanel) {
+                console.log('[AI-LOG] Mostrando Preview Panel');
                 previewPanel.style.setProperty('display', 'flex', 'important');
                 previewPanel.style.setProperty('visibility', 'visible', 'important');
-                previewPanel.style.setProperty('opacity', '1', 'important');
-                previewPanel.style.setProperty('z-index', '10000', 'important');
+                previewPanel.style.setProperty('z-index', '30000', 'important');
                 previewPanel.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
             if (editorWrapper) {
+                console.log('[AI-LOG] Mostrando Editor Panel');
                 editorWrapper.style.setProperty('display', 'block', 'important');
                 editorWrapper.style.setProperty('visibility', 'visible', 'important');
-                editorWrapper.style.setProperty('opacity', '1', 'important');
-                editorWrapper.style.setProperty('z-index', '10000', 'important');
+                editorWrapper.style.setProperty('z-index', '30000', 'important');
                 editorWrapper.classList.remove('hidden-panel');
-                if (toolbar) {
-                    toolbar.style.setProperty('display', 'flex', 'important');
-                    toolbar.style.setProperty('visibility', 'visible', 'important');
-                }
+                if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
                 
                 const tab = this.openTabs.find(t => t.id === tabId);
                 if (tab) {
