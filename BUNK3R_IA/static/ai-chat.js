@@ -128,7 +128,10 @@ const AIChat = {
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             console.log('[DEBUG] Activating console panel');
-            if (panels.empty) panels.empty.style.setProperty('display', 'none', 'important');
+            if (panels.empty) {
+                panels.empty.style.setProperty('display', 'none', 'important');
+                panels.empty.style.setProperty('z-index', '-1', 'important');
+            }
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
@@ -139,7 +142,10 @@ const AIChat = {
             }
         } else if (tabId === 'preview') {
             console.log('[DEBUG] Activating preview panel');
-            if (panels.empty) panels.empty.style.setProperty('display', 'none', 'important');
+            if (panels.empty) {
+                panels.empty.style.setProperty('display', 'none', 'important');
+                panels.empty.style.setProperty('z-index', '-1', 'important');
+            }
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
@@ -153,18 +159,19 @@ const AIChat = {
             if (tab && panels.editor) {
                 console.log('[DEBUG] Rendering Editor for:', tab.path);
                 
-                // ASEGURAR que el estado vacío se oculte PRIMERO
+                // ASEGURAR que el estado vacío se oculte PRIMERO y se mande al fondo
                 if (panels.empty) {
                     panels.empty.style.setProperty('display', 'none', 'important');
                     panels.empty.style.setProperty('visibility', 'hidden', 'important');
+                    panels.empty.style.setProperty('z-index', '-1', 'important');
                     panels.empty.classList.add('hidden-panel');
                 }
 
-                // Activar editor wrapper con Z-INDEX ALTO
+                // Activar editor wrapper con ALTA PRIORIDAD
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
-                panels.editor.style.setProperty('z-index', '100', 'important');
+                panels.editor.style.setProperty('z-index', '999', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
                 // Activar toolbar
@@ -172,6 +179,7 @@ const AIChat = {
                     panels.toolbar.style.setProperty('display', 'flex', 'important');
                     panels.toolbar.style.setProperty('visibility', 'visible', 'important');
                     panels.toolbar.style.setProperty('opacity', '1', 'important');
+                    panels.toolbar.style.setProperty('z-index', '1000', 'important');
                     panels.toolbar.classList.remove('hidden-panel');
                 }
                 
@@ -181,8 +189,9 @@ const AIChat = {
                     console.log('[DEBUG] Setting editor value. Content length:', tab.content ? tab.content.length : 0);
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
-                    // Forzar reflow para asegurar que el contenido se renderice
+                    // Forzar reflow
                     editor.scrollTop = 0;
+                    editor.focus();
                 } else {
                     console.error('[DEBUG] #ai-real-editor NOT FOUND in DOM');
                 }
@@ -195,6 +204,7 @@ const AIChat = {
                 panels.empty.style.setProperty('display', 'flex', 'important');
                 panels.empty.style.setProperty('visibility', 'visible', 'important');
                 panels.empty.style.setProperty('opacity', '1', 'important');
+                panels.empty.style.setProperty('z-index', '100', 'important');
                 panels.empty.classList.remove('hidden-panel');
             }
         }
