@@ -60,59 +60,124 @@ const AIChat = {
         });
     },
 
-    async openFile(path, name) {
-        const editor = document.getElementById('ai-real-editor');
-        const wrapper = document.getElementById('editor-wrapper');
-        const toolbar = document.getElementById('editor-toolbar');
+    openTabs: [
+        { id: 'console', name: 'Consola', type: 'console' },
+        { id: 'preview', name: 'Preview', type: 'preview' }
+    ],
+    activeTabId: 'console',
+
+    renderTabs() {
+        const container = document.querySelector('.ai-tabs');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        this.openTabs.forEach(tab => {
+            const tabEl = document.createElement('div');
+            tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
+            tabEl.style.padding = '8px 15px';
+            tabEl.style.cursor = 'pointer';
+            tabEl.style.fontSize = '12px';
+            tabEl.style.display = 'flex';
+            tabEl.style.alignItems = 'center';
+            tabEl.style.gap = '8px';
+            tabEl.style.borderRight = '1px solid #30363d';
+            tabEl.style.background = this.activeTabId === tab.id ? '#1e1e1e' : '#2d333b';
+            tabEl.style.color = this.activeTabId === tab.id ? '#fff' : '#8b949e';
+            
+            tabEl.innerHTML = `<span>${tab.name}</span>`;
+            
+            if (tab.type === 'file') {
+                const closeBtn = document.createElement('span');
+                closeBtn.innerHTML = '×';
+                closeBtn.style.fontSize = '16px';
+                closeBtn.style.lineHeight = '1';
+                closeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.closeTab(tab.id);
+                };
+                tabEl.appendChild(closeBtn);
+            }
+            
+            tabEl.onclick = () => this.switchTab(tab.id);
+            container.appendChild(tabEl);
+        });
+    },
+
+    switchTab(tabId) {
+        this.activeTabId = tabId;
+        this.renderTabs();
+        
+        const consoleEl = document.getElementById('ai-console');
+        const editorWrapper = document.getElementById('editor-wrapper');
         const emptyState = document.querySelector('.ai-empty-state');
+        const toolbar = document.getElementById('editor-toolbar');
         
-        if (!editor || !wrapper) {
-            console.error('Editor elements not found');
-            return;
-        }
-
-        // Manejar el caso donde se pasan (repo, path) o solo (path)
-        let finalPath = path;
-        if (typeof name === 'string' && name.includes('/')) {
-            finalPath = name;
-        } else if (typeof path === 'object') {
-            // Ignorar eventos accidentales
-            return;
-        }
-
-        if (!finalPath || typeof finalPath !== 'string') return;
-
-        // Si el path parece ser solo el nombre del repo o usuario (sin extensión de archivo)
-        const parts = finalPath.split('/').filter(p => p);
-        const lastPart = parts[parts.length - 1] || "";
+        // Ocultar todo
+        if (consoleEl) consoleEl.classList.add('hidden');
+        if (editorWrapper) editorWrapper.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'none';
+        if (toolbar) toolbar.style.display = 'none';
         
-        // Si no tiene punto y es corto (ej: PrincipeGhost/BUNK3R), es el repo, no un archivo
-        if (!lastPart.includes('.') && parts.length <= 2) {
-            console.log('Skipping repo-level path:', finalPath);
+        if (tabId === 'console') {
+            if (consoleEl) consoleEl.classList.remove('hidden');
+        } else if (tabId === 'preview') {
+            // Lógica de preview (podría mostrar un iframe)
+            if (emptyState) {
+                emptyState.style.display = 'flex';
+                emptyState.querySelector('p').textContent = 'Vista previa en desarrollo';
+            }
+        } else {
+            // Es un archivo
+            const tab = this.openTabs.find(t => t.id === tabId);
+            if (tab && editorWrapper) {
+                editorWrapper.style.display = 'flex';
+                if (toolbar) toolbar.style.display = 'flex';
+                const editor = document.getElementById('ai-real-editor');
+                if (editor) editor.value = tab.content || '';
+                window.currentEditingFile = tab.path;
+            }
+        }
+    },
+
+    closeTab(tabId) {
+        const index = this.openTabs.findIndex(t => t.id === tabId);
+        if (index !== -1) {
+            this.openTabs.splice(index, 1);
+            if (this.activeTabId === tabId) {
+                this.activeTabId = this.openTabs[index - 1]?.id || this.openTabs[0]?.id;
+            }
+            this.renderTabs();
+            this.switchTab(this.activeTabId);
+        }
+    },
+
+    async openFile(path, name) {
+        const tabId = `file-${path}`;
+        const existingTab = this.openTabs.find(t => t.id === tabId);
+        
+        if (existingTab) {
+            this.switchTab(tabId);
             return;
         }
-
-        console.log('Opening file:', finalPath);
 
         try {
-            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(finalPath)}`);
+            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
             const data = await response.json();
             
             if (data.success) {
-                editor.value = data.content;
-                wrapper.style.display = 'flex';
-                if (toolbar) toolbar.style.display = 'flex';
-                if (emptyState) emptyState.style.display = 'none';
-                
-                window.currentEditingFile = finalPath;
-                editor.scrollTop = 0;
+                this.openTabs.push({
+                    id: tabId,
+                    name: name || path.split('/').pop(),
+                    type: 'file',
+                    path: path,
+                    content: data.content
+                });
+                this.switchTab(tabId);
             } else {
-                console.error('API Error:', data.error);
                 alert('Error: ' + data.error);
             }
         } catch (e) {
             console.error('Fetch error:', e);
-            alert('Error al conectar con el servidor');
         }
     },
 
@@ -188,6 +253,8 @@ const AIChat = {
         this.bindRefreshButton();
         this.bindCodeEditor();
         this.bindConsole();
+        this.renderTabs();
+        this.switchTab('console');
         
         // Configurar el botón de guardar si no se ha hecho
         const saveBtn = document.getElementById('btn-save-file');

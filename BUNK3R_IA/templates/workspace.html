@@ -400,22 +400,32 @@
                 style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0;">
                 <!-- TABS HEADER -->
                 <div class="ai-tabs"
-                    style="height:35px; background:#2d333b; display:flex; align-items:flex-end; overflow-x:auto; border-bottom:1px solid #30363d; padding-right:10px;">
+                    style="height:35px; background:#2d333b; display:flex; align-items:flex-end; overflow-x:auto; border-bottom:1px solid #30363d;">
                     <!-- Tabs injected by JS -->
                 </div>
 
-                <!-- EDITOR CONTAINER -->
+                <!-- EDITOR/CONSOLE CONTAINER -->
                 <div id="file-editor-container"
-                    style="flex:1; width:100%; overflow:hidden; position:relative; background:#1e1e1e; display:flex; flex-direction:column; z-index: 5;">
-                    <div id="editor-toolbar" style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333; z-index: 10;">
+                    style="flex:1; width:100%; overflow:hidden; position:relative; background:#1e1e1e; display:flex; flex-direction:column;">
+                    
+                    <div id="editor-toolbar" style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333;">
                         <button id="btn-save-file" style="background:#007acc; color:white; border:none; padding:4px 12px; border-radius:3px; cursor:pointer; font-size:12px;">Guardar</button>
                     </div>
-                    <textarea id="real-file-editor" style="flex:1; width:100%; background:#1e1e1e; color:#d4d4d4; border:none; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none; display:none !important; position:relative; z-index: 5;"></textarea>
-                    <div id="ai-console" class="hidden" style="flex:1; display:flex; flex-direction:column; background:#000; color:#fff; font-family:monospace; padding:10px;">
-                    <div id="ai-console-output" style="flex:1; overflow-y:auto; margin-bottom:10px; white-space:pre-wrap; font-size:12px;"></div>
-                    <div style="display:flex; align-items:center; border-top:1px solid #333; padding-top:5px;">
-                        <span style="color:#0f0; margin-right:5px;">$</span>
-                        <input type="text" id="ai-console-input" style="flex:1; background:transparent; border:none; color:#fff; outline:none; font-family:monospace; font-size:12px;" placeholder="Escribe un comando...">
+
+                    <div id="editor-wrapper" style="flex:1; display:none; flex-direction:column;">
+                        <textarea id="ai-real-editor" style="flex:1; width:100%; background:#1e1e1e; color:#d4d4d4; border:none; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none;"></textarea>
+                    </div>
+
+                    <div id="ai-console" style="flex:1; display:flex; flex-direction:column; background:#000; color:#fff; font-family:monospace; padding:10px;">
+                        <div id="ai-console-output" style="flex:1; overflow-y:auto; margin-bottom:10px; white-space:pre-wrap; font-size:12px;"></div>
+                        <div style="display:flex; align-items:center; border-top:1px solid #333; padding-top:5px;">
+                            <span style="color:#0f0; margin-right:5px;">$</span>
+                            <input type="text" id="ai-console-input" style="flex:1; background:transparent; border:none; color:#fff; outline:none; font-family:monospace; font-size:12px;" placeholder="Escribe un comando...">
+                        </div>
+                    </div>
+
+                    <div class="ai-empty-state" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#6b7280; user-select:none;">
+                        <p style="font-size:14px;">Selecciona un archivo del explorador para editar</p>
                     </div>
                 </div>
             </div>
