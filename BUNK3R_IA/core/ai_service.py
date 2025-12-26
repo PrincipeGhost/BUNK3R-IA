@@ -531,7 +531,7 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
             self.providers.append(BaiduProvider(baidu_key))
             logger.info("Baidu provider initialized (Priority 5)")
         
-        # Priority 6: DeepSeek API
+        # Fallback: DeepSeek API
         deepseek_key = os.environ.get('DEEPSEEK_API_KEY', '')
         if deepseek_key:
             self.providers.append(DeepSeekProvider(deepseek_key))
