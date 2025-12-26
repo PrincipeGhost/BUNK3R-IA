@@ -76,12 +76,18 @@ const AIChat = {
         // Si el path parece ser solo el nombre del repo (sin extensión de archivo), ignorar el error 404
         const parts = path.split('/');
         const lastPart = parts[parts.length - 1];
-        if (!lastPart.includes('.')) {
+        if (!lastPart.includes('.') && !path.endsWith('.md')) {
             console.log('Skipping non-file path:', path);
             return;
         }
 
         console.log('Opening file:', path);
+        
+        // Asegurarnos de que el panel central sea visible
+        const centerView = document.querySelector('.ai-center-view');
+        if (centerView) {
+            centerView.style.display = 'flex';
+        }
 
         try {
             const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
