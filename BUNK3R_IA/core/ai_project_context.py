@@ -167,52 +167,44 @@ class AIProjectContext:
     def get_context_summary(self) -> str:
         """
         Generate context summary to include in AI prompts.
-        This is passed to the AI so it understands the current state.
+        Includes repository structure and key file contents.
         """
-        summary = f"""
+        try:
+            from BUNK3R_IA.core.ai_toolkit import AIFileToolkit
+            toolkit = AIFileToolkit()
+            
+            # 1. Información básica de la sesión
+            summary = f"""
 ================================================================
-PROJECT CONTEXT
+BUNK3R IA - REPOSITORY CONTEXT
 ================================================================
 
-PROJECT INFORMATION:
-- Primary Language: {self.project_info.get('language', 'unknown') if self.project_info else 'unknown'}
-- Framework: {self.project_info.get('framework', 'none') if self.project_info else 'none'}
-- Entry Points: {', '.join(self.project_info.get('entry_points', [])) if self.project_info else 'unknown'}
-- Database: {self.project_info.get('database', 'none') if self.project_info else 'none'}
+PROJECT STATUS:
+- Primary Language: {self.project_info.get('language', 'unknown') if self.project_info else 'Python'}
+- Files created in session: {len(self.files_created)}
+- Files modified in session: {len(self.files_modified)}
 
-SESSION ACTIVITY:
-- Files created: {len(self.files_created)}
-- Files modified: {len(self.files_modified)}
-- Commands executed: {len(self.commands_executed)}
-- Errors fixed: {len(self.errors_fixed)}
-- Packages installed: {len(self.packages_installed)}
 """
-        
-        if self.files_created:
-            summary += "\nFILES CREATED:\n"
-            for f in self.files_created[-5:]:
-                summary += f"  - {f['path']}: {f.get('description', '')}\n"
-        
-        if self.files_modified:
-            summary += "\nFILES MODIFIED:\n"
-            for f in self.files_modified[-5:]:
-                summary += f"  - {f['path']}: {f['change']}\n"
-        
-        if self.packages_installed:
-            summary += "\nPACKAGES INSTALLED:\n"
-            for p in self.packages_installed:
-                summary += f"  - {p['package']} ({p['manager']})\n"
-        
-        if self.errors_fixed:
-            summary += "\nERRORS FIXED:\n"
-            for e in self.errors_fixed[-3:]:
-                error = e.get('error', {})
-                summary += f"  - {error.get('type', 'Error')}: {error.get('message', '')[:50]}\n"
-        
-        if self.current_task:
-            summary += f"\nCURRENT TASK:\n  - {self.current_task['type']}: {self.current_task['description']}\n"
-        
-        return summary
+            # 2. Estructura de archivos
+            files_result = toolkit.list_directory(recursive=True, max_depth=2)
+            if files_result.get('success'):
+                summary += "FILE STRUCTURE:\n"
+                for item in files_result.get('items', []):
+                    indent = "  " * item['path'].count('/')
+                    summary += f"{indent}- {item['name']} ({item['type']})\n"
+            
+            # 3. Contenido de archivos clave (limitado para no saturar tokens)
+            key_files = ['replit.md', 'main.py', 'render.yaml']
+            summary += "\nKEY PROJECT FILES:\n"
+            for kf in key_files:
+                read_res = toolkit.read_file(kf, max_lines=50)
+                if read_res.get('success'):
+                    summary += f"\n--- {kf} ---\n{read_res['content']}\n"
+            
+            return summary
+        except Exception as e:
+            logger.error(f"Error generating repository context: {e}")
+            return "Error generando contexto del repositorio."
     
     def get_recent_conversation(self, limit: int = 10) -> List[Dict]:
         """Get the last N messages from conversation"""
