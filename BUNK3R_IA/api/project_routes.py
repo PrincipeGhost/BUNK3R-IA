@@ -93,8 +93,8 @@ def manage_file_content():
     if not os.path.exists(full_path):
         # Limpieza de la ruta para evitar problemas con nombres de repo
         # Si la ruta es solo el nombre de un repo, devolvemos un error amigable o el README
-        if file_path.count('/') <= 1:
-            # Es probable que sea el nombre del repo PrincipeGhost/BUNK3R-W3B
+        if file_path.count('/') <= 1 or not "." in file_path.split('/')[-1]:
+            # Es probable que sea el nombre del repo PrincipeGhost/BUNK3R-W3B o una carpeta
             # Intentamos servir el README.md del proyecto actual como fallback
             full_path = os.path.join(os.getcwd(), 'README.md')
         else:

@@ -73,6 +73,14 @@ const AIChat = {
             return;
         }
 
+        // Si el path parece ser solo el nombre del repo (sin extensión de archivo), ignorar el error 404
+        const parts = path.split('/');
+        const lastPart = parts[parts.length - 1];
+        if (!lastPart.includes('.')) {
+            console.log('Skipping non-file path:', path);
+            return;
+        }
+
         console.log('Opening file:', path);
 
         try {
