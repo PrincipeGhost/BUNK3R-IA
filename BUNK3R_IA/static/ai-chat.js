@@ -104,12 +104,6 @@ const AIChat = {
         this.activeTabId = tabId;
         this.renderTabs();
         
-        console.log('[AI-LOG] switchTab -> Limpiando overlays...');
-        document.querySelectorAll('.ai-empty-state, .ai-preview-empty').forEach(el => {
-            console.log('[AI-LOG] switchTab -> Eliminando elemento:', el.className);
-            el.remove();
-        });
-
         const panels = {
             'console': document.getElementById('ai-console'),
             'editor': document.getElementById('editor-wrapper'),
@@ -117,72 +111,60 @@ const AIChat = {
             'toolbar': document.getElementById('editor-toolbar')
         };
 
-        console.log('[AI-LOG] switchTab -> Paneles encontrados:', Object.keys(panels).filter(k => !!panels[k]));
-
-        Object.keys(panels).forEach(key => {
-            const panel = panels[key];
+        // OCULTAR TODOS LOS PANELES
+        Object.values(panels).forEach(panel => {
             if (panel) {
-                panel.style.setProperty('display', 'none', 'important');
-                panel.style.setProperty('visibility', 'hidden', 'important');
-                panel.style.setProperty('opacity', '0', 'important');
+                panel.style.display = 'none';
+                panel.style.visibility = 'hidden';
+                panel.style.opacity = '0';
                 panel.classList.add('hidden-panel');
             }
         });
 
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
-            console.log('[AI-LOG] switchTab -> Activando CONSOLA');
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
                 panels.console.style.setProperty('opacity', '1', 'important');
-                panels.console.style.setProperty('z-index', '1000', 'important');
+                panels.console.style.setProperty('z-index', '8000', 'important');
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
-            console.log('[AI-LOG] switchTab -> Activando PREVIEW');
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
                 panels.preview.style.setProperty('opacity', '1', 'important');
-                panels.preview.style.setProperty('z-index', '1000', 'important');
+                panels.preview.style.setProperty('z-index', '8000', 'important');
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
-            console.log('[AI-LOG] switchTab -> Activando EDITOR para:', tabId);
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                console.log('[AI-LOG] switchTab -> Tab encontrado, contenido length:', tab.content ? tab.content.length : 0);
+                console.log('[AI-LOG] switchTab -> Forzando visualización de archivo:', tabId);
+                
+                // Ocultar TODO lo demás agresivamente
+                document.getElementById('ai-preview-panel').style.display = 'none';
+                document.getElementById('ai-console').style.display = 'none';
+                
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
-                panels.editor.style.setProperty('z-index', '2000', 'important');
+                panels.editor.style.setProperty('z-index', '9999999', 'important');
                 panels.editor.classList.remove('hidden-panel');
-                
-                if (panels.toolbar) {
-                    panels.toolbar.style.setProperty('display', 'flex', 'important');
-                    panels.toolbar.style.setProperty('visibility', 'visible', 'important');
-                    panels.toolbar.style.setProperty('opacity', '1', 'important');
-                    panels.toolbar.style.setProperty('z-index', '2001', 'important');
-                    panels.toolbar.classList.remove('hidden-panel');
-                }
                 
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
-                    console.log('[AI-LOG] switchTab -> Asignando contenido al textarea');
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
                     editor.style.setProperty('display', 'block', 'important');
                     editor.style.setProperty('visibility', 'visible', 'important');
                     editor.style.setProperty('opacity', '1', 'important');
                     editor.focus();
-                } else {
-                    console.error('[AI-LOG] switchTab -> ERROR: No se encontró ai-real-editor');
+                    console.log('[AI-LOG] FINAL: Editor forzado al frente con éxito');
                 }
-            } else {
-                console.error('[AI-LOG] switchTab -> ERROR: No se encontró tab o panel editor', { hasTab: !!tab, hasEditor: !!panels.editor });
             }
         }
         console.log('[AI-LOG] switchTab FIN');

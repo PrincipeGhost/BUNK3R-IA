@@ -236,34 +236,49 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            z-index: 999999 !important;
+            z-index: 9999999 !important;
             background: #1e1e1e !important;
-            display: none;
+            display: flex !important; 
             flex-direction: column !important;
             width: 100% !important;
             height: 100% !important;
             visibility: visible !important;
             opacity: 1 !important;
-            outline: 3px solid #F0B90B !important; /* DEBUG BORDER MÁS GRUESO */
+            outline: 8px solid #F0B90B !important; /* ULTRA BORDE */
             pointer-events: all !important;
         }
         #ai-real-editor {
+            position: relative !important;
+            z-index: 10000000 !important;
             flex: 1 !important;
             width: 100% !important;
             height: 100% !important;
             border: none !important;
             background: #1e1e1e !important;
-            color: #d4d4d4 !important;
+            color: #ffffff !important; /* Blanco puro para contraste */
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-            font-size: 14px !important;
-            padding: 20px !important;
+            font-size: 18px !important; 
+            padding: 40px !important;
             resize: none !important;
             outline: none !important;
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
-            min-height: 500px !important;
             pointer-events: all !important;
+        }
+        .panel-content {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        .hidden-panel {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            z-index: -1000 !important;
+            pointer-events: none !important;
+        }
+        #ai-preview-panel, #ai-console {
+            z-index: 5000 !important;
         }
     </style>
 </head>
