@@ -11,7 +11,7 @@ ollama serve 2>&1 | stdbuf -oL tr '\r' '\n' &
 echo "Waiting for Ollama to wake up..."
 # Esperar a que Ollama esté listo (máximo 60 segundos)
 for i in {1..30}; do
-  if curl -s http://localhost:11434/api/tags > /dev/null; then
+  if curl -s http://127.0.0.1:11434/api/tags > /dev/null; then
     echo "Ollama is awake and ready!"
     break
   fi
