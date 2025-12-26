@@ -490,7 +490,7 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
     def _initialize_providers(self):
         """Initialize all available AI providers - ordered by reliability"""
         
-        # Priority 1: Antigravity Bridge (free, unlimited, user's PC)
+        # Priority 0: Antigravity Bridge (free, unlimited, user's PC)
         antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', 'http://localhost:8888')
         if antigravity_url:
             try:
@@ -502,6 +502,10 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
                 logger.warning(f"Could not initialize Antigravity provider: {e}")
         
         # Priority 1: Groq (fast, reliable, Llama 3.3 70B)
+        groq_key = os.environ.get('GROQ_API_KEY', '')
+        if groq_key:
+            self.providers.append(GroqProvider(groq_key))
+            logger.info("Groq provider initialized (Priority 1)")
         groq_key = os.environ.get('GROQ_API_KEY', '')
         if groq_key:
             self.providers.append(GroqProvider(groq_key))
