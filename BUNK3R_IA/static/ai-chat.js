@@ -100,11 +100,10 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('switching to:', tabId);
+        console.log('Final switch attempt to:', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
-        // Elementos de la UI
         const panels = {
             'console': document.getElementById('ai-console'),
             'editor': document.getElementById('editor-wrapper'),
@@ -113,31 +112,53 @@ const AIChat = {
             'toolbar': document.getElementById('editor-toolbar')
         };
 
-        // Ocultar TODOS los paneles primero
-        Object.values(panels).forEach(panel => {
-            if (panel) panel.style.display = 'none';
+        // Ocultar todo de forma radical
+        Object.keys(panels).forEach(key => {
+            const panel = panels[key];
+            if (panel) {
+                panel.style.setProperty('display', 'none', 'important');
+                panel.style.setProperty('visibility', 'hidden', 'important');
+                panel.classList.add('hidden-panel');
+            }
         });
 
-        // Mostrar el panel correspondiente
+        // Mostrar solo el panel seleccionado
         if (tabId === 'console') {
             if (panels.console) {
-                panels.console.style.display = 'flex';
+                panels.console.style.setProperty('display', 'flex', 'important');
+                panels.console.style.setProperty('visibility', 'visible', 'important');
+                panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
-            if (panels.preview) panels.preview.style.display = 'block';
-        } else {
-            // Caso archivo
+            if (panels.preview) {
+                panels.preview.style.setProperty('display', 'block', 'important');
+                panels.preview.style.setProperty('visibility', 'visible', 'important');
+                panels.preview.classList.remove('hidden-panel');
+            }
+        } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                panels.editor.style.display = 'flex';
-                if (panels.toolbar) panels.toolbar.style.display = 'flex';
+                panels.editor.style.setProperty('display', 'flex', 'important');
+                panels.editor.style.setProperty('visibility', 'visible', 'important');
+                panels.editor.classList.remove('hidden-panel');
+                if (panels.toolbar) {
+                    panels.toolbar.style.setProperty('display', 'flex', 'important');
+                    panels.toolbar.style.setProperty('visibility', 'visible', 'important');
+                    panels.toolbar.classList.remove('hidden-panel');
+                }
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
                 }
+            }
+        } else {
+            if (panels.empty) {
+                panels.empty.style.setProperty('display', 'flex', 'important');
+                panels.empty.style.setProperty('visibility', 'visible', 'important');
+                panels.empty.classList.remove('hidden-panel');
             }
         }
     },
@@ -260,9 +281,11 @@ const AIChat = {
         this.bindConsole();
         this.bindSidebarToggle();
         
-        // Mantener las pestañas visibles pero iniciar en preview
-        this.renderTabs();
-        this.switchTab('preview');
+        // CORRECCIÓN: Asegurar que el estado inicial cargue correctamente las pestañas y el panel
+        setTimeout(() => {
+            this.renderTabs();
+            this.switchTab('preview');
+        }, 100);
         
         // Configurar el botón de guardar si no se ha hecho
         const saveBtn = document.getElementById('btn-save-file');

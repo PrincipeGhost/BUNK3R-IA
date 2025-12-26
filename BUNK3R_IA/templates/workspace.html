@@ -197,10 +197,15 @@
             color: #8b949e !important;
             user-select: none;
             white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .ai-tab-item:hover {
+            background: #343b44 !important;
         }
         .ai-tab-item.active {
             background: #1e1e1e !important;
             color: #fff !important;
+            border-bottom: 2px solid #F0B90B !important;
         }
         .tab-close-btn {
             margin-left: 8px;
@@ -210,6 +215,11 @@
         .tab-close-btn:hover {
             opacity: 1;
             color: #ff4444;
+        }
+        /* Ocultar elementos por defecto */
+        .hidden-panel {
+            display: none !important;
+            visibility: hidden !important;
         }
     </style>
 </head>
