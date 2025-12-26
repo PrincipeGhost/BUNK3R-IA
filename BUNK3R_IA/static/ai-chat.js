@@ -261,30 +261,6 @@ const AIChat = {
             console.error('[DEBUG] Fetch Exception:', e);
         }
     },
-            
-            if (data.success) {
-                console.log('File content loaded successfully');
-                const newTab = {
-                    id: tabId,
-                    name: name || path.split('/').pop(),
-                    type: 'file',
-                    path: path,
-                    content: data.content
-                };
-                this.openTabs.push(newTab);
-                this.activeTabId = tabId;
-                
-                // Forzar el renderizado y el cambio de pestaña con el contenido cargado
-                this.renderTabs();
-                this.switchTab(tabId);
-            } else {
-                console.error('Error loading file content:', data.error);
-                alert('Error: ' + data.error);
-            }
-        } catch (e) {
-            console.error('Fetch error during openFile:', e);
-        }
-    },
 
     async saveCurrentFile() {
         if (!window.currentEditingFile) return;
