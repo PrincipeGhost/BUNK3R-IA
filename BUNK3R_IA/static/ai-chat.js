@@ -68,14 +68,18 @@ const AIChat = {
 
     renderTabs() {
         const container = document.getElementById('ai-tabs-container');
-        if (!container) return;
+        if (!container) {
+            console.error('[AI-ERROR] ai-tabs-container no encontrado');
+            return;
+        }
         container.innerHTML = '';
         
         this.openTabs.forEach(tab => {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
+            tabEl.style.display = 'flex';
+            tabEl.style.visibility = 'visible';
             
-            // Estilos CSS vía clases, evitando inline style excesivo
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
             if (tab.type === 'file') {
@@ -124,20 +128,20 @@ const AIChat = {
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             if (panels.console) {
-                panels.console.style.setProperty('display', 'flex', 'important');
-                panels.console.style.setProperty('visibility', 'visible', 'important');
-                panels.console.style.setProperty('opacity', '1', 'important');
-                panels.console.style.setProperty('z-index', '8000', 'important');
+                panels.console.style.display = 'flex';
+                panels.console.style.visibility = 'visible';
+                panels.console.style.opacity = '1';
+                panels.console.style.zIndex = '8000';
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
             if (panels.preview) {
-                panels.preview.style.setProperty('display', 'block', 'important');
-                panels.preview.style.setProperty('visibility', 'visible', 'important');
-                panels.preview.style.setProperty('opacity', '1', 'important');
-                panels.preview.style.setProperty('z-index', '8000', 'important');
+                panels.preview.style.display = 'flex';
+                panels.preview.style.visibility = 'visible';
+                panels.preview.style.opacity = '1';
+                panels.preview.style.zIndex = '8000';
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
