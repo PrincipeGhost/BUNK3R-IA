@@ -13,8 +13,11 @@ for i in {1..30}; do
   sleep 2
 done
 
-# Descargar modelo ligero (Cerebro)
+# Descargar modelo ligero (Cerebro) con progreso visible
+echo "Starting model download: llama3.2:1b..."
 ollama pull llama3.2:1b
+
+echo "Model download finished or already exists."
 
 # Iniciar la aplicación Flask con Gunicorn
 gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"
