@@ -67,28 +67,16 @@ const AIChat = {
     activeTabId: 'preview',
 
     renderTabs() {
-        const container = document.querySelector('.ai-tabs');
-        if (!container) return;
+        const container = document.getElementById('ai-tabs-container');
+        if (!container) {
+            console.error('Tabs container not found by ID');
+            return;
+        }
         container.innerHTML = '';
         
         this.openTabs.forEach(tab => {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
-            
-            // Estilos directos
-            tabEl.style.padding = '8px 15px';
-            tabEl.style.cursor = 'pointer';
-            tabEl.style.fontSize = '12px';
-            tabEl.style.display = 'flex';
-            tabEl.style.alignItems = 'center';
-            tabEl.style.gap = '8px';
-            tabEl.style.borderRight = '1px solid #30363d';
-            tabEl.style.height = '100%';
-            tabEl.style.boxSizing = 'border-box';
-            tabEl.style.whiteSpace = 'nowrap';
-            tabEl.style.background = this.activeTabId === tab.id ? '#1e1e1e' : '#2d333b';
-            tabEl.style.color = this.activeTabId === tab.id ? '#fff' : '#8b949e';
-            
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
             if (tab.type === 'file') {
