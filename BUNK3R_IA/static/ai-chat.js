@@ -64,7 +64,7 @@ const AIChat = {
         { id: 'console', name: 'Terminal', type: 'console' },
         { id: 'preview', name: 'Preview', type: 'preview' }
     ],
-    activeTabId: 'preview',
+    activeTabId: 'console',
 
     renderTabs() {
         const container = document.getElementById('ai-tabs-container');
@@ -104,26 +104,16 @@ const AIChat = {
         
         // Sincronizar estado inicial
         setTimeout(() => {
+            console.log('[AI-LOG] init -> switchTab inicial a:', this.activeTabId);
             this.switchTab(this.activeTabId);
-        }, 100);
+        }, 300);
     },
 
-    switchTab(tabId) {
-        console.log('[AI-LOG] switchTab INICIO ->', tabId);
-        this.activeTabId = tabId;
-        this.renderTabs();
-        
-        const consolePanel = document.getElementById('ai-console');
-        const editorWrapper = document.getElementById('editor-wrapper');
-        const previewPanel = document.getElementById('ai-preview-panel');
-        const toolbar = document.getElementById('editor-toolbar');
-        const emptyState = document.querySelector('.ai-empty-state');
-
-        // Reset all panels with absolute force
+        // Reset all panels
         [consolePanel, editorWrapper, previewPanel, toolbar, emptyState].forEach(p => {
             if (p) {
+                p.classList.remove('active-panel');
                 p.style.setProperty('display', 'none', 'important');
-                p.style.setProperty('visibility', 'hidden', 'important');
                 p.style.setProperty('z-index', '1', 'important');
                 p.classList.add('hidden-panel');
             }
@@ -134,51 +124,44 @@ const AIChat = {
         if (tabId === 'console') {
             if (consolePanel) {
                 console.log('[AI-LOG] Mostrando Terminal Panel');
+                consolePanel.classList.add('active-panel');
                 consolePanel.style.setProperty('display', 'flex', 'important');
-                consolePanel.style.setProperty('visibility', 'visible', 'important');
-                consolePanel.style.setProperty('z-index', '50000', 'important');
+                consolePanel.style.setProperty('z-index', '2147483647', 'important');
                 consolePanel.classList.remove('hidden-panel');
                 
-                // Asegurar que el output sea visible
                 const output = document.getElementById('ai-console-output');
                 if (output) {
                     output.style.setProperty('display', 'block', 'important');
                     output.style.setProperty('visibility', 'visible', 'important');
+                    output.innerHTML += `<div>[BUNK3R] Terminal activa - ${new Date().toLocaleTimeString()}</div>`;
                 }
 
                 setTimeout(() => {
                     const input = document.getElementById('ai-console-input');
-                    if (input) {
-                        input.focus();
-                        console.log('[AI-LOG] Terminal focused');
-                    }
-                }, 300);
-            } else {
-                console.error('[AI-LOG] ERROR: No se encontró el panel de terminal (ai-console)');
+                    if (input) input.focus();
+                }, 100);
             }
         } else if (tabId === 'preview') {
             if (previewPanel) {
                 console.log('[AI-LOG] Mostrando Preview Panel');
+                previewPanel.classList.add('active-panel');
                 previewPanel.style.setProperty('display', 'flex', 'important');
-                previewPanel.style.setProperty('visibility', 'visible', 'important');
-                previewPanel.style.setProperty('z-index', '50000', 'important');
+                previewPanel.style.setProperty('z-index', '2147483647', 'important');
                 previewPanel.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
             if (editorWrapper) {
                 console.log('[AI-LOG] Mostrando Editor Panel');
+                editorWrapper.classList.add('active-panel');
                 editorWrapper.style.setProperty('display', 'block', 'important');
-                editorWrapper.style.setProperty('visibility', 'visible', 'important');
-                editorWrapper.style.setProperty('z-index', '50000', 'important');
+                editorWrapper.style.setProperty('z-index', '2147483647', 'important');
                 editorWrapper.classList.remove('hidden-panel');
                 if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
                 
                 const tab = this.openTabs.find(t => t.id === tabId);
                 if (tab) {
                     const editor = document.getElementById('ai-real-editor');
-                    if (editor) {
-                        editor.value = tab.content || '';
-                    }
+                    if (editor) editor.value = tab.content || '';
                 }
             }
         }
