@@ -305,6 +305,7 @@ const AIChat = {
         this.bindCodeEditor();
         this.bindConsole();
         this.bindSidebarToggle();
+        this.bindResizer();
         
         // CORRECCIÓN: Asegurar que el estado inicial cargue correctamente las pestañas y el panel
         setTimeout(() => {
@@ -583,6 +584,43 @@ const AIChat = {
                 panel.style.display = 'none';
                 panel.classList.add('hidden');
                 btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+            }
+        });
+    },
+
+    bindResizer() {
+        const resizer = document.getElementById('main-resizer');
+        const leftPanel = document.getElementById('panel-chat');
+        if (!resizer || !leftPanel) return;
+
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            resizer.classList.add('resizing');
+            // Evitar selección de texto durante el arrastre
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const activityBar = document.querySelector('.activity-bar');
+            const offset = activityBar ? activityBar.offsetWidth : 50;
+            const newWidth = e.clientX - offset;
+
+            if (newWidth >= 280 && newWidth <= 800) {
+                leftPanel.style.flex = `0 0 ${newWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+                resizer.classList.remove('resizing');
+                document.body.style.userSelect = 'auto';
             }
         });
     },
