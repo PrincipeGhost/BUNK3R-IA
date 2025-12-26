@@ -165,35 +165,6 @@ const AIChat = {
                 // INYECTAR DIRECTAMENTE AL BODY PARA EVITAR CUALQUIER RESTRICCIÓN DE CONTENEDOR
                 document.body.appendChild(realEditor);
 
-                realEditor.value = tab.content || '';
-                window.currentEditingFile = tab.path;
-                
-                const styles = {
-                    display: 'block',
-                    visibility: 'visible',
-                    opacity: '1',
-                    position: 'fixed',
-                    top: '10%',
-                    left: '10%',
-                    width: '80%',
-                    height: '80%',
-                    background: '#1e1e1e',
-                    color: '#00ff00',
-                    padding: '20px',
-                    border: '10px solid #F0B90B',
-                    outline: 'none',
-                    zIndex: '2147483647',
-                    fontFamily: 'monospace',
-                    fontSize: '18px',
-                    boxShadow: '0 0 100px rgba(0,0,0,1)',
-                    overflow: 'auto'
-                };
-
-                for (let prop in styles) {
-                    realEditor.style.setProperty(prop, styles[prop], 'important');
-                }
-
-                console.log('[AI-DIAG] Editor inyectado en BODY con estilos de EMERGENCIA');
                 
                 // Botón de cerrar para este editor de emergencia
                 const closeBtn = document.createElement('button');
