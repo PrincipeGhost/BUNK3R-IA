@@ -76,6 +76,18 @@ const AIChat = {
             return;
         }
 
+        // Si el path parece ser solo el nombre del repo o usuario (sin extensión de archivo)
+        const parts = path.split('/').filter(p => p);
+        const lastPart = parts[parts.length - 1] || "";
+        
+        // Si no tiene punto y es corto (ej: PrincipeGhost/BUNK3R), es el repo, no un archivo
+        if (!lastPart.includes('.') && parts.length <= 2) {
+            console.log('Skipping repo-level path:', path);
+            return;
+        }
+
+        console.log('Opening file:', path);
+
         try {
             const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
             const data = await response.json();
@@ -95,7 +107,6 @@ const AIChat = {
             alert('Error al conectar con el servidor');
         }
     },
-
     async saveCurrentFile() {
         if (!window.currentEditingFile) return;
         const editor = document.getElementById('ai-real-editor');

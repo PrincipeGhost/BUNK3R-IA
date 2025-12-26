@@ -92,18 +92,31 @@ def manage_file_content():
     # Intento de encontrar el archivo si la ruta incluye el nombre del repo (para compatibilidad con GitHub UI)
     if not os.path.exists(full_path):
         # Limpieza de la ruta para evitar problemas con nombres de repo
-        # Si la ruta es solo el nombre de un repo, devolvemos un error amigable o el README
-        if file_path.count('/') <= 1 or not "." in file_path.split('/')[-1]:
-            # Es probable que sea el nombre del repo PrincipeGhost/BUNK3R-W3B o una carpeta
+        # Si la ruta es solo el nombre de un repo o usuario, o una carpeta sin extensión
+        parts = file_path.strip('/').split('/')
+        is_potential_repo_or_dir = len(parts) <= 2 and not "." in parts[-1]
+        
+        if is_potential_repo_or_dir:
+            # Es probable que sea el nombre del repo PrincipeGhost/BUNK3R o una carpeta
             # Intentamos servir el README.md del proyecto actual como fallback
             full_path = os.path.join(os.getcwd(), 'README.md')
         else:
-            if "PrincipeGhost/BUNK3R-W3B/" in file_path:
-                file_path = file_path.replace("PrincipeGhost/BUNK3R-W3B/", "")
-            elif "PrincipeGhost/BUNK3R-IA/" in file_path:
-                file_path = file_path.replace("PrincipeGhost/BUNK3R-IA/", "")
-                
-            full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
+            # Intentar limpiar prefijos conocidos si el archivo no existe
+            clean_path = file_path
+            # Prefijos dinámicos basados en la estructura del usuario (dueño/repo)
+            if len(parts) >= 2:
+                # Si las primeras partes parecen ser un owner/repo de GitHub
+                # Probamos quitando PrincipeGhost/BUNK3R y variantes
+                prefixes = ["PrincipeGhost/BUNK3R-W3B/", "PrincipeGhost/BUNK3R-IA/", "PrincipeGhost/BUNK3R/"]
+                for prefix in prefixes:
+                    if clean_path.startswith(prefix):
+                        clean_path = clean_path.replace(prefix, "", 1)
+                        break
+                # Si aún no existe, probamos quitando los dos primeros segmentos dinámicamente
+                if not os.path.exists(os.path.join(os.getcwd(), clean_path)) and len(parts) > 2:
+                    clean_path = "/".join(parts[2:])
+            
+            full_path = os.path.abspath(os.path.join(os.getcwd(), clean_path))
 
     # Intento agresivo si sigue sin existir
     if not os.path.exists(full_path):
