@@ -518,6 +518,11 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         if openai_key:
             self.providers.append(OpenAIProvider(openai_key))
             logger.info("OpenAI provider initialized (Priority 3)")
+
+        # Priority GitHub: GitHub Token for AI Constructor
+        github_token = os.environ.get('GITHUB_TOKEN', '')
+        if github_token:
+            logger.info("GitHub Token detected and ready for AI Constructor")
         
         # Priority 4: Gemini
         gemini_key = os.environ.get('GEMINI_API_KEY', '')

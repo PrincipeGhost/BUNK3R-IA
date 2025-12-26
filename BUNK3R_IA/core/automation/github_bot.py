@@ -15,7 +15,7 @@ class GithubBot(BaseAutomationBot):
         super().__init__(headless)
         self.token = token
 
-    async def create_repo(self, repo_name: str, private: bool = True, description: str = "") -> str:
+    async def create_repo(self, repo_name: str, private: bool = True, description: str = "") -> Any:
         """
         Crea un repositorio en GitHub.
         Si hay token, usa API (Requests). Si no, intentará flujo UI (Complejo por 2FA).
@@ -59,7 +59,7 @@ class GithubBot(BaseAutomationBot):
         # Por ahora, lanzaremos error si no hay token.
         raise NotImplementedError("Ghost Mode para creación de repos requiere Cookies de sesión configuradas. Por favor proporciona un GITHUB_TOKEN.")
 
-    async def push_code(self, repo_url: str, local_path: str, user_email: str, user_name: str):
+    async def push_code(self, repo_url: str, local_path: str, user_email: str, user_name: str) -> None:
         """Inicializa git y hace push al repo"""
         try:
             # Construir URL con token para auth
