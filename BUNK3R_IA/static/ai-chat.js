@@ -610,8 +610,14 @@ const AIChat = {
             const offset = activityBar ? activityBar.offsetWidth : 50;
             const newWidth = e.clientX - offset;
 
-            if (newWidth >= 280 && newWidth <= 800) {
-                leftPanel.style.flex = `0 0 ${newWidth}px`;
+            // Log para depuración
+            console.log('[RESIZER] ClientX:', e.clientX, 'Offset:', offset, 'NewWidth:', newWidth);
+
+            if (newWidth >= 100 && newWidth <= window.innerWidth * 0.8) {
+                leftPanel.style.setProperty('flex', `0 0 ${newWidth}px`, 'important');
+                leftPanel.style.setProperty('width', `${newWidth}px`, 'important');
+                leftPanel.style.setProperty('min-width', `${newWidth}px`, 'important');
+                leftPanel.style.setProperty('max-width', `${newWidth}px`, 'important');
             }
         });
 
