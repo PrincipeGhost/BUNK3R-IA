@@ -600,28 +600,34 @@ const AIChat = {
             document.body.style.cursor = 'col-resize';
             resizer.classList.add('resizing');
             document.body.style.userSelect = 'none';
-            // Prevenir comportamientos por defecto que puedan interrumpir el arrastre
             e.preventDefault();
+            
+            // Inyectar overlay para evitar que el iframe capture eventos
+            const overlay = document.createElement('div');
+            overlay.id = 'resizer-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.bottom = '0';
+            overlay.style.zIndex = '99998';
+            overlay.style.cursor = 'col-resize';
+            document.body.appendChild(overlay);
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
 
-            // Usar requestAnimationFrame para suavizar el movimiento
-            requestAnimationFrame(() => {
-                if (!isResizing) return;
-                
-                const activityBar = document.querySelector('.activity-bar');
-                const offset = activityBar ? activityBar.offsetWidth : 50;
-                const newWidth = e.clientX - offset;
+            const activityBar = document.querySelector('.activity-bar');
+            const offset = activityBar ? activityBar.offsetWidth : 50;
+            const newWidth = e.clientX - offset;
 
-                if (newWidth >= 150 && newWidth <= window.innerWidth * 0.7) {
-                    leftPanel.style.setProperty('flex', `0 0 ${newWidth}px`, 'important');
-                    leftPanel.style.setProperty('width', `${newWidth}px`, 'important');
-                    leftPanel.style.setProperty('min-width', `${newWidth}px`, 'important');
-                    leftPanel.style.setProperty('max-width', `${newWidth}px`, 'important');
-                }
-            });
+            if (newWidth >= 200 && newWidth <= window.innerWidth * 0.8) {
+                leftPanel.style.setProperty('flex', `0 0 ${newWidth}px`, 'important');
+                leftPanel.style.setProperty('width', `${newWidth}px`, 'important');
+                leftPanel.style.setProperty('min-width', `${newWidth}px`, 'important');
+                leftPanel.style.setProperty('max-width', `${newWidth}px`, 'important');
+            }
         });
 
         document.addEventListener('mouseup', () => {
@@ -630,6 +636,9 @@ const AIChat = {
                 document.body.style.cursor = 'default';
                 resizer.classList.remove('resizing');
                 document.body.style.userSelect = 'auto';
+                
+                const overlay = document.getElementById('resizer-overlay');
+                if (overlay) overlay.remove();
             }
         });
     },
