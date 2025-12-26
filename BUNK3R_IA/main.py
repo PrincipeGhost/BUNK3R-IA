@@ -280,7 +280,8 @@ def main():
     app = create_app(config)
     
     host = config.HOST
-    port = config.PORT
+    # Priorizar el puerto de la variable de entorno para Render
+    port = int(os.environ.get("PORT", config.PORT))
     debug = config.DEBUG
     
     logger.info(f"Starting server on {host}:{port}")
