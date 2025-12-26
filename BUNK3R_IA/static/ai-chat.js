@@ -109,7 +109,7 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('[AI-LOG] switchTab ->', tabId);
+        console.log('[AI-LOG] switchTab INICIO ->', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
@@ -129,27 +129,39 @@ const AIChat = {
             }
         });
 
+        console.log('[AI-LOG] Activando tabId:', tabId);
+
         if (tabId === 'console') {
             if (consolePanel) {
                 console.log('[AI-LOG] Mostrando Terminal Panel');
                 consolePanel.style.setProperty('display', 'flex', 'important');
                 consolePanel.style.setProperty('visibility', 'visible', 'important');
-                consolePanel.style.setProperty('z-index', '30000', 'important');
+                consolePanel.style.setProperty('z-index', '50000', 'important');
                 consolePanel.classList.remove('hidden-panel');
+                
+                // Asegurar que el output sea visible
+                const output = document.getElementById('ai-console-output');
+                if (output) {
+                    output.style.setProperty('display', 'block', 'important');
+                    output.style.setProperty('visibility', 'visible', 'important');
+                }
+
                 setTimeout(() => {
                     const input = document.getElementById('ai-console-input');
                     if (input) {
                         input.focus();
                         console.log('[AI-LOG] Terminal focused');
                     }
-                }, 200);
+                }, 300);
+            } else {
+                console.error('[AI-LOG] ERROR: No se encontró el panel de terminal (ai-console)');
             }
         } else if (tabId === 'preview') {
             if (previewPanel) {
                 console.log('[AI-LOG] Mostrando Preview Panel');
                 previewPanel.style.setProperty('display', 'flex', 'important');
                 previewPanel.style.setProperty('visibility', 'visible', 'important');
-                previewPanel.style.setProperty('z-index', '30000', 'important');
+                previewPanel.style.setProperty('z-index', '50000', 'important');
                 previewPanel.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
@@ -157,7 +169,7 @@ const AIChat = {
                 console.log('[AI-LOG] Mostrando Editor Panel');
                 editorWrapper.style.setProperty('display', 'block', 'important');
                 editorWrapper.style.setProperty('visibility', 'visible', 'important');
-                editorWrapper.style.setProperty('z-index', '30000', 'important');
+                editorWrapper.style.setProperty('z-index', '50000', 'important');
                 editorWrapper.classList.remove('hidden-panel');
                 if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
                 
