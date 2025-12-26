@@ -128,6 +128,7 @@ const AIChat = {
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             console.log('[DEBUG] Activating console panel');
+            if (panels.empty) panels.empty.style.setProperty('display', 'none', 'important');
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
@@ -138,6 +139,7 @@ const AIChat = {
             }
         } else if (tabId === 'preview') {
             console.log('[DEBUG] Activating preview panel');
+            if (panels.empty) panels.empty.style.setProperty('display', 'none', 'important');
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
