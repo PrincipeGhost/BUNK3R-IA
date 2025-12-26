@@ -77,6 +77,12 @@ const AIChat = {
         console.log('Rendering tabs:', this.openTabs);
         
         this.openTabs.forEach(tab => {
+            // No mostrar la pestaña de consola si no está activa y no es el tipo actual
+            if (tab.id === 'console' && this.activeTabId !== 'console') {
+                // Verificar si hay otras pestañas, si no hay ninguna más (improbable) la dejamos
+                if (this.openTabs.length > 1) return;
+            }
+
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
             
