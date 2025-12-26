@@ -88,7 +88,6 @@ def manage_file_content():
         return jsonify({"success": False, "error": "No path provided"}), 400
 
     # Normalización agresiva de la ruta
-    # Si la ruta tiene prefijos de repo de GitHub, los removemos
     clean_path = file_path.strip('/')
     prefixes = ["PrincipeGhost/BUNK3R-W3B", "PrincipeGhost/BUNK3R-IA", "PrincipeGhost/BUNK3R"]
     for prefix in prefixes:
@@ -96,47 +95,52 @@ def manage_file_content():
             clean_path = clean_path[len(prefix):].strip('/')
             break
 
-    # Buscar el archivo directamente en la raíz del proyecto local
+    # Intentar encontrar el archivo en la raíz del proyecto o en BUNK3R_IA
+    project_root = os.path.abspath(os.getcwd())
+    filename = os.path.basename(clean_path)
+    
     possible_paths = [
-        os.path.abspath(os.path.join(os.getcwd(), clean_path)),
-        os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", clean_path))
+        os.path.join(project_root, clean_path),
+        os.path.join(project_root, "BUNK3R_IA", clean_path),
+        os.path.join(project_root, "BUNK3R-W3B", clean_path)
     ]
     
-    # Añadir rutas de carpetas comunes si no se encuentra
-    if not any(os.path.exists(p) for p in possible_paths):
-        common_dirs = ["api", "core", "static", "templates", "tests", "docs", "prompts"]
-        for d in common_dirs:
-            possible_paths.append(os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", d, clean_path)))
+    # Añadir rutas de carpetas comunes
+    common_dirs = ["api", "core", "static", "templates", "tests", "docs", "prompts"]
+    for d in common_dirs:
+        possible_paths.append(os.path.join(project_root, "BUNK3R_IA", d, clean_path))
+        possible_paths.append(os.path.join(project_root, d, clean_path))
+
+    # Fallbacks específicos para app.py / main.py
+    if filename == "app.py" or filename == "main.py":
+        possible_paths.append(os.path.join(project_root, "BUNK3R_IA", "main.py"))
+        possible_paths.append(os.path.join(project_root, "main.py"))
 
     full_path = None
     for p in possible_paths:
-        if os.path.exists(p) and os.path.isfile(p):
-            full_path = p
+        abs_p = os.path.abspath(p)
+        if os.path.exists(abs_p) and os.path.isfile(abs_p):
+            # Seguridad: ignorar si está en librerías
+            if ".pythonlibs" in abs_p:
+                continue
+            full_path = abs_p
             break
             
-    # Si sigue sin existir y es un archivo (tiene extensión), buscarlo recursivamente en TODO el proyecto
-    if not full_path and "." in os.path.basename(clean_path):
-        filename = os.path.basename(clean_path)
-        print(f"[AI-LOG] File not found by direct path, searching recursively for: {filename}")
-        search_root = os.path.abspath(os.path.join(os.getcwd())) 
-        # IGNORAR .pythonlibs y .git para evitar encontrar archivos de librerías
-        for root, dirs, files in os.walk(search_root):
-            if ".pythonlibs" in root or ".git" in root or "__pycache__" in root:
+    # BÚSQUEDA RECURSIVA AGRESIVA (último recurso)
+    if not full_path:
+        print(f"[AI-LOG] Searching recursively for: {filename}")
+        for root, dirs, files in os.walk(project_root):
+            if any(x in root for x in [".pythonlibs", ".git", "__pycache__", "venv", "node_modules"]):
                 continue
             if filename in files:
                 full_path = os.path.join(root, filename)
-                print(f"[AI-LOG] Found file at: {full_path}")
                 break
 
     if not full_path:
-        print(f"[AI-LOG] ERROR: File NOT found: {file_path}")
-        return jsonify({"success": False, "error": f"File not found: {file_path} (cleaned: {clean_path})"}), 404
+        return jsonify({"success": False, "error": f"File not found: {file_path}"}), 404
 
-    print(f"[AI-LOG] File found, proceeding to read/write: {full_path}")
     # Seguridad: asegurar que el archivo está dentro de la raíz permitida
-    # En Replit, permitimos leer cualquier cosa dentro de /home/runner/
     if not full_path.startswith('/home/runner/'):
-         print(f"[AI-LOG] ERROR: Access denied for path: {full_path}")
          return jsonify({"success": False, "error": "Access denied"}), 403
 
     if request.method == 'GET':

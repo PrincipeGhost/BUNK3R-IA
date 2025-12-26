@@ -203,10 +203,11 @@ const AIChat = {
     async openFile(path, name) {
         console.log('[AI-LOG] openFile INICIO -> path:', path, 'name:', name);
         
-        let cleanIdPath = path;
-        if (path.startsWith('./')) cleanIdPath = path.substring(2);
+        // Normalización para Replit: quitar ./ si existe
+        let cleanPath = path;
+        if (path.startsWith('./')) cleanPath = path.substring(2);
         
-        const tabId = `file-${cleanIdPath}`;
+        const tabId = `file-${cleanPath.replace(/\//g, '-')}`;
         console.log('[AI-LOG] openFile -> tabId:', tabId);
         
         const existingTab = this.openTabs.find(t => t.id === tabId);
@@ -218,7 +219,7 @@ const AIChat = {
 
         console.log('[AI-LOG] openFile -> Cargando contenido desde API...');
         try {
-            const url = `/api/projects/file/content?path=${encodeURIComponent(path)}`;
+            const url = `/api/projects/file/content?path=${encodeURIComponent(cleanPath)}`;
             console.log('[AI-LOG] openFile -> URL:', url);
             
             const response = await fetch(url);
@@ -231,9 +232,9 @@ const AIChat = {
                 console.log('[AI-LOG] openFile -> ÉXITO, contenido recibido, length:', data.content ? data.content.length : 0);
                 const newTab = {
                     id: tabId,
-                    name: name || path.split('/').pop(),
+                    name: name || cleanPath.split('/').pop(),
                     type: 'file',
-                    path: path,
+                    path: cleanPath,
                     content: data.content
                 };
                 this.openTabs.push(newTab);
@@ -243,6 +244,12 @@ const AIChat = {
                 this.switchTab(tabId);
             } else {
                 console.error('[AI-LOG] openFile -> ERROR API:', data.error);
+                // Si falla, reintentar con el nombre de archivo solamente
+                const filename = cleanPath.split('/').pop();
+                if (filename !== cleanPath) {
+                    console.log('[AI-LOG] openFile -> Reintentando solo con nombre de archivo:', filename);
+                    return this.openFile(filename, name);
+                }
                 alert('Error al cargar archivo: ' + data.error);
             }
         } catch (e) {
