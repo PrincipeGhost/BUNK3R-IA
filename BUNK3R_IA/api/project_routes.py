@@ -100,7 +100,9 @@ def manage_file_content():
     possible_paths = [
         os.path.abspath(os.path.join(os.getcwd(), clean_path)),
         os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", clean_path)),
-        os.path.abspath(os.path.join(os.getcwd(), "..", clean_path))
+        os.path.abspath(os.path.join(os.getcwd(), "..", clean_path)),
+        os.path.abspath(os.path.join("/home/runner", os.environ.get('REPL_SLUG', ''), clean_path)),
+        os.path.abspath(os.path.join("/home/runner", os.environ.get('REPL_SLUG', ''), "BUNK3R_IA", clean_path))
     ]
     
     # Añadir rutas de carpetas comunes si no se encuentra

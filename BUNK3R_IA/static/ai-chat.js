@@ -211,7 +211,11 @@ const AIChat = {
 
         console.log('Loading file content for:', path);
         try {
-            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
+            // Limpiar la ruta para el API
+            let apiPath = path;
+            if (path.startsWith('./')) apiPath = path.substring(2);
+            
+            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(apiPath)}`);
             const data = await response.json();
             
             if (data.success) {
