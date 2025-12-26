@@ -128,31 +128,31 @@ const AIChat = {
         const emptyState = document.querySelector('.ai-empty-state');
         const toolbar = document.getElementById('editor-toolbar');
         
-        // Ocultar todo por defecto
+        // Ocultar todo por defecto usando !important para asegurar
         if (consoleEl) {
-            consoleEl.style.display = 'none';
+            consoleEl.style.setProperty('display', 'none', 'important');
             consoleEl.classList.add('hidden');
         }
-        if (editorWrapper) editorWrapper.style.display = 'none';
-        if (emptyState) emptyState.style.display = 'none';
-        if (toolbar) toolbar.style.display = 'none';
+        if (editorWrapper) editorWrapper.style.setProperty('display', 'none', 'important');
+        if (emptyState) emptyState.style.setProperty('display', 'none', 'important');
+        if (toolbar) toolbar.style.setProperty('display', 'none', 'important');
         
         if (tabId === 'console') {
             if (consoleEl) {
-                consoleEl.style.display = 'flex';
+                consoleEl.style.setProperty('display', 'flex', 'important');
                 consoleEl.classList.remove('hidden');
             }
         } else if (tabId === 'preview') {
             if (emptyState) {
-                emptyState.style.display = 'flex';
+                emptyState.style.setProperty('display', 'flex', 'important');
                 emptyState.querySelector('p').textContent = 'Selecciona un archivo o espera a que se genere la vista previa';
             }
         } else {
             // Es un archivo
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && editorWrapper) {
-                editorWrapper.style.display = 'flex';
-                if (toolbar) toolbar.style.display = 'flex';
+                editorWrapper.style.setProperty('display', 'flex', 'important');
+                if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) editor.value = tab.content || '';
                 window.currentEditingFile = tab.path;
