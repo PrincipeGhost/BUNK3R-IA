@@ -974,6 +974,15 @@ const AIChat = {
             console.warn('AIChat: iframe not found');
             return;
         }
+
+        const hasFiles = Object.keys(this.files).length > 0;
+        if (hasFiles) {
+            iframe.style.display = 'block';
+            if (emptyState) emptyState.style.display = 'none';
+        } else {
+            iframe.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'flex';
+        }
         
         let html = this.files['index.html'] || this.files['html'] || '';
         let css = this.files['styles.css'] || this.files['style.css'] || this.files['css'] || '';
