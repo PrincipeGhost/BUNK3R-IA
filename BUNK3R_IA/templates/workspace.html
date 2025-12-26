@@ -40,15 +40,39 @@
             overflow: hidden !important;
         }
         .ai-panel-chat {
-            display: flex !important;
+            display: none !important;
             flex-direction: column !important;
             flex: 0 0 300px !important;
             background: #0d1117 !important;
             border-right: 1px solid #30363d !important;
             overflow: hidden !important;
+            min-height: 0 !important;
+            min-width: 0 !important;
         }
         .ai-panel-chat.active-panel {
             display: flex !important;
+            flex: 1 !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-right: none !important;
+            flex-direction: column !important;
+            min-height: 0 !important;
+        }
+        .ai-chat-sidebar-header {
+            flex-shrink: 0 !important;
+            padding: 20px 16px !important;
+            border-bottom: 1px solid #30363d !important;
+        }
+        .ai-chat-messages {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            padding: 16px !important;
+            min-height: 0 !important;
+        }
+        .ai-chat-input-container {
+            flex-shrink: 0 !important;
+            padding: 16px !important;
+            border-top: 1px solid #30363d !important;
         }
         .ai-panel.hidden {
             display: none !important;
