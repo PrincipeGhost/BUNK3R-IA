@@ -513,20 +513,33 @@ const AIChat = {
     
     bindSidebarToggle() {
         const btn = document.getElementById('toggle-sidebar-btn');
+        // El panel de proyectos real que se usa en el layout
         const projectsPanel = document.getElementById('panel-projects');
-        if (!btn || !projectsPanel) return;
+        
+        if (!btn || !projectsPanel) {
+            console.error('Sidebar toggle elements not found:', { btn: !!btn, panel: !!projectsPanel });
+            return;
+        }
 
-        btn.onclick = () => {
-            const isHidden = projectsPanel.classList.contains('hidden');
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Forzar el cambio de estado usando estilos directos para asegurar que funcione
+            const isHidden = projectsPanel.style.display === 'none' || projectsPanel.classList.contains('hidden');
+            
             if (isHidden) {
-                projectsPanel.classList.remove('hidden');
                 projectsPanel.style.display = 'flex';
+                projectsPanel.classList.remove('hidden');
                 btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+                btn.style.left = '0'; // Ajustar posición si es necesario
             } else {
-                projectsPanel.classList.add('hidden');
                 projectsPanel.style.display = 'none';
+                projectsPanel.classList.add('hidden');
                 btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+                btn.style.left = '0';
             }
+            console.log('Sidebar toggled. Current display:', projectsPanel.style.display);
         };
     },
 
