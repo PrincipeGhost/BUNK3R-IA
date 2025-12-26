@@ -97,6 +97,7 @@ const AIChat = {
     },
 
     switchTab(tabId) {
+        console.log('Switching to tab:', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
@@ -104,6 +105,7 @@ const AIChat = {
         const editorWrapper = document.getElementById('editor-wrapper');
         const emptyState = document.querySelector('.ai-empty-state');
         const toolbar = document.getElementById('editor-toolbar');
+        const previewContainer = document.getElementById('ai-preview-iframe'); // Buscar iframe si existe
         
         // Ocultar todo por defecto usando !important para asegurar
         if (consoleEl) {
@@ -113,16 +115,22 @@ const AIChat = {
         if (editorWrapper) editorWrapper.style.setProperty('display', 'none', 'important');
         if (emptyState) emptyState.style.setProperty('display', 'none', 'important');
         if (toolbar) toolbar.style.setProperty('display', 'none', 'important');
+        if (previewContainer) previewContainer.style.setProperty('display', 'none', 'important');
         
         if (tabId === 'console') {
             if (consoleEl) {
                 consoleEl.style.setProperty('display', 'flex', 'important');
                 consoleEl.classList.remove('hidden');
+                const consoleInput = document.getElementById('ai-console-input');
+                if (consoleInput) consoleInput.focus();
             }
         } else if (tabId === 'preview') {
-            if (emptyState) {
+            // Mostrar estado de preview o el iframe de preview
+            if (previewContainer && previewContainer.src) {
+                previewContainer.style.setProperty('display', 'block', 'important');
+            } else if (emptyState) {
                 emptyState.style.setProperty('display', 'flex', 'important');
-                emptyState.querySelector('p').textContent = 'Selecciona un archivo o espera a que se genere la vista previa';
+                emptyState.querySelector('p').textContent = 'Vista previa activa. Describe cambios en el chat para ver resultados.';
             }
         } else {
             // Es un archivo
@@ -131,8 +139,11 @@ const AIChat = {
                 editorWrapper.style.setProperty('display', 'flex', 'important');
                 if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
                 const editor = document.getElementById('ai-real-editor');
-                if (editor) editor.value = tab.content || '';
-                window.currentEditingFile = tab.path;
+                if (editor) {
+                    editor.value = tab.content || '';
+                    // Guardar el path actual para el guardado
+                    window.currentEditingFile = tab.path;
+                }
             }
         }
     },
