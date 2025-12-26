@@ -75,35 +75,23 @@ const AIChat = {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
             
-            // Estilos inline forzados para garantizar visibilidad
-            tabEl.style.padding = '0 15px';
-            tabEl.style.height = '100%';
-            tabEl.style.display = 'flex';
-            tabEl.style.alignItems = 'center';
-            tabEl.style.cursor = 'pointer';
-            tabEl.style.fontSize = '12px';
-            tabEl.style.borderRight = '1px solid #30363d';
-            tabEl.style.background = this.activeTabId === tab.id ? '#1e1e1e' : '#2d333b';
-            tabEl.style.color = this.activeTabId === tab.id ? '#fff' : '#8b949e';
-            tabEl.style.userSelect = 'none';
-            tabEl.style.zIndex = '1100';
-            
+            // Estilos CSS vía clases, evitando inline style excesivo
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
             if (tab.type === 'file') {
                 const closeBtn = document.createElement('span');
                 closeBtn.innerHTML = '×';
-                closeBtn.style.padding = '0 5px';
-                closeBtn.style.marginLeft = '5px';
-                closeBtn.onmousedown = (e) => {
+                closeBtn.className = 'tab-close-btn';
+                closeBtn.onclick = (e) => {
                     e.stopPropagation();
                     this.closeTab(tab.id);
                 };
                 tabEl.appendChild(closeBtn);
             }
             
-            tabEl.onmousedown = (e) => {
+            tabEl.onclick = (e) => {
                 e.preventDefault();
+                console.log('Tab clicked:', tab.id);
                 this.switchTab(tab.id);
             };
             
@@ -112,42 +100,39 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('Switching to tab:', tabId);
+        console.log('switching to:', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
-        const consoleEl = document.getElementById('ai-console');
-        const editorWrapper = document.getElementById('editor-wrapper');
-        const emptyState = document.querySelector('.ai-empty-state');
-        const toolbar = document.getElementById('editor-toolbar');
-        const previewPanel = document.getElementById('ai-preview-panel');
-        
-        // Ocultar todo usando display: none !important
-        const hide = (el) => { if (el) el.style.setProperty('display', 'none', 'important'); };
-        hide(consoleEl);
-        hide(editorWrapper);
-        hide(emptyState);
-        hide(toolbar);
-        hide(previewPanel);
-        
+        // Elementos de la UI
+        const panels = {
+            'console': document.getElementById('ai-console'),
+            'editor': document.getElementById('editor-wrapper'),
+            'preview': document.getElementById('ai-preview-panel'),
+            'empty': document.querySelector('.ai-empty-state'),
+            'toolbar': document.getElementById('editor-toolbar')
+        };
+
+        // Ocultar TODOS los paneles primero
+        Object.values(panels).forEach(panel => {
+            if (panel) panel.style.display = 'none';
+        });
+
+        // Mostrar el panel correspondiente
         if (tabId === 'console') {
-            if (consoleEl) {
-                consoleEl.style.setProperty('display', 'flex', 'important');
+            if (panels.console) {
+                panels.console.style.display = 'flex';
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
-            if (previewPanel) {
-                previewPanel.style.setProperty('display', 'block', 'important');
-            } else if (emptyState) {
-                emptyState.style.setProperty('display', 'flex', 'important');
-            }
+            if (panels.preview) panels.preview.style.display = 'block';
         } else {
-            // Es un archivo
+            // Caso archivo
             const tab = this.openTabs.find(t => t.id === tabId);
-            if (tab && editorWrapper) {
-                editorWrapper.style.setProperty('display', 'flex', 'important');
-                if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
+            if (tab && panels.editor) {
+                panels.editor.style.display = 'flex';
+                if (panels.toolbar) panels.toolbar.style.display = 'flex';
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
                     editor.value = tab.content || '';

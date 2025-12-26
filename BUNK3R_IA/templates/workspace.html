@@ -179,12 +179,13 @@
             min-height: 35px !important;
             overflow-x: auto !important;
             scrollbar-width: none !important;
-            z-index: 100 !important;
+            z-index: 1000 !important;
             visibility: visible !important;
             width: 100% !important;
+            position: relative;
         }
         .ai-tab-item {
-            padding: 8px 15px !important;
+            padding: 0 15px !important;
             cursor: pointer !important;
             font-size: 12px !important;
             display: flex !important;
@@ -194,10 +195,21 @@
             height: 100% !important;
             background: #2d333b !important;
             color: #8b949e !important;
+            user-select: none;
+            white-space: nowrap;
         }
         .ai-tab-item.active {
             background: #1e1e1e !important;
             color: #fff !important;
+        }
+        .tab-close-btn {
+            margin-left: 8px;
+            opacity: 0.6;
+            font-size: 16px;
+        }
+        .tab-close-btn:hover {
+            opacity: 1;
+            color: #ff4444;
         }
     </style>
 </head>
