@@ -4,7 +4,14 @@
 ollama serve &
 
 # Esperar a que Ollama esté listo
-sleep 5
+for i in {1..30}; do
+  if curl -s http://localhost:11434/api/tags > /dev/null; then
+    echo "Ollama is ready!"
+    break
+  fi
+  echo "Waiting for Ollama..."
+  sleep 2
+done
 
 # Descargar modelo ligero (Cerebro)
 ollama pull llama3.2:1b
