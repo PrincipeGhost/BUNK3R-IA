@@ -547,12 +547,6 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
     def _initialize_providers(self):
         """Initialize all available AI providers - ordered by reliability"""
         
-        # Priority 0: Ollama Local (Requested by user)
-        ollama_url = os.environ.get('OLLAMA_URL', 'http://127.0.0.1:11434')
-        if ollama_url:
-            self.providers.append(OllamaProvider(ollama_url))
-            logger.info(f"Ollama provider initialized as PRIMARY at {ollama_url}")
-
         # Priority 1: Antigravity Bridge (free, unlimited, user's PC)
         antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', 'http://localhost:8888')
         if antigravity_url:
