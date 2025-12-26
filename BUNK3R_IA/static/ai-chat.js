@@ -160,24 +160,6 @@ const AIChat = {
                 const oldEditor = document.getElementById('ai-real-editor');
                 if (oldEditor) oldEditor.remove();
 
-                const realEditor = document.createElement('textarea');
-                realEditor.id = 'ai-real-editor';
-                // INYECTAR DIRECTAMENTE AL BODY PARA EVITAR CUALQUIER RESTRICCIÓN DE CONTENEDOR
-                document.body.appendChild(realEditor);
-
-                
-                // Botón de cerrar para este editor de emergencia
-                const closeBtn = document.createElement('button');
-                closeBtn.innerText = 'CERRAR EDITOR';
-                closeBtn.style.cssText = 'position:fixed; top:5%; right:10%; z-index:2147483647; padding:15px; background:red; color:white; border:none; cursor:pointer; font-weight:bold;';
-                closeBtn.onclick = () => { realEditor.remove(); closeBtn.remove(); };
-                document.body.appendChild(closeBtn);
-
-                realEditor.focus();
-            }
-        }
-        console.log('[AI-LOG] switchTab FIN');
-    },
 
     closeTab(tabId) {
         const index = this.openTabs.findIndex(t => t.id === tabId);
