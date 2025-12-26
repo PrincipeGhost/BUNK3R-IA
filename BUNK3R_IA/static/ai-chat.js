@@ -132,22 +132,37 @@ const AIChat = {
 
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
-            if (panels.console) {
-                panels.console.style.display = 'flex';
-                panels.console.style.visibility = 'visible';
-                panels.console.style.opacity = '1';
-                panels.console.style.zIndex = '8000';
-                panels.console.classList.remove('hidden-panel');
+            const consolePanel = document.getElementById('ai-console');
+            if (consolePanel) {
+                console.log('[AI-LOG] Activando Terminal Panel');
+                consolePanel.style.display = 'flex';
+                consolePanel.style.visibility = 'visible';
+                consolePanel.style.opacity = '1';
+                consolePanel.style.zIndex = '10000';
+                consolePanel.classList.remove('hidden-panel');
+                
+                // Asegurarse de que el contenedor de archivos/editor no lo tape
+                const editorWrapper = document.getElementById('editor-wrapper');
+                if (editorWrapper) editorWrapper.style.display = 'none';
+                const previewPanel = document.getElementById('ai-preview-panel');
+                if (previewPanel) previewPanel.style.display = 'none';
+                
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
-            if (panels.preview) {
-                panels.preview.style.display = 'flex';
-                panels.preview.style.visibility = 'visible';
-                panels.preview.style.opacity = '1';
-                panels.preview.style.zIndex = '8000';
-                panels.preview.classList.remove('hidden-panel');
+            const previewPanel = document.getElementById('ai-preview-panel');
+            if (previewPanel) {
+                previewPanel.style.display = 'flex';
+                previewPanel.style.visibility = 'visible';
+                previewPanel.style.opacity = '1';
+                previewPanel.style.zIndex = '10000';
+                previewPanel.classList.remove('hidden-panel');
+                
+                const editorWrapper = document.getElementById('editor-wrapper');
+                if (editorWrapper) editorWrapper.style.display = 'none';
+                const consolePanel = document.getElementById('ai-console');
+                if (consolePanel) consolePanel.style.display = 'none';
             }
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
