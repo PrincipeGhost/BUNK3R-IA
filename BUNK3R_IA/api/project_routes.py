@@ -46,8 +46,8 @@ def create_project():
 @projects_bp.route('/<project_id>/files', methods=['GET'])
 def get_project_files(project_id):
     """Retorna la estructura de archivos real del proyecto"""
-    project_path = os.path.join(os.getcwd(), project_id)
-    if not os.path.exists(project_path):
+    project_path = os.path.join(os.getcwd(), str(project_id))
+    if not os.path.exists(project_path) or project_id == 'current':
         # Fallback para el repo actual si el proyecto no tiene carpeta propia aún
         project_path = os.getcwd()
 
@@ -78,18 +78,25 @@ def get_project_files(project_id):
 @projects_bp.route('/file/content', methods=['GET', 'POST'])
 def manage_file_content():
     """Leer o actualizar contenido de un archivo"""
-    file_path = request.args.get('path') or request.json.get('path')
+    file_path = ""
+    if request.method == 'GET':
+        file_path = request.args.get('path', '')
+    else:
+        file_path = request.json.get('path', '') if request.json else ''
+        
     if not file_path:
         return jsonify({"success": False, "error": "No path provided"}), 400
 
-    full_path = os.path.join(os.getcwd(), file_path)
+    full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
     
     # Seguridad básica: no salir del directorio actual
-    if not os.path.abspath(full_path).startswith(os.getcwd()):
+    if not full_path.startswith(os.getcwd()):
         return jsonify({"success": False, "error": "Access denied"}), 403
 
     if request.method == 'GET':
         try:
+            if not os.path.exists(full_path):
+                return jsonify({"success": False, "error": f"File not found: {file_path}"}), 404
             with open(full_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             return jsonify({"success": True, "content": content})
@@ -97,7 +104,7 @@ def manage_file_content():
             return jsonify({"success": False, "error": str(e)}), 500
 
     if request.method == 'POST':
-        content = request.json.get('content', '')
+        content = request.json.get('content', '') if request.json else ''
         try:
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
             with open(full_path, 'w', encoding='utf-8') as f:

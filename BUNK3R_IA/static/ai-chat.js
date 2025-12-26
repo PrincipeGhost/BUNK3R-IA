@@ -51,7 +51,10 @@ const AIChat = {
                 }
             } else {
                 item.innerHTML = `📄 ${file.name}`;
-                item.onclick = () => this.openFile(file.path, file.name);
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.openFile(file.path, file.name);
+                });
                 container.appendChild(item);
             }
         });
@@ -64,10 +67,13 @@ const AIChat = {
         
         if (!editor) return;
 
-        // Si no viene path, es porque se llamó desde la lógica vieja de GitHub con repo
-        if (arguments.length === 2 && typeof name === 'string' && name.includes('/')) {
-            path = name;
+        // Si path es un objeto (evento de click) o no viene, ignorar
+        if (typeof path === 'object' || !path) {
+            console.error('Invalid path for openFile:', path);
+            return;
         }
+
+        console.log('Opening file:', path);
 
         try {
             const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
@@ -82,14 +88,15 @@ const AIChat = {
                 // Guardar path actual para el botón de guardar
                 window.currentEditingFile = path;
                 
-                // Configurar el botón de guardar si no se ha hecho
-                const saveBtn = document.getElementById('btn-save-file');
-                if (saveBtn) {
-                    saveBtn.onclick = () => this.saveCurrentFile();
-                }
+                // Forzar scroll al principio del editor
+                editor.scrollTop = 0;
+            } else {
+                console.error('API Error:', data.error);
+                alert('Error: ' + data.error);
             }
         } catch (e) {
-            alert('Error al abrir el archivo');
+            console.error('Fetch Error:', e);
+            alert('Error al conectar con el servidor');
         }
     },
 
@@ -164,6 +171,12 @@ const AIChat = {
         this.bindRefreshButton();
         this.bindCodeEditor();
         this.bindConsole();
+        
+        // Configurar el botón de guardar si no se ha hecho
+        const saveBtn = document.getElementById('btn-save-file');
+        if (saveBtn) {
+            saveBtn.onclick = () => AIChat.saveCurrentFile();
+        }
         
         input.focus();
     },
