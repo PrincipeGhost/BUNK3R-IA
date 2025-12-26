@@ -512,34 +512,33 @@ const AIChat = {
     },
     
     bindSidebarToggle() {
+        // Usar delegación de eventos o selector directo más robusto
         const btn = document.getElementById('toggle-sidebar-btn');
-        // El panel de proyectos real que se usa en el layout
         const projectsPanel = document.getElementById('panel-projects');
         
-        if (!btn || !projectsPanel) {
-            console.error('Sidebar toggle elements not found:', { btn: !!btn, panel: !!projectsPanel });
-            return;
-        }
+        console.log('BIND SIDEBAR:', { btn, projectsPanel });
+        
+        if (!btn) return;
 
         btn.onclick = (e) => {
+            console.log('SIDEBAR CLICK');
             e.preventDefault();
             e.stopPropagation();
             
-            // Forzar el cambio de estado usando estilos directos para asegurar que funcione
-            const isHidden = projectsPanel.style.display === 'none' || projectsPanel.classList.contains('hidden');
+            const panel = document.getElementById('panel-projects');
+            if (!panel) return;
+
+            const isHidden = panel.style.display === 'none' || panel.classList.contains('hidden');
             
             if (isHidden) {
-                projectsPanel.style.display = 'flex';
-                projectsPanel.classList.remove('hidden');
-                btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>';
-                btn.style.left = '0'; // Ajustar posición si es necesario
+                panel.style.display = 'flex';
+                panel.classList.remove('hidden');
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>';
             } else {
-                projectsPanel.style.display = 'none';
-                projectsPanel.classList.add('hidden');
-                btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-                btn.style.left = '0';
+                panel.style.display = 'none';
+                panel.classList.add('hidden');
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
             }
-            console.log('Sidebar toggled. Current display:', projectsPanel.style.display);
         };
     },
 

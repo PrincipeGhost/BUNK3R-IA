@@ -397,26 +397,26 @@
 
             <!-- CENTER PANEL: EDITOR ONLY -->
             <div class="ai-center-view"
-                style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0; position:relative;">
+                style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0; position:relative; overflow:hidden;">
                 <!-- TABS HEADER -->
                 <div class="ai-tabs"
-                    style="height:35px; min-height:35px; background:#2d333b; display:flex; align-items:flex-end; overflow-x:auto; border-bottom:1px solid #30363d; position:relative; z-index:1000;">
+                    style="height:35px !important; min-height:35px !important; background:#2d333b !important; display:flex !important; align-items:flex-end !important; overflow-x:auto !important; border-bottom:1px solid #30363d !important; position:relative !important; z-index:9999 !important; width:100% !important;">
                     <!-- Tabs injected by JS -->
                 </div>
 
                 <!-- EDITOR/CONSOLE CONTAINER -->
                 <div id="file-editor-container"
-                    style="flex:1; width:100%; overflow:hidden; position:relative; background:#1e1e1e; display:flex; flex-direction:column; z-index:1;">
+                    style="flex:1; width:100%; overflow:hidden; position:relative; background:#1e1e1e; display:flex; flex-direction:column; z-index:10;">
                     
-                    <div id="editor-toolbar" style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333;">
+                    <div id="editor-toolbar" style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333; z-index:20;">
                         <button id="btn-save-file" style="background:#007acc; color:white; border:none; padding:4px 12px; border-radius:3px; cursor:pointer; font-size:12px;">Guardar</button>
                     </div>
 
-                    <div id="editor-wrapper" style="flex:1; display:none; flex-direction:column; height: calc(100% - 35px);">
+                    <div id="editor-wrapper" style="flex:1; display:none; flex-direction:column; height: 100%;">
                         <textarea id="ai-real-editor" style="flex:1; width:100%; background:#1e1e1e; color:#d4d4d4; border:none; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none;"></textarea>
                     </div>
 
-                    <div id="ai-console" style="flex:1; display:flex; flex-direction:column; background:#000; color:#fff; font-family:monospace; padding:10px; height: calc(100% - 35px);">
+                    <div id="ai-console" style="flex:1; display:flex; flex-direction:column; background:#000; color:#fff; font-family:monospace; padding:10px; height: 100%;">
                         <div id="ai-console-output" style="flex:1; overflow-y:auto; margin-bottom:10px; white-space:pre-wrap; font-size:12px;"></div>
                         <div style="display:flex; align-items:center; border-top:1px solid #333; padding-top:5px;">
                             <span style="color:#0f0; margin-right:5px;">$</span>
@@ -430,11 +430,11 @@
                 </div>
                 
                 <!-- BOTÓN PARA OCULTAR BARRA LATERAL -->
-                <button id="toggle-sidebar-btn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:20px; height:40px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#8b949e; cursor:pointer; z-index:2000; display:flex; align-items:center; justify-content:center; border-top-right-radius:4px; border-bottom-right-radius:4px;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <div id="toggle-sidebar-btn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:10000; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
-                </button>
+                </div>
             </div>
         </div>
     </main>
