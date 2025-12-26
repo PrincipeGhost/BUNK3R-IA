@@ -36,6 +36,45 @@ class AIProvider(ABC):
         return self.available
 
 
+class OllamaProvider(AIProvider):
+    """Local Ollama Provider"""
+    
+    def __init__(self, base_url: str = "http://localhost:11434"):
+        super().__init__("local-ollama")
+        self.name = "ollama"
+        self.model = "llama3" # O el que el usuario tenga
+        self.base_url = f"{base_url}/api/chat"
+    
+    def chat(self, messages: List[Dict], system_prompt: str = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            chat_messages.extend(messages)
+            
+            response = requests.post(
+                self.base_url,
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "stream": False
+                },
+                timeout=120
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Ollama error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
 class DeepSeekV32Provider(AIProvider):
     """DeepSeek V3.2 via Hugging Face - Main AI Model"""
     
@@ -514,7 +553,13 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
     def _initialize_providers(self):
         """Initialize all available AI providers - ordered by reliability"""
         
-        # Priority 0: Antigravity Bridge (free, unlimited, user's PC)
+        # Priority 0: Ollama Local (Requested by user)
+        ollama_url = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
+        if ollama_url:
+            self.providers.append(OllamaProvider(ollama_url))
+            logger.info(f"Ollama provider initialized as PRIMARY at {ollama_url}")
+
+        # Priority 1: Antigravity Bridge (free, unlimited, user's PC)
         antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', 'http://localhost:8888')
         if antigravity_url:
             try:
