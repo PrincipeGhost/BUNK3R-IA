@@ -16,6 +16,103 @@ const AIChat = {
         }
     },
     
+    async loadProjectFiles(projectId) {
+        const listContainer = document.getElementById('ai-projects-list');
+        if (!listContainer) return;
+
+        try {
+            const response = await fetch(`/api/projects/${projectId}/files`);
+            const data = await response.json();
+            
+            if (data.files) {
+                listContainer.innerHTML = '';
+                this.renderFileStructure(data.files, listContainer);
+            }
+        } catch (e) {
+            listContainer.innerHTML = '<div class="error">Error al cargar archivos</div>';
+        }
+    },
+
+    renderFileStructure(files, container, level = 0) {
+        files.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.style.paddingLeft = `${level * 15 + 10}px`;
+            item.style.cursor = 'pointer';
+            item.style.color = '#c9d1d9';
+            item.style.fontSize = '13px';
+            item.style.padding = '4px 10px';
+            
+            if (file.type === 'folder') {
+                item.innerHTML = `📁 ${file.name}`;
+                container.appendChild(item);
+                if (file.children) {
+                    this.renderFileStructure(file.children, container, level + 1);
+                }
+            } else {
+                item.innerHTML = `📄 ${file.name}`;
+                item.onclick = () => this.openFile(file.path, file.name);
+                container.appendChild(item);
+            }
+        });
+    },
+
+    async openFile(path, name) {
+        const editor = document.getElementById('real-file-editor');
+        const toolbar = document.getElementById('editor-toolbar');
+        const emptyState = document.querySelector('.ai-empty-state');
+        
+        if (!editor || !path) return;
+
+        try {
+            const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                editor.value = data.content;
+                editor.style.display = 'block';
+                toolbar.style.display = 'flex';
+                if (emptyState) emptyState.style.display = 'none';
+                
+                // Guardar path actual para el botón de guardar
+                window.currentEditingFile = path;
+                
+                // Configurar el botón de guardar si no se ha hecho
+                const saveBtn = document.getElementById('btn-save-file');
+                if (saveBtn && !saveBtn.onclick) {
+                    saveBtn.onclick = () => this.saveCurrentFile();
+                }
+            }
+        } catch (e) {
+            alert('Error al abrir el archivo');
+        }
+    },
+
+    async saveCurrentFile() {
+        if (!window.currentEditingFile) return;
+        const editor = document.getElementById('real-file-editor');
+        const content = editor.value;
+
+        try {
+            const response = await fetch('/api/projects/file/content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: window.currentEditingFile,
+                    content: content
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Archivo guardado correctamente');
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            alert('Error al guardar');
+        }
+    },
+
     init() {
         const pageContainer = document.getElementById('ai-chat-screen');
         if (pageContainer && !pageContainer.classList.contains('hidden')) {

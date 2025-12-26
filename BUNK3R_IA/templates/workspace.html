@@ -406,7 +406,11 @@
 
                 <!-- EDITOR CONTAINER -->
                 <div id="file-editor-container"
-                    style="flex:1; width:100%; overflow:auto; position:relative; background:#1e1e1e;">
+                    style="flex:1; width:100%; overflow:hidden; position:relative; background:#1e1e1e; display:flex; flex-direction:column;">
+                    <div id="editor-toolbar" style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333;">
+                        <button id="btn-save-file" style="background:#007acc; color:white; border:none; padding:4px 12px; border-radius:3px; cursor:pointer; font-size:12px;">Guardar</button>
+                    </div>
+                    <textarea id="real-file-editor" style="flex:1; width:100%; background:#1e1e1e; color:#d4d4d4; border:none; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none; display:none;"></textarea>
                     <div class="ai-empty-state"
                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#6b7280; user-select:none;">
                         <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor"
