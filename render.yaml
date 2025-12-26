@@ -1,13 +1,14 @@
 services:
   - type: web
     name: bunk3r-ia
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "BUNK3R_IA.main:create_app()"
+    runtime: docker
+    plan: starter
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.11"
+      - key: OLLAMA_URL
+        value: "http://localhost:11434"
       - key: FLASK_ENV
         value: production
-      - key: DEBUG
-        value: "false"
+    disk:
+      name: ollama-data
+      mountPath: /root/.ollama
+      sizeGB: 10
