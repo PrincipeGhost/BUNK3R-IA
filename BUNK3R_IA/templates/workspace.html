@@ -399,8 +399,7 @@
             <div class="ai-center-view"
                 style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0; position:relative; overflow:hidden;">
                 <!-- TABS HEADER -->
-                <div class="ai-tabs"
-                    style="height:35px !important; min-height:35px !important; background:#2d333b !important; display:flex !important; align-items:flex-end !important; overflow-x:auto !important; border-bottom:1px solid #30363d !important; position:relative !important; z-index:9999 !important; width:100% !important;">
+                <div class="ai-tabs" id="ai-tabs-container">
                     <!-- Tabs injected by JS -->
                 </div>
 
@@ -898,39 +897,23 @@
             function renderTabs() {
                 const tabsContainer = document.querySelector('.ai-tabs');
                 if (!tabsContainer) return;
-                tabsContainer.innerHTML = ''; // Start clean
+                tabsContainer.innerHTML = ''; 
 
                 window.openTabs.forEach((tab, index) => {
                     const tabBtn = document.createElement('div');
                     const isActive = index === window.activeTabIndex;
-                    tabBtn.className = 'ai-tab-item';
-
-                    // Simple styling via JS (or rely on CSS if exists)
-                    tabBtn.style.padding = '8px 12px';
-                    tabBtn.style.fontSize = '13px';
-                    tabBtn.style.color = isActive ? '#c9d1d9' : '#8b949e';
-                    tabBtn.style.borderTop = isActive ? '2px solid #f9826c' : '2px solid transparent'; // Orange accent
-                    tabBtn.style.background = isActive ? '#1e1e1e' : '#2d333b';
-                    tabBtn.style.cursor = 'pointer';
-                    tabBtn.style.display = 'flex';
-                    tabBtn.style.alignItems = 'center';
-                    tabBtn.style.userSelect = 'none';
+                    tabBtn.className = `ai-tab-item ${isActive ? 'active' : ''}`;
 
                     const nameSpan = document.createElement('span');
-                    nameSpan.textContent = tab.name + (tab.modified ? ' â—Ź' : '');
+                    nameSpan.textContent = tab.name + (tab.modified ? ' ●' : '');
                     tabBtn.appendChild(nameSpan);
 
                     const closeSpan = document.createElement('span');
-                    closeSpan.innerHTML = ' Ă—'; // Simple close char
-                    closeSpan.style.marginLeft = '8px';
-                    closeSpan.style.opacity = '0.6';
-                    closeSpan.style.borderRadius = '3px';
-                    closeSpan.onmouseover = () => { closeSpan.style.background = '#484f58'; };
-                    closeSpan.onmouseleave = () => { closeSpan.style.background = 'transparent'; };
+                    closeSpan.className = 'tab-close';
+                    closeSpan.innerHTML = '×'; 
                     closeSpan.onclick = (e) => { e.stopPropagation(); closeTab(index); };
 
                     tabBtn.appendChild(closeSpan);
-
                     tabBtn.onclick = () => switchToTab(index);
                     tabsContainer.appendChild(tabBtn);
                 });

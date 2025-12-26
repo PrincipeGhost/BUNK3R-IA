@@ -2322,3 +2322,73 @@ body.resizing * {
         font-size: 16px;
     }
 }
+
+/* IDE TABS SYSTEM */
+.ai-tabs {
+    display: flex !important;
+    align-items: flex-end !important;
+    background: #252526 !important;
+    height: 35px !important;
+    min-height: 35px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-bottom: 1px solid #30363d !important;
+    scrollbar-width: none;
+    padding-left: 10px;
+    z-index: 9999;
+}
+
+.ai-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.ai-tab-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    height: 35px;
+    background: #2d333b;
+    color: #8b949e;
+    font-size: 13px;
+    cursor: pointer;
+    border-right: 1px solid #1c2128;
+    user-select: none;
+    transition: all 0.2s;
+    position: relative;
+    border-top: 2px solid transparent;
+}
+
+.ai-tab-item:hover {
+    background: #1c2128;
+    color: #c9d1d9;
+}
+
+.ai-tab-item.active {
+    background: #1e1e1e;
+    color: #ffffff;
+    border-top: 2px solid #f9826c;
+}
+
+.ai-tab-item .tab-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    opacity: 0.4;
+    transition: all 0.2s;
+    margin-left: 4px;
+}
+
+.ai-tab-item:hover .tab-close {
+    opacity: 0.8;
+}
+
+.ai-tab-item .tab-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f85149;
+    opacity: 1;
+}
