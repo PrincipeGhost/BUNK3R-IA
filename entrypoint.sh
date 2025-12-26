@@ -15,7 +15,7 @@ done
 
 # Descargar modelo ligero (Cerebro) con progreso visible
 echo "Starting model download: llama3.2:1b..."
-ollama pull llama3.2:1b
+ollama pull llama3.2:1b 2>&1 | stdbuf -oL tr '\r' '\n'
 
 echo "Model download finished or already exists."
 
