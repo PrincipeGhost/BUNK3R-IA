@@ -19,9 +19,9 @@ class Config:
     
     # Session configuration
     PERMANENT_SESSION_LIFETIME = 604800  # 7 days
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = True # Requerido para SameSite=None
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'None' # Permitir embedding en iframes de otro origen
     
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
     GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')

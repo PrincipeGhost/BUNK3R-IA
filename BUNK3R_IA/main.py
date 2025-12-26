@@ -66,11 +66,12 @@ def create_app(config_class=None):
         db.create_all()
         logger.info("Database tables created")
     
-    # CORS Configuration
+    # CORS Configuration - Restringido a tu web principal
     CORS(app, resources={r"/*": {
-        "origins": "*",
+        "origins": ["https://bunk3r-w3b.onrender.com"],
         "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+        "supports_credentials": True
     }})
 
     @app.after_request
@@ -81,11 +82,12 @@ def create_app(config_class=None):
         response.headers['Expires'] = '0'
         
         # Permitir Embedding (Iframe) - RESTRINGIDO A TU DOMINIO
-        response.headers['X-Frame-Options'] = 'ALLOWALL' 
-        response.headers['Content-Security-Policy'] = "frame-ancestors 'self' *; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
-        response.headers['Access-Control-Allow-Origin'] = "*"
+        # Usamos Content-Security-Policy frame-ancestors en lugar del obsoleto X-Frame-Options
+        response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://bunk3r-w3b.onrender.com; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
+        response.headers['Access-Control-Allow-Origin'] = "https://bunk3r-w3b.onrender.com"
         response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
         response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization, X-Requested-With"
+        response.headers['Access-Control-Allow-Credentials'] = "true"
         
         return response
 
