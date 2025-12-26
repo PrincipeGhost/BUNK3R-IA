@@ -1514,10 +1514,10 @@ def ai_chat_stream():
         preferred_provider = request.args.get('provider')
         
         if not message:
-            def error_stream():
+            def error_stream_empty():
                 yield 'data: {"type": "error", "data": "Message is required"}\n\n'
             return Response(
-                stream_with_context(error_stream()),
+                stream_with_context(error_stream_empty()),
                 mimetype='text/event-stream',
                 headers={
                     'Cache-Control': 'no-cache',
@@ -1534,7 +1534,7 @@ def ai_chat_stream():
                 for event in streaming_service.stream_chat(
                     user_id=user_id,
                     message=message,
-                    preferred_provider=preferred_provider
+                    preferred_provider=preferred_provider or ""
                 ):
                     yield event.to_sse()
             except Exception as e:
@@ -1589,8 +1589,8 @@ def ai_chat_stream_post():
                 for event in streaming_service.stream_chat(
                     user_id=user_id,
                     message=message,
-                    system_prompt=system_prompt,
-                    preferred_provider=preferred_provider
+                    system_prompt=system_prompt or "",
+                    preferred_provider=preferred_provider or ""
                 ):
                     yield event.to_sse()
             except Exception as e:

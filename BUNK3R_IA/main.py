@@ -109,13 +109,12 @@ def create_app(config_class=None):
         if not user:
             # Create new demo user if doesn't exist
             demo_user_id = "demo_" + str(uuid.uuid4())[:8]
-            user = User(
-                id=demo_user_id,
-                first_name="Usuario",
-                last_name="Demo",
-                email="demo@bunkr.local",
-                profile_image_url="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F0B90B'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E"
-            )
+            user = User()
+            user.id = demo_user_id
+            user.first_name = "Usuario"
+            user.last_name = "Demo"
+            user.email = "demo@bunkr.local"
+            user.profile_image_url = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F0B90B'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E"
             db.session.add(user)
             db.session.commit()
         

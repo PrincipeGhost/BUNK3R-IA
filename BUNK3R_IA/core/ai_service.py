@@ -14,6 +14,9 @@ from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
+# Global variable to store database manager
+db_manager = None
+
 try:
     from BUNK3R_IA.core.ai_flow_logger import flow_logger
 except ImportError:
@@ -743,6 +746,8 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
                 
         except Exception as e:
             return f"[TOOL EXECUTION EXCEPTION] {str(e)}"
+        
+        return {}
 
     def chat(self, user_id: str, message: str, system_prompt: Optional[str] = None, 
              preferred_provider: Optional[str] = None, user_context: Optional[Dict] = None,
