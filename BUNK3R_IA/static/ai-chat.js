@@ -104,15 +104,15 @@ const AIChat = {
         this.activeTabId = tabId;
         this.renderTabs();
         
+        // ELIMINAR físicamente el estado vacío si existe para que no bloquee nada
+        document.querySelectorAll('.ai-empty-state').forEach(el => el.remove());
+
         const panels = {
             'console': document.getElementById('ai-console'),
             'editor': document.getElementById('editor-wrapper'),
             'preview': document.getElementById('ai-preview-panel'),
-            'empty': document.querySelector('.ai-empty-state'),
             'toolbar': document.getElementById('editor-toolbar')
         };
-
-        console.log('[DEBUG] Panels found in DOM:', Object.keys(panels).map(k => `${k}: ${!!panels[k]}`));
 
         // LIMPIEZA TOTAL: Ocultar todo y remover visibilidad
         Object.keys(panels).forEach(key => {
@@ -120,96 +120,49 @@ const AIChat = {
             if (panel) {
                 panel.style.setProperty('display', 'none', 'important');
                 panel.style.setProperty('visibility', 'hidden', 'important');
-                panel.style.setProperty('opacity', '0', 'important');
                 panel.classList.add('hidden-panel');
             }
         });
 
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
-            console.log('[DEBUG] Activating console panel');
-            if (panels.empty) {
-                panels.empty.style.setProperty('display', 'none', 'important');
-                panels.empty.style.setProperty('z-index', '-1', 'important');
-                panels.empty.style.setProperty('visibility', 'hidden', 'important');
-            }
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
-                panels.console.style.setProperty('opacity', '1', 'important');
                 panels.console.style.setProperty('z-index', '100', 'important');
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
-            console.log('[DEBUG] Activating preview panel');
-            if (panels.empty) {
-                panels.empty.style.setProperty('display', 'none', 'important');
-                panels.empty.style.setProperty('z-index', '-1', 'important');
-                panels.empty.style.setProperty('visibility', 'hidden', 'important');
-            }
             if (panels.preview) {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
-                panels.preview.style.setProperty('opacity', '1', 'important');
                 panels.preview.style.setProperty('z-index', '100', 'important');
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
-            console.log('[DEBUG] File tab data found:', !!tab);
-            
             if (tab && panels.editor) {
-                console.log('[DEBUG] Rendering Editor for:', tab.path);
-                
-                // ASEGURAR que el estado vacío se oculte PRIMERO y se mande al fondo
-                if (panels.empty) {
-                    panels.empty.style.setProperty('display', 'none', 'important');
-                    panels.empty.style.setProperty('visibility', 'hidden', 'important');
-                    panels.empty.style.setProperty('z-index', '-1', 'important');
-                    panels.empty.classList.add('hidden-panel');
-                }
-
-                // Activar editor wrapper con ALTA PRIORIDAD
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
-                panels.editor.style.setProperty('opacity', '1', 'important');
                 panels.editor.style.setProperty('z-index', '999', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
-                // Activar toolbar
                 if (panels.toolbar) {
                     panels.toolbar.style.setProperty('display', 'flex', 'important');
                     panels.toolbar.style.setProperty('visibility', 'visible', 'important');
-                    panels.toolbar.style.setProperty('opacity', '1', 'important');
-                    panels.toolbar.style.setProperty('z-index', '1000', 'important');
                     panels.toolbar.classList.remove('hidden-panel');
                 }
                 
-                // Setear contenido
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
-                    console.log('[DEBUG] Setting editor value. Content length:', tab.content ? tab.content.length : 0);
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
-                    // Forzar reflow
-                    editor.scrollTop = 0;
+                    editor.style.setProperty('display', 'block', 'important');
+                    editor.style.setProperty('visibility', 'visible', 'important');
                     editor.focus();
-                } else {
-                    console.error('[DEBUG] #ai-real-editor NOT FOUND in DOM');
                 }
-            } else {
-                console.error('[DEBUG] Tab data or editor panel MISSING for file tab');
-            }
-        } else {
-            console.log('[DEBUG] Showing empty state');
-            if (panels.empty) {
-                panels.empty.style.setProperty('display', 'flex', 'important');
-                panels.empty.style.setProperty('visibility', 'visible', 'important');
-                panels.empty.style.setProperty('opacity', '1', 'important');
-                panels.empty.style.setProperty('z-index', '100', 'important');
-                panels.empty.classList.remove('hidden-panel');
             }
         }
     },
