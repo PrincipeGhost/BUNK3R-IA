@@ -96,13 +96,10 @@ def manage_file_content():
             clean_path = clean_path[len(prefix):].strip('/')
             break
 
-    # Intentar encontrar el archivo en el sistema de archivos real
-    # Prioridad: 1. Ruta absoluta de Replit, 2. Relativa al proyecto, 3. Relativa a BUNK3R_IA
+    # Buscar el archivo directamente en la raíz del proyecto local
     possible_paths = [
-        os.path.abspath(os.path.join("/home/runner", os.environ.get('REPL_SLUG', ''), clean_path)),
         os.path.abspath(os.path.join(os.getcwd(), clean_path)),
-        os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", clean_path)),
-        os.path.abspath(os.path.join(os.getcwd(), "..", clean_path))
+        os.path.abspath(os.path.join(os.getcwd(), "BUNK3R_IA", clean_path))
     ]
     
     # Añadir rutas de carpetas comunes si no se encuentra
