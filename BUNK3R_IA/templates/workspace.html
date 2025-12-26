@@ -430,11 +430,29 @@
                 </div>
                 
                 <!-- BOTÓN PARA OCULTAR BARRA LATERAL -->
-                <div id="toggle-sidebar-btn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:10000; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
+                <div id="toggle-sidebar-btn" onclick="toggleSidebarInternal()" style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:10000; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline points="15 18 9 12 15 6"></polyline>
+                        <polyline id="toggle-icon" points="15 18 9 12 15 6"></polyline>
                     </svg>
                 </div>
+                
+                <script>
+                function toggleSidebarInternal() {
+                    const panel = document.getElementById('panel-projects');
+                    const btn = document.getElementById('toggle-sidebar-btn');
+                    const icon = document.getElementById('toggle-icon');
+                    if (!panel) return;
+                    
+                    const isHidden = panel.style.display === 'none';
+                    if (isHidden) {
+                        panel.style.display = 'flex';
+                        icon.setAttribute('points', '15 18 9 12 15 6');
+                    } else {
+                        panel.style.display = 'none';
+                        icon.setAttribute('points', '9 18 15 12 9 6');
+                    }
+                }
+                </script>
             </div>
         </div>
     </main>
