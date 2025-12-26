@@ -4,21 +4,23 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            z-index: 2147483647 !important;
+            z-index: 999999 !important;
             background: #1e1e1e !important;
             display: none !important; 
-            flex-direction: column !important;
             width: 100% !important;
             height: 100% !important;
             visibility: hidden !important;
             opacity: 0 !important;
-            outline: 2px solid #F0B90B !important;
+            border: 1px solid #30363d !important;
             pointer-events: all !important;
         }
         #ai-real-editor {
-            position: relative !important;
-            z-index: 2147483647 !important;
-            flex: 1 !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            z-index: 1000000 !important;
             width: 100% !important;
             height: 100% !important;
             border: none !important;
@@ -29,9 +31,9 @@
             padding: 20px !important;
             resize: none !important;
             outline: none !important;
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
             pointer-events: all !important;
         }
         .hidden-panel {

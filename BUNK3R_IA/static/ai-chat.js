@@ -150,10 +150,10 @@ const AIChat = {
                 if (panels.console) panels.console.style.setProperty('display', 'none', 'important');
                 
                 // Activar wrapper del editor
-                panels.editor.style.setProperty('display', 'flex', 'important');
+                panels.editor.style.setProperty('display', 'block', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
-                panels.editor.style.setProperty('z-index', '2147483647', 'important'); // Máximo valor posible
+                panels.editor.style.setProperty('z-index', '999999', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
                 const editor = document.getElementById('ai-real-editor');
@@ -163,8 +163,6 @@ const AIChat = {
                     editor.style.setProperty('display', 'block', 'important');
                     editor.style.setProperty('visibility', 'visible', 'important');
                     editor.style.setProperty('opacity', '1', 'important');
-                    editor.style.setProperty('color', '#ffffff', 'important');
-                    editor.style.setProperty('background', '#1e1e1e', 'important');
                     editor.focus();
                     console.log('[AI-LOG] Editor inyectado, visible y enfocado');
                 }
