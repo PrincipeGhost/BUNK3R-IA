@@ -170,6 +170,8 @@ const AIChat = {
                     path: path,
                     content: data.content
                 });
+                this.activeTabId = tabId; // Asegurar que el ID activo se actualice
+                this.renderTabs();
                 this.switchTab(tabId);
             } else {
                 alert('Error: ' + data.error);
