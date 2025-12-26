@@ -118,8 +118,8 @@ const AIChat = {
         Object.keys(panels).forEach(key => {
             const panel = panels[key];
             if (panel) {
-                panel.style.setProperty('display', 'none', 'important');
-                panel.style.setProperty('visibility', 'hidden', 'important');
+                panel.style.display = 'none';
+                panel.style.visibility = 'hidden';
                 panel.classList.add('hidden-panel');
             }
         });
