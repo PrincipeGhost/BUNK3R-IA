@@ -75,12 +75,12 @@ def create_app(config_class=None):
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
         
-        # Permitir Embedding (Iframe)
+        # Permitir Embedding (Iframe) - Configuración más flexible para integraciones
         response.headers['X-Frame-Options'] = 'ALLOWALL' 
-        response.headers['Content-Security-Policy'] = "frame-ancestors *; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline';"
+        response.headers['Content-Security-Policy'] = "frame-ancestors *; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
         response.headers['Access-Control-Allow-Origin'] = "*"
         response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
-        response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
+        response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization, X-Requested-With"
         
         return response
 
