@@ -140,17 +140,21 @@ const AIChat = {
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
+                console.log('Activating editor for file:', tab.path);
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.classList.remove('hidden-panel');
+                
                 if (panels.toolbar) {
                     panels.toolbar.style.setProperty('display', 'flex', 'important');
                     panels.toolbar.style.setProperty('visibility', 'visible', 'important');
                     panels.toolbar.classList.remove('hidden-panel');
                 }
+                
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
                     editor.value = tab.content || '';
+                    console.log('Editor content set:', (tab.content ? tab.content.substring(0, 20) + '...' : 'empty'));
                     window.currentEditingFile = tab.path;
                 }
             }
@@ -180,30 +184,37 @@ const AIChat = {
         const existingTab = this.openTabs.find(t => t.id === tabId);
         
         if (existingTab) {
+            console.log('Switching to existing tab:', tabId);
             this.switchTab(tabId);
             return;
         }
 
+        console.log('Loading file content for:', path);
         try {
             const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
             const data = await response.json();
             
             if (data.success) {
-                this.openTabs.push({
+                console.log('File content loaded successfully');
+                const newTab = {
                     id: tabId,
                     name: name || path.split('/').pop(),
                     type: 'file',
                     path: path,
                     content: data.content
-                });
-                this.activeTabId = tabId; // Asegurar que el ID activo se actualice
+                };
+                this.openTabs.push(newTab);
+                this.activeTabId = tabId;
+                
+                // Forzar el renderizado y el cambio de pestaña con el contenido cargado
                 this.renderTabs();
                 this.switchTab(tabId);
             } else {
+                console.error('Error loading file content:', data.error);
                 alert('Error: ' + data.error);
             }
         } catch (e) {
-            console.error('Fetch error:', e);
+            console.error('Fetch error during openFile:', e);
         }
     },
 
