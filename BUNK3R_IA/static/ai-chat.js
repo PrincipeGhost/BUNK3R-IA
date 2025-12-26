@@ -127,39 +127,45 @@ const AIChat = {
         // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             if (panels.console) {
-                panels.console.style.display = 'flex';
-                panels.console.style.visibility = 'visible';
+                panels.console.style.setProperty('display', 'flex', 'important');
+                panels.console.style.setProperty('visibility', 'visible', 'important');
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
             }
         } else if (tabId === 'preview') {
             if (panels.preview) {
-                panels.preview.style.display = 'block';
-                panels.preview.style.visibility = 'visible';
+                panels.preview.style.setProperty('display', 'block', 'important');
+                panels.preview.style.setProperty('visibility', 'visible', 'important');
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
             const tab = this.openTabs.find(t => t.id === tabId);
             if (tab && panels.editor) {
-                panels.editor.style.display = 'flex';
-                panels.editor.style.visibility = 'visible';
+                console.log('[DEBUG] Showing editor for file tab');
+                panels.editor.style.setProperty('display', 'flex', 'important');
+                panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
                 if (panels.toolbar) {
-                    panels.toolbar.style.display = 'flex';
-                    panels.toolbar.style.visibility = 'visible';
+                    panels.toolbar.style.setProperty('display', 'flex', 'important');
+                    panels.toolbar.style.setProperty('visibility', 'visible', 'important');
                     panels.toolbar.classList.remove('hidden-panel');
                 }
                 
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
+                    console.log('[DEBUG] Setting editor content, length:', tab.content ? tab.content.length : 0);
                     editor.value = tab.content || '';
                     window.currentEditingFile = tab.path;
-                    editor.style.display = 'block';
-                    editor.style.visibility = 'visible';
+                    editor.style.setProperty('display', 'block', 'important');
+                    editor.style.setProperty('visibility', 'visible', 'important');
                     editor.focus();
+                } else {
+                    console.error('[DEBUG] ai-real-editor element not found!');
                 }
+            } else {
+                console.error('[DEBUG] Editor panel not found or tab missing');
             }
         }
     },
