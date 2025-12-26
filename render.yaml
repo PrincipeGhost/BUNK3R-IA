@@ -8,6 +8,8 @@ services:
         value: "http://localhost:11434"
       - key: DATABASE_URL
         value: "postgresql://neondb_owner:npg_IDhalvO17Apb@ep-wild-sea-advimph5-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
+      - key: ALLOWED_WEB_ORIGIN
+        value: "https://tu-dominio-bunk3r.com" # CAMBIA ESTO POR TU URL REAL
       - key: FLASK_ENV
         value: production
     disk:

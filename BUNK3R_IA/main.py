@@ -75,10 +75,13 @@ def create_app(config_class=None):
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
         
-        # Permitir Embedding (Iframe) - Configuración más flexible para integraciones
+        # Permitir Embedding (Iframe) - RESTRINGIDO A TU DOMINIO
+        # Reemplaza 'tu-dominio-bunk3r.com' con la URL real de tu web principal
+        allowed_origin = os.environ.get("ALLOWED_WEB_ORIGIN", "*")
+        
         response.headers['X-Frame-Options'] = 'ALLOWALL' 
-        response.headers['Content-Security-Policy'] = "frame-ancestors *; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
-        response.headers['Access-Control-Allow-Origin'] = "*"
+        response.headers['Content-Security-Policy'] = f"frame-ancestors 'self' {allowed_origin}; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
+        response.headers['Access-Control-Allow-Origin'] = allowed_origin
         response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
         response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization, X-Requested-With"
         
