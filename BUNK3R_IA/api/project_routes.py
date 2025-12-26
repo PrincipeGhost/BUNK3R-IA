@@ -151,6 +151,8 @@ def manage_file_content():
             return jsonify({"success": True})
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
+            
+    return jsonify({"success": False, "error": "Method not allowed"}), 405
 
 import subprocess
 
