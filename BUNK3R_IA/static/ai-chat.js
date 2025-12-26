@@ -68,22 +68,23 @@ const AIChat = {
 
     renderTabs() {
         const container = document.getElementById('ai-tabs-container');
-        if (!container) {
-            console.error('Tabs container not found by ID');
-            return;
-        }
+        if (!container) return;
         container.innerHTML = '';
         
         this.openTabs.forEach(tab => {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
+            
+            // Forzar puntero y eventos
+            tabEl.style.pointerEvents = 'auto';
+            tabEl.style.zIndex = '1000';
+            
             tabEl.innerHTML = `<span>${tab.name}</span>`;
             
             if (tab.type === 'file') {
                 const closeBtn = document.createElement('span');
                 closeBtn.innerHTML = '×';
-                closeBtn.style.fontSize = '16px';
-                closeBtn.style.marginLeft = '5px';
+                closeBtn.style.padding = '0 5px';
                 closeBtn.onclick = (e) => {
                     e.stopPropagation();
                     this.closeTab(tab.id);
@@ -91,7 +92,12 @@ const AIChat = {
                 tabEl.appendChild(closeBtn);
             }
             
-            tabEl.onclick = () => this.switchTab(tab.id);
+            // Usar mousedown en lugar de click para mayor rapidez
+            tabEl.onmousedown = (e) => {
+                e.preventDefault();
+                this.switchTab(tab.id);
+            };
+            
             container.appendChild(tabEl);
         });
     },
@@ -105,32 +111,27 @@ const AIChat = {
         const editorWrapper = document.getElementById('editor-wrapper');
         const emptyState = document.querySelector('.ai-empty-state');
         const toolbar = document.getElementById('editor-toolbar');
-        const previewContainer = document.getElementById('ai-preview-iframe'); // Buscar iframe si existe
+        const previewPanel = document.getElementById('ai-preview-panel');
         
-        // Ocultar todo por defecto usando !important para asegurar
-        if (consoleEl) {
-            consoleEl.style.setProperty('display', 'none', 'important');
-            consoleEl.classList.add('hidden');
-        }
-        if (editorWrapper) editorWrapper.style.setProperty('display', 'none', 'important');
-        if (emptyState) emptyState.style.setProperty('display', 'none', 'important');
-        if (toolbar) toolbar.style.setProperty('display', 'none', 'important');
-        if (previewContainer) previewContainer.style.setProperty('display', 'none', 'important');
+        // Ocultar todo usando display: none !important
+        const hide = (el) => { if (el) el.style.setProperty('display', 'none', 'important'); };
+        hide(consoleEl);
+        hide(editorWrapper);
+        hide(emptyState);
+        hide(toolbar);
+        hide(previewPanel);
         
         if (tabId === 'console') {
             if (consoleEl) {
                 consoleEl.style.setProperty('display', 'flex', 'important');
-                consoleEl.classList.remove('hidden');
-                const consoleInput = document.getElementById('ai-console-input');
-                if (consoleInput) consoleInput.focus();
+                const input = document.getElementById('ai-console-input');
+                if (input) input.focus();
             }
         } else if (tabId === 'preview') {
-            // Mostrar estado de preview o el iframe de preview
-            if (previewContainer && previewContainer.src) {
-                previewContainer.style.setProperty('display', 'block', 'important');
+            if (previewPanel) {
+                previewPanel.style.setProperty('display', 'block', 'important');
             } else if (emptyState) {
                 emptyState.style.setProperty('display', 'flex', 'important');
-                emptyState.querySelector('p').textContent = 'Vista previa activa. Describe cambios en el chat para ver resultados.';
             }
         } else {
             // Es un archivo
@@ -141,7 +142,6 @@ const AIChat = {
                 const editor = document.getElementById('ai-real-editor');
                 if (editor) {
                     editor.value = tab.content || '';
-                    // Guardar el path actual para el guardado
                     window.currentEditingFile = tab.path;
                 }
             }
