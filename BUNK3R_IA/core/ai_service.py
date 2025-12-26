@@ -786,11 +786,22 @@ Soy experto en: Arquitectura de Software, Seguridad, Web3, y DevOps. Respondo cl
         
         # 2. El Cerebro (Ollama) analiza la petición (Prioridad 0)
         brain = next((p for p in self.providers if p.name == "ollama"), None)
-        if brain and brain.is_available():
-            logger.info("🧠 Cerebro (Ollama) activado para analizar la petición...")
-            # Aquí podrías inyectar lógica de pensamiento previa de Ollama
         
+        # Inyectar contexto del repositorio para que la IA entienda el proyecto
+        repo_context = ""
+        try:
+            from BUNK3R_IA.core.ai_project_context import AIProjectContext
+            # Usar un ID de sesión genérico para el contexto global
+            ctx = AIProjectContext("global_user", "bunk3r_ia")
+            repo_context = ctx.get_context_summary()
+        except Exception as e:
+            logger.error(f"Error obteniendo contexto del repositorio: {e}")
+
         system = system_prompt or self.DEFAULT_SYSTEM_PROMPT
+        if repo_context:
+            system = f"{system}\n\n{repo_context}"
+        
+        if brain and brain.is_available():
         
         if user_context:
             context_info = self._build_user_context(user_context)
