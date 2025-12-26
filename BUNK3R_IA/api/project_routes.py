@@ -92,13 +92,18 @@ def manage_file_content():
     # Intento de encontrar el archivo si la ruta incluye el nombre del repo (para compatibilidad con GitHub UI)
     if not os.path.exists(full_path):
         # Limpieza de la ruta para evitar problemas con nombres de repo
-        # Si la ruta empieza con PrincipeGhost/BUNK3R-W3B/, lo quitamos
-        if "PrincipeGhost/BUNK3R-W3B/" in file_path:
-            file_path = file_path.replace("PrincipeGhost/BUNK3R-W3B/", "")
-        elif "PrincipeGhost/BUNK3R-IA/" in file_path:
-            file_path = file_path.replace("PrincipeGhost/BUNK3R-IA/", "")
-            
-        full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
+        # Si la ruta es solo el nombre de un repo, devolvemos un error amigable o el README
+        if file_path.count('/') <= 1:
+            # Es probable que sea el nombre del repo PrincipeGhost/BUNK3R-W3B
+            # Intentamos servir el README.md del proyecto actual como fallback
+            full_path = os.path.join(os.getcwd(), 'README.md')
+        else:
+            if "PrincipeGhost/BUNK3R-W3B/" in file_path:
+                file_path = file_path.replace("PrincipeGhost/BUNK3R-W3B/", "")
+            elif "PrincipeGhost/BUNK3R-IA/" in file_path:
+                file_path = file_path.replace("PrincipeGhost/BUNK3R-IA/", "")
+                
+            full_path = os.path.abspath(os.path.join(os.getcwd(), file_path))
 
     # Intento agresivo si sigue sin existir
     if not os.path.exists(full_path):
