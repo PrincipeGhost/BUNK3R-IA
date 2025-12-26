@@ -1098,13 +1098,18 @@ const AIChat = {
     async sendSimpleChat(message) {
         this.showTyping();
         try {
+            console.log('[AI-LOG] Sending simple chat request...');
             const response = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: this.getApiHeaders(),
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({ 
+                    message: message,
+                    user_id: 'demo_user'
+                })
             });
             
             const data = await response.json();
+            console.log('[AI-LOG] Simple chat response:', data);
             this.hideTyping();
             
             if (data.success) {

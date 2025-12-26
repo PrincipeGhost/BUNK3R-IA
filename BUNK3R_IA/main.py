@@ -50,23 +50,20 @@ def create_app(config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
     
-    # GitHub Auth setup
-    from BUNK3R_IA.replit_auth import setup_github_auth
-    setup_github_auth(app)
-    app.register_blueprint(ai_bp)
-    app.register_blueprint(projects_bp)
-    app.register_blueprint(github_bp)
-    app.register_blueprint(automation_bp)
-    
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    @app.before_request
+    def make_session_permanent():
+        session.permanent = True
 
     with app.app_context():
         db.create_all()
         logger.info("Database tables created")
     
-    @app.before_request
-    def make_session_permanent():
-        session.permanent = True
+    # CORS Configuration
+    CORS(app, resources={r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    }})
 
     @app.after_request
     def add_header(response):
@@ -76,12 +73,9 @@ def create_app(config_class=None):
         response.headers['Expires'] = '0'
         
         # Permitir Embedding (Iframe) - RESTRINGIDO A TU DOMINIO
-        # Reemplaza 'tu-dominio-bunk3r.com' con la URL real de tu web principal
-        allowed_origin = os.environ.get("ALLOWED_WEB_ORIGIN", "*")
-        
         response.headers['X-Frame-Options'] = 'ALLOWALL' 
-        response.headers['Content-Security-Policy'] = f"frame-ancestors 'self' {allowed_origin}; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
-        response.headers['Access-Control-Allow-Origin'] = allowed_origin
+        response.headers['Content-Security-Policy'] = "frame-ancestors 'self' *; default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: 'unsafe-inline'; connect-src *;"
+        response.headers['Access-Control-Allow-Origin'] = "*"
         response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS, PUT, DELETE"
         response.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization, X-Requested-With"
         
