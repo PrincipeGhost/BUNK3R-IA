@@ -263,6 +263,7 @@ const AIChat = {
         this.bindRefreshButton();
         this.bindCodeEditor();
         this.bindConsole();
+        this.bindSidebarToggle();
         this.renderTabs();
         this.switchTab('console');
         
@@ -510,6 +511,25 @@ const AIChat = {
         return;
     },
     
+    bindSidebarToggle() {
+        const btn = document.getElementById('toggle-sidebar-btn');
+        const projectsPanel = document.getElementById('panel-projects');
+        if (!btn || !projectsPanel) return;
+
+        btn.onclick = () => {
+            const isHidden = projectsPanel.classList.contains('hidden');
+            if (isHidden) {
+                projectsPanel.classList.remove('hidden');
+                projectsPanel.style.display = 'flex';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+            } else {
+                projectsPanel.classList.add('hidden');
+                projectsPanel.style.display = 'none';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+            }
+        };
+    },
+
     autoResize(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
