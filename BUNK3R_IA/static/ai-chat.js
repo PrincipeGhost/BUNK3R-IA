@@ -109,6 +109,17 @@ const AIChat = {
         }, 300);
     },
 
+    switchTab(tabId) {
+        console.log('[AI-LOG] switchTab INICIO ->', tabId);
+        this.activeTabId = tabId;
+        this.renderTabs();
+        
+        const consolePanel = document.getElementById('ai-console');
+        const editorWrapper = document.getElementById('editor-wrapper');
+        const previewPanel = document.getElementById('ai-preview-panel');
+        const toolbar = document.getElementById('editor-toolbar');
+        const emptyState = document.querySelector('.ai-empty-state');
+
         // Reset all panels
         [consolePanel, editorWrapper, previewPanel, toolbar, emptyState].forEach(p => {
             if (p) {
@@ -133,7 +144,6 @@ const AIChat = {
                 if (output) {
                     output.style.setProperty('display', 'block', 'important');
                     output.style.setProperty('visibility', 'visible', 'important');
-                    output.innerHTML += `<div>[BUNK3R] Terminal activa - ${new Date().toLocaleTimeString()}</div>`;
                 }
 
                 setTimeout(() => {
