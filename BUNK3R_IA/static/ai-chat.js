@@ -108,81 +108,68 @@ const AIChat = {
         });
     },
 
+    init() {
+        console.log('[AI-LOG] AIChat init()');
+        this.renderTabs();
+        
+        // Vincular eventos de pestañas globales si no están
+        const consoleTab = this.openTabs.find(t => t.id === 'console');
+        const previewTab = this.openTabs.find(t => t.id === 'preview');
+        
+        // Asegurar que al inicio se renderice el estado correcto
+        this.switchTab(this.activeTabId);
+    },
+
     switchTab(tabId) {
         console.log('[AI-LOG] switchTab INICIO -> tabId:', tabId);
         this.activeTabId = tabId;
         this.renderTabs();
         
-        const panels = {
-            'console': document.getElementById('ai-console'),
-            'editor': document.getElementById('editor-wrapper'),
-            'preview': document.getElementById('ai-preview-panel'),
-            'toolbar': document.getElementById('editor-toolbar')
-        };
+        // Seleccionar todos los posibles paneles
+        const consolePanel = document.getElementById('ai-console');
+        const editorWrapper = document.getElementById('editor-wrapper');
+        const previewPanel = document.getElementById('ai-preview-panel');
+        const toolbar = document.getElementById('editor-toolbar');
 
-        // OCULTAR TODOS LOS PANELES Y LIMPIAR CLASES AGRESIVAMENTE
-        Object.values(panels).forEach(panel => {
-            if (panel) {
-                panel.style.display = 'none';
-                panel.style.visibility = 'hidden';
-                panel.style.opacity = '0';
-                panel.classList.add('hidden-panel');
+        // OCULTAR TODO PRIMERO
+        [consolePanel, editorWrapper, previewPanel, toolbar].forEach(p => {
+            if (p) {
+                p.style.setProperty('display', 'none', 'important');
+                p.style.setProperty('visibility', 'hidden', 'important');
+                p.classList.add('hidden-panel');
             }
         });
 
-        // MOSTRAR PANEL ESPECÍFICO
+        // MOSTRAR EL SELECCIONADO
         if (tabId === 'console') {
-            const consolePanel = document.getElementById('ai-console');
             if (consolePanel) {
-                console.log('[AI-LOG] Activando Terminal Panel');
-                consolePanel.style.display = 'flex';
-                consolePanel.style.visibility = 'visible';
-                consolePanel.style.opacity = '1';
-                consolePanel.style.zIndex = '10000';
+                console.log('[AI-LOG] Mostrando Terminal');
+                consolePanel.style.setProperty('display', 'flex', 'important');
+                consolePanel.style.setProperty('visibility', 'visible', 'important');
+                consolePanel.style.setProperty('opacity', '1', 'important');
+                consolePanel.style.setProperty('z-index', '10000', 'important');
                 consolePanel.classList.remove('hidden-panel');
-                
-                // Asegurarse de que el contenedor de archivos/editor no lo tape
-                const editorWrapper = document.getElementById('editor-wrapper');
-                if (editorWrapper) editorWrapper.style.display = 'none';
-                const previewPanel = document.getElementById('ai-preview-panel');
-                if (previewPanel) previewPanel.style.display = 'none';
-                
                 const input = document.getElementById('ai-console-input');
-                if (input) input.focus();
+                if (input) setTimeout(() => input.focus(), 50);
             }
         } else if (tabId === 'preview') {
-            const previewPanel = document.getElementById('ai-preview-panel');
             if (previewPanel) {
-                previewPanel.style.display = 'flex';
-                previewPanel.style.visibility = 'visible';
-                previewPanel.style.opacity = '1';
-                previewPanel.style.zIndex = '10000';
+                console.log('[AI-LOG] Mostrando Preview');
+                previewPanel.style.setProperty('display', 'flex', 'important');
+                previewPanel.style.setProperty('visibility', 'visible', 'important');
+                previewPanel.style.setProperty('opacity', '1', 'important');
+                previewPanel.style.setProperty('z-index', '10000', 'important');
                 previewPanel.classList.remove('hidden-panel');
-                
-                const editorWrapper = document.getElementById('editor-wrapper');
-                if (editorWrapper) editorWrapper.style.display = 'none';
-                const consolePanel = document.getElementById('ai-console');
-                if (consolePanel) consolePanel.style.display = 'none';
             }
         } else if (tabId.startsWith('file-')) {
-            const tab = this.openTabs.find(t => t.id === tabId);
-            if (tab && panels.editor) {
-                console.log('[AI-LOG] switchTab -> ACTIVANDO EDITOR:', tabId);
-                
-                // Forzar limpieza de otros paneles
-                if (panels.preview) panels.preview.style.setProperty('display', 'none', 'important');
-                if (panels.console) panels.console.style.setProperty('display', 'none', 'important');
-                
-                // Activar wrapper del editor
-                panels.editor.style.setProperty('display', 'block', 'important');
-                panels.editor.style.setProperty('visibility', 'visible', 'important');
-                panels.editor.style.setProperty('opacity', '1', 'important');
-                panels.editor.style.setProperty('z-index', '999999', 'important');
-                panels.editor.classList.remove('hidden-panel');
-                
-                // ELIMINAR CUALQUER EDITOR PREVIO
-                const oldEditor = document.getElementById('ai-real-editor');
-                if (oldEditor) oldEditor.remove();
+            if (editorWrapper) {
+                console.log('[AI-LOG] Mostrando Editor para:', tabId);
+                editorWrapper.style.setProperty('display', 'block', 'important');
+                editorWrapper.style.setProperty('visibility', 'visible', 'important');
+                editorWrapper.style.setProperty('opacity', '1', 'important');
+                editorWrapper.style.setProperty('z-index', '10000', 'important');
+                editorWrapper.classList.remove('hidden-panel');
+                if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
             }
         }
     },
