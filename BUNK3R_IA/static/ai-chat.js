@@ -129,12 +129,14 @@ const AIChat = {
             }
         });
 
+        // MOSTRAR PANEL ESPECÍFICO
         if (tabId === 'console') {
             console.log('[AI-LOG] switchTab -> Activando CONSOLA');
             if (panels.console) {
                 panels.console.style.setProperty('display', 'flex', 'important');
                 panels.console.style.setProperty('visibility', 'visible', 'important');
                 panels.console.style.setProperty('opacity', '1', 'important');
+                panels.console.style.setProperty('z-index', '1000', 'important');
                 panels.console.classList.remove('hidden-panel');
                 const input = document.getElementById('ai-console-input');
                 if (input) input.focus();
@@ -145,6 +147,7 @@ const AIChat = {
                 panels.preview.style.setProperty('display', 'block', 'important');
                 panels.preview.style.setProperty('visibility', 'visible', 'important');
                 panels.preview.style.setProperty('opacity', '1', 'important');
+                panels.preview.style.setProperty('z-index', '1000', 'important');
                 panels.preview.classList.remove('hidden-panel');
             }
         } else if (tabId.startsWith('file-')) {
@@ -155,12 +158,14 @@ const AIChat = {
                 panels.editor.style.setProperty('display', 'flex', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
+                panels.editor.style.setProperty('z-index', '2000', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
                 if (panels.toolbar) {
                     panels.toolbar.style.setProperty('display', 'flex', 'important');
                     panels.toolbar.style.setProperty('visibility', 'visible', 'important');
                     panels.toolbar.style.setProperty('opacity', '1', 'important');
+                    panels.toolbar.style.setProperty('z-index', '2001', 'important');
                     panels.toolbar.classList.remove('hidden-panel');
                 }
                 

@@ -119,7 +119,10 @@ def manage_file_content():
         filename = os.path.basename(clean_path)
         print(f"[AI-LOG] File not found by direct path, searching recursively for: {filename}")
         search_root = os.path.abspath(os.path.join(os.getcwd())) 
+        # IGNORAR .pythonlibs y .git para evitar encontrar archivos de librerías
         for root, dirs, files in os.walk(search_root):
+            if ".pythonlibs" in root or ".git" in root or "__pycache__" in root:
+                continue
             if filename in files:
                 full_path = os.path.join(root, filename)
                 print(f"[AI-LOG] Found file at: {full_path}")
