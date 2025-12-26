@@ -80,6 +80,19 @@
         .ai-panel-chat.hidden {
             display: none !important;
         }
+        .panel-resizer {
+            width: 8px !important;
+            background: rgba(240, 185, 11, 0.1) !important;
+            cursor: col-resize !important;
+            transition: background 0.2s !important;
+            z-index: 9999 !important;
+            flex-shrink: 0 !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .panel-resizer:hover, .panel-resizer.resizing {
+            background: #F0B90B !important;
+        }
     </style>
     <script>
         (function() {
