@@ -153,13 +153,11 @@ const AIChat = {
                 panels.editor.style.setProperty('display', 'block', 'important');
                 panels.editor.style.setProperty('visibility', 'visible', 'important');
                 panels.editor.style.setProperty('opacity', '1', 'important');
-                panels.editor.style.setProperty('z-index', '999999', 'important');
+                panels.editor.style.setProperty('z-index', '1000', 'important');
                 panels.editor.classList.remove('hidden-panel');
                 
-                // INYECCIÓN DE EMERGENCIA: Si el editor no se ve, lo creamos de nuevo
                 let realEditor = document.getElementById('ai-real-editor');
                 if (!realEditor) {
-                    console.log('[AI-LOG] Editor no encontrado, creando uno nuevo...');
                     realEditor = document.createElement('textarea');
                     realEditor.id = 'ai-real-editor';
                     panels.editor.appendChild(realEditor);
@@ -168,8 +166,7 @@ const AIChat = {
                 realEditor.value = tab.content || '';
                 window.currentEditingFile = tab.path;
                 
-                // Estilos ultra-forzados
-                const emergencyStyles = {
+                const styles = {
                     display: 'block',
                     visibility: 'visible',
                     opacity: '1',
@@ -183,18 +180,21 @@ const AIChat = {
                     padding: '20px',
                     border: 'none',
                     outline: 'none',
-                    zIndex: '1000000',
+                    zIndex: '1001',
                     fontFamily: 'monospace',
                     fontSize: '14px'
                 };
 
-                Object.assign(realEditor.style, emergencyStyles);
-                for (let prop in emergencyStyles) {
-                    realEditor.style.setProperty(prop, emergencyStyles[prop], 'important');
+                for (let prop in styles) {
+                    realEditor.style.setProperty(prop, styles[prop], 'important');
                 }
 
-                realEditor.focus();
-                console.log('[AI-LOG] Editor inyectado con estilos de emergencia');
+                // Forzar refresco visual
+                realEditor.style.display = 'none';
+                setTimeout(() => {
+                    realEditor.style.setProperty('display', 'block', 'important');
+                    realEditor.focus();
+                }, 10);
             }
         }
         console.log('[AI-LOG] switchTab FIN');
