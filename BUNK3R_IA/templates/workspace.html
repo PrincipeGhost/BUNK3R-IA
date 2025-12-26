@@ -488,6 +488,12 @@
                     // Mapeo unificado: todo lo que sea github o projects va al mismo panel
                     let targetId = (view === 'github' || view === 'projects') ? 'panel-projects' : `panel-${view}`;
                     
+                    if (view === 'projects') {
+                        if (window.AIChat && typeof window.AIChat.loadProjectFiles === 'function') {
+                            window.AIChat.loadProjectFiles('current');
+                        }
+                    }
+                    
                     const target = document.getElementById(targetId);
                     if (target) {
                         console.log('Panel found:', targetId);

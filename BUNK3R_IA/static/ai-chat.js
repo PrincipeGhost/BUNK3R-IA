@@ -62,7 +62,12 @@ const AIChat = {
         const toolbar = document.getElementById('editor-toolbar');
         const emptyState = document.querySelector('.ai-empty-state');
         
-        if (!editor || !path) return;
+        if (!editor) return;
+
+        // Si no viene path, es porque se llamó desde la lógica vieja de GitHub con repo
+        if (arguments.length === 2 && typeof name === 'string' && name.includes('/')) {
+            path = name;
+        }
 
         try {
             const response = await fetch(`/api/projects/file/content?path=${encodeURIComponent(path)}`);
@@ -79,7 +84,7 @@ const AIChat = {
                 
                 // Configurar el botón de guardar si no se ha hecho
                 const saveBtn = document.getElementById('btn-save-file');
-                if (saveBtn && !saveBtn.onclick) {
+                if (saveBtn) {
                     saveBtn.onclick = () => this.saveCurrentFile();
                 }
             }
