@@ -1,6 +1,7 @@
 import logging
 import os
 import asyncio
+from typing import Any
 from .base_bot import BaseAutomationBot
 
 logger = logging.getLogger(__name__)

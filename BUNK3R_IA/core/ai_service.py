@@ -639,7 +639,7 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         try:
             logger.info(f"Ejecutando herramienta: {tool_name} con args: {args}")
             
-            result = None
+            result = {}
             modified_fs = False
             
             if tool_name == "read_file":
@@ -684,7 +684,7 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
 
     def chat(self, user_id: str, message: str, system_prompt: Optional[str] = None, 
              preferred_provider: Optional[str] = None, user_context: Optional[Dict] = None,
-             enable_auto_rectify: bool = True) -> Dict:
+             enable_auto_rectify: bool = True) -> Dict[str, Any]:
         """
         Flujo de Chat: El Cerebro (Ollama) analiza y delega.
         """
