@@ -827,89 +827,23 @@
                 </div>
             </div>
 
-            <div class="ai-panels-container">
+            <div class="ai-panels-container"
+                style="position:relative; display:flex; flex-direction:column; height:100%;">
                 <!-- PANEL GITHUB (UNIFICADO) SE CARGARÁ AQUÍ -->
+
+                <!-- BOTÓN PARA OCULTAR BARRA LATERAL -->
+                <div id="toggle-sidebar-btn" onclick="toggleSidebarInternal()"
+                    style="position:absolute; right:0; top:50%; transform:translate(100%, -50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:100; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <polyline id="toggle-icon" points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </div>
             </div>
 
             <div class="panel-resizer" id="main-resizer"></div>
 
             <!-- PERMANENT AI SIDEBAR RIGHT -->
-            <div class="ai-sidebar-right"
-                style="width: 350px; min-width: 300px; border-left: 1px solid #30363d; display: flex; flex-direction: column; background: #0d1117; z-index: 50;">
-                <div class="ai-panel ai-panel-chat active-panel" id="panel-chat"
-                    style="display: flex !important; flex: 1; flex-direction: column;">
-                    <div class="ai-chat-sidebar-header">
-                        <div class="ai-chat-sidebar-logo">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
-                                <line x1="12" y1="22" x2="12" y2="15.5" />
-                                <polyline points="22,8.5 12,15.5 2,8.5" />
-                            </svg>
-                            <div style="display: flex; flex-direction: column;">
-                                <span class="ai-chat-sidebar-title">Constructor Inteligente</span>
-                                <div id="brain-status-indicator"
-                                    style="display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8b949e; margin-top: 2px;">
-                                    <span id="brain-status-dot"
-                                        style="width: 8px; height: 8px; background: #8b949e; border-radius: 50%; display: inline-block;"></span>
-                                    <span id="brain-status-text">Detectando Cerebro...</span>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="ai-chat-sidebar-subtitle">Describe tu proyecto y lo construire paso a paso usando IA
-                            avanzada</p>
-                        <div class="ai-quick-actions-sidebar">
-                            <button class="ai-quick-btn-sidebar"
-                                data-prompt="Crea una landing page moderna y profesional">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                    <line x1="3" y1="9" x2="21" y2="9" />
-                                </svg>
-                                Landing Page
-                            </button>
-                            <button class="ai-quick-btn-sidebar"
-                                data-prompt="Crea un dashboard con graficos y estadisticas">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect x="3" y="3" width="7" height="9" />
-                                    <rect x="14" y="3" width="7" height="5" />
-                                    <rect x="14" y="12" width="7" height="9" />
-                                    <rect x="3" y="16" width="7" height="5" />
-                                </svg>
-                                Dashboard
-                            </button>
-                        </div>
-                    </div>
-                    <div class="ai-chat-messages" id="ai-chat-messages"></div>
-                    <div class="ai-chat-input-container modern-input">
-                        <div class="ai-chat-input-wrapper-v2">
-                            <textarea class="ai-chat-input-v2" id="ai-chat-input"
-                                placeholder="Describe lo que quieres crear..." rows="1"></textarea>
-                            <div class="ai-chat-controls-v2">
-                                <div class="controls-left">
-                                    <button class="build-btn-v2" id="ai-chat-send">
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-                                            stroke="currentColor" stroke-width="2.5">
-                                            <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
-                                        </svg>
-                                        <span>Build</span>
-                                    </button>
-                                </div>
-                                <div class="controls-right">
-                                    <button class="icon-btn-v2" id="ai-chat-send-arrow" title="Enviar mensaje">
-                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
-                                            stroke="currentColor" stroke-width="2.5">
-                                            <line x1="12" y1="19" x2="12" y2="5" />
-                                            <polyline points="5 12 12 5 19 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div class="panel-resizer" id="main-resizer"></div>
 
@@ -1012,13 +946,111 @@
                 </div>
             </div>
 
-            <!-- BOTÓN PARA OCULTAR BARRA LATERAL -->
-            <div id="toggle-sidebar-btn" onclick="toggleSidebarInternal()"
-                style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:10000; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline id="toggle-icon" points="15 18 9 12 15 6"></polyline>
-                </svg>
+
+            <!-- PERMANENT AI SIDEBAR RIGHT -->
+            <div class="ai-sidebar-right"
+                style="width: 350px; min-width: 300px; border-left: 1px solid #30363d; display: flex; flex-direction: column; background: #0d1117; z-index: 50;">
+                <div class="ai-panel ai-panel-chat active-panel" id="panel-chat"
+                    style="display: flex !important; flex: 1; flex-direction: column;">
+                    <div class="ai-chat-sidebar-header">
+                        <div class="ai-chat-sidebar-logo">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
+                                <line x1="12" y1="22" x2="12" y2="15.5" />
+                                <polyline points="22,8.5 12,15.5 2,8.5" />
+                            </svg>
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="ai-chat-sidebar-title">Constructor Inteligente</span>
+                                <div id="brain-status-indicator"
+                                    style="display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8b949e; margin-top: 2px;">
+                                    <span id="brain-status-dot"
+                                        style="width: 8px; height: 8px; background: #8b949e; border-radius: 50%; display: inline-block;"></span>
+                                    <span id="brain-status-text">Detectando Cerebro...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="ai-chat-sidebar-subtitle">Describe tu proyecto y lo construire paso a paso usando IA
+                            avanzada</p>
+                        <div class="ai-quick-actions-sidebar">
+                            <button class="ai-quick-btn-sidebar"
+                                data-prompt="Crea una landing page moderna y profesional">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <line x1="3" y1="9" x2="21" y2="9" />
+                                </svg>
+                                Landing Page
+                            </button>
+                            <button class="ai-quick-btn-sidebar"
+                                data-prompt="Crea un dashboard con graficos y estadisticas">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="9" />
+                                    <rect x="14" y="3" width="7" height="5" />
+                                    <rect x="14" y="12" width="7" height="9" />
+                                    <rect x="3" y="16" width="7" height="5" />
+                                </svg>
+                                Dashboard
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ai-chat-messages" id="ai-chat-messages"></div>
+                    <div class="ai-chat-input-container modern-input">
+                        <div class="ai-chat-input-wrapper-v2">
+                            <textarea class="ai-chat-input-v2" id="ai-chat-input"
+                                placeholder="Describe lo que quieres crear..." rows="1"></textarea>
+                            <div class="ai-chat-controls-v2">
+                                <div class="controls-left">
+                                    <div class="model-selector-container" style="position: relative;">
+                                        <button class="build-btn-v2" id="ai-model-selector-btn"
+                                            style="min-width: 90px; justify-content: space-between; padding: 6px 10px;">
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path
+                                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                                    </path>
+                                                </svg>
+                                                <span id="current-model-name">Model</span>
+                                            </div>
+                                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                                                stroke="currentColor" stroke-width="2" style="opacity: 0.7;">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </button>
+                                        <!-- Dropdown Menu -->
+                                        <div id="ai-model-dropdown" class="model-dropdown hidden"
+                                            style="position: absolute; bottom: 100%; left: 0; background: #161b22; border: 1px solid #30363d; border-radius: 6px; width: 220px; z-index: 1000; margin-bottom: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: none;">
+                                            <div style="padding: 8px; border-bottom: 1px solid #30363d;">
+                                                <input type="text" placeholder="Buscar modelo..."
+                                                    style="width: 100%; background: #0d1117; border: 1px solid #30363d; padding: 6px; border-radius: 4px; color: #c9d1d9; font-size: 12px;">
+                                            </div>
+                                            <ul id="ai-model-list"
+                                                style="list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto;">
+                                                <!-- Models injected by JS -->
+                                                <li
+                                                    style="padding: 8px 12px; color: #8b949e; font-size: 12px; text-align: center;">
+                                                    Cargando modelos...</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="controls-right">
+                                    <button class="icon-btn-v2" id="ai-chat-send-arrow" title="Enviar mensaje">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <line x1="12" y1="19" x2="12" y2="5" />
+                                            <polyline points="5 12 12 5 19 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
 
             <script>
                 function toggleSidebarInternal() {

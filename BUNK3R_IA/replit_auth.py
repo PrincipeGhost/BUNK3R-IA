@@ -18,16 +18,26 @@ def setup_github_auth(app):
         github_bp = make_github_blueprint(
             client_id=client_id,
             client_secret=client_secret,
-            scope="user:email,repo"
+            scope="user:email,repo,workflow,read:org"
         )
         app.register_blueprint(github_bp, url_prefix="/auth")
     
     login_manager.init_app(app)
 
+    @app.route("/auth/token")
+    @require_login
+    def auth_token():
+        # Securely return the OAuth token to the authenticated user's frontend
+        if not github.authorized:
+            return {"error": "Not authorized with GitHub"}, 401
+        
+        token = github.token
+        return {"token": token.get("access_token"), "scope": token.get("scope")}
+
     @app.route("/login")
     def login_route():
         if not os.environ.get("GITHUB_CLIENT_ID"):
-            return "GITHUB_CLIENT_ID no configurado en Secretos", 401
+            return "Error: GITHUB_CLIENT_ID no configurado en variables de entorno (.env)", 401
         return redirect(url_for("github.login"))
 
     @app.route("/logout")

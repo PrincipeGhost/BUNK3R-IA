@@ -205,11 +205,21 @@ const AIChat = {
             this.initWidgetMode();
         }
 
-        this.renderTabs();
-        this.loadFromStorage();
         this.loadSession();
 
+        // Fetch Real GitHub Token for Extension & Clone
+        fetch('/auth/token').then(r => r.json()).then(data => {
+            if (data.token) {
+                console.log('[Auth] Token real sincronizado.');
+                localStorage.setItem('github_token', data.token);
+            }
+        }).catch(e => console.log('Auth check skipped'));
+
+        this.initExtensionHandshake(); // Auto-configure Extension
+        this.initModelSelector(); // Initialize Model Selector
+
         // Sincronizar estado inicial
+
         // Sincronizar estado inicial
         setTimeout(() => {
             this.switchTab(this.activeTabId);
@@ -247,6 +257,137 @@ const AIChat = {
         } catch (e) {
             console.error('[AI-LOG] Error loading repos:', e);
             listContainer.innerHTML = '<div class="error">Connection Error</div>';
+        }
+    },
+
+    initExtensionHandshake() {
+        // Attempt to auto-configure the extension if present
+        const handshake = () => {
+            const apiUrl = window.location.origin;
+            const token = localStorage.getItem('github_token') || 'demo-token'; // Or use proper auth token
+
+            console.log('[AIChat] Sending Handshake to Extension...', apiUrl);
+            window.postMessage({
+                type: 'BUNK3R_HANDSHAKE',
+                config: {
+                    apiUrl: apiUrl,
+                    token: token,
+                    userId: 'current'
+                }
+            }, '*');
+        };
+
+        // Try immediately and a few times shortly after load
+        // Aggressive Retry Strategy for Localhost
+        handshake(); // 0ms
+        setTimeout(handshake, 500); // 500ms
+        setTimeout(handshake, 1500); // 1.5s
+        setTimeout(handshake, 3000); // 3s
+        setTimeout(handshake, 6000); // 6s
+
+        // Expose debug helper globally
+        window.retryHandshake = handshake;
+
+        // Listen for success
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'BUNK3R_HANDSHAKE_SUCCESS') {
+                console.log('✅ Extension Connected & Configured!');
+                this.extensionConnected = true;
+
+                // Show visual indicator if possible
+                const status = document.getElementById('ai-brain-status');
+                if (status) status.classList.add('connected');
+            }
+        });
+    },
+
+    async initModelSelector() {
+        const btn = document.getElementById('ai-model-selector-btn');
+        const dropdown = document.getElementById('ai-model-dropdown');
+        const list = document.getElementById('ai-model-list');
+        const currentName = document.getElementById('current-model-name');
+
+        if (!btn || !dropdown || !list) return;
+
+        // Toggle Dropdown
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            dropdown.style.display = dropdown.classList.contains('hidden') ? 'none' : 'block';
+        });
+
+        // Close on click outside
+        document.addEventListener('click', () => {
+            dropdown.classList.add('hidden');
+            dropdown.style.display = 'none';
+        });
+
+        // Load saved model
+        const savedModel = localStorage.getItem('bunkr_selected_model');
+        if (savedModel) {
+            currentName.textContent = savedModel;
+        }
+
+        // Fetch Models with Fallback
+        const fallbackModels = [
+            { name: "GPT-4o", provider: "OpenAI", id: "gpt-4o" },
+            { name: "Gemini 1.5 Pro", provider: "Google", id: "gemini-1.5-pro" },
+            { name: "Claude 3.5 Sonnet", provider: "Anthropic", id: "claude-3-5-sonnet" },
+            { name: "DeepSeek Coder", provider: "DeepSeek", id: "deepseek-coder" },
+            { name: "BUNK3R-V1", provider: "BUNK3R", id: "bunk3r-preview" }
+        ];
+
+        const renderModels = (providers) => {
+            list.innerHTML = '';
+            if (!providers || providers.length === 0) providers = fallbackModels;
+
+            providers.forEach(p => {
+                const li = document.createElement('li');
+                li.style.padding = '8px 12px';
+                li.style.cursor = 'pointer';
+                li.style.color = '#c9d1d9';
+                li.style.fontSize = '12px';
+                li.style.borderBottom = '1px solid #21262d';
+                li.style.display = 'flex';
+                li.style.justifyContent = 'space-between';
+                li.style.alignItems = 'center';
+
+                li.innerHTML = `
+                    <span style="font-weight:500;">${this.escapeHtml(p.name)}</span>
+                    <span style="color: #58a6ff; font-size: 10px; background: rgba(56,139,253,0.15); padding: 2px 6px; border-radius: 4px;">${this.escapeHtml(p.provider)}</span>
+                `;
+
+                li.addEventListener('mouseover', () => li.style.background = '#21262d');
+                li.addEventListener('mouseout', () => li.style.background = 'transparent');
+
+                li.addEventListener('click', () => {
+                    const modelId = p.id || p.name;
+                    currentName.textContent = p.name;
+                    localStorage.setItem('bunkr_selected_model', p.name);
+                    localStorage.setItem('bunkr_selected_model_id', modelId);
+                    dropdown.classList.add('hidden');
+                    dropdown.style.display = 'none';
+                });
+
+                list.appendChild(li);
+            });
+        };
+
+        try {
+            const response = await fetch('/api/ai-providers');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.providers && data.providers.length > 0) {
+                    renderModels(data.providers);
+                } else {
+                    renderModels(fallbackModels);
+                }
+            } else {
+                renderModels(fallbackModels);
+            }
+        } catch (e) {
+            console.error("Error fetching models, utilizing fallback:", e);
+            renderModels(fallbackModels);
         }
     },
 
@@ -1437,6 +1578,26 @@ const AIChat = {
                 this.currentPhase = 0;
                 this.esperandoConfirmacion = false;
                 this.esperandoClarificacion = false;
+
+                // Refresh Preview Iframe
+                const previewFrame = document.getElementById('ai-preview-iframe');
+                if (previewFrame) {
+                    const userId = "demo_user"; // TODO: Get dynamic user ID if available
+                    // Use new preview route
+                    previewFrame.src = `/api/preview/${userId}/`;
+                    previewFrame.style.display = 'block';
+                    document.getElementById('ai-preview-empty').style.display = 'none';
+
+                    // Tell extension to wake up and allow connection
+                    if (chrome && chrome.runtime) {
+                        try {
+                            // We can't directly talk to extension background from here easily without exact ID.
+                            // But we can rely on the Extension Content Script picking up an event or specialized message.
+                            window.postMessage({ type: 'BUNK3R_CONNECT_BRAIN', url: previewFrame.src }, '*');
+                        } catch (e) { console.warn("Extension connect failed", e); }
+                    }
+                }
+
                 this.appendMessage('assistant', 'Sesion reiniciada. Puedes empezar un nuevo proyecto.');
             }
         } catch (e) {
