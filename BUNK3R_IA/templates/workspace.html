@@ -1322,7 +1322,14 @@
                         localStorage.setItem('github_token', val);
                         window.currentToken = val;
                         projectAuthSection.classList.add('hidden');
-                        window.loadGitHubRepos();
+
+                        // Sync with existing list
+                        if (window.loadGitHubRepos) window.loadGitHubRepos();
+
+                        // Trigger AI Chat Sync
+                        if (window.AIChat && window.AIChat.loadGitHubRepos) {
+                            window.AIChat.loadGitHubRepos();
+                        }
                     }
                 });
             }

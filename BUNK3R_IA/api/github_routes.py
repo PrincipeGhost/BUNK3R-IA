@@ -6,13 +6,40 @@ github_bp = Blueprint('github', __name__, url_prefix='/api/github')
 @github_bp.route('/repos', methods=['GET'])
 def list_repos():
     """Lista los repositorios del usuario authenticated"""
+    import requests
+    manual_token = request.args.get('token')
+    
+    if manual_token:
+        try:
+            headers = {"Authorization": f"token {manual_token}", "Accept": "application/vnd.github.v3+json"}
+            response = requests.get("https://api.github.com/user/repos?sort=updated&per_page=100", headers=headers)
+            
+            if response.ok:
+                repos = response.json()
+                simplified_repos = [{
+                    'id': r['id'],
+                    'name': r['name'],
+                    'full_name': r['full_name'],
+                    'private': r['private'],
+                    'html_url': r['html_url'],
+                    'description': r['description'],
+                    'language': r['language'],
+                    'updated_at': r['updated_at']
+                } for r in repos]
+                return jsonify({"repos": simplified_repos})
+            else:
+                return jsonify({"error": "Failed to fetch repos with manual token", "details": response.text}), response.status_code
+        except Exception as e:
+            return jsonify({"error": str(e), "repos": []}), 500
+
+    # Old OAuth Logic fallback
     import os
     
     # Check if GitHub OAuth is configured
     if not os.environ.get('GITHUB_CLIENT_ID'):
         return jsonify({
             "error": "GitHub not configured",
-            "message": "Configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to enable GitHub integration",
+            "message": "Configure GITHUB_CLIENT_ID or provide a manual token",
             "repos": []
         }), 200
     
@@ -20,7 +47,7 @@ def list_repos():
         if not github.authorized:
             return jsonify({
                 "error": "GitHub not authorized",
-                "message": "Please login with GitHub to view your repositories",
+                "message": "Please login with GitHub or provide a token",
                 "repos": []
             }), 200
         
@@ -45,7 +72,7 @@ def list_repos():
         # github.authorized not available - GitHub OAuth not initialized
         return jsonify({
             "error": "GitHub OAuth not initialized",
-            "message": "GitHub authentication is not configured. Please set up GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET",
+            "message": "GitHub authentication is not configured.",
             "repos": []
         }), 200
     except Exception as e:

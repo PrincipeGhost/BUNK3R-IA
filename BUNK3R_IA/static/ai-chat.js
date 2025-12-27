@@ -143,6 +143,56 @@ const AIChat = {
     },
 
     init() {
+        // --- COMMAND PROCESSING LOGIC ---
+        this.processAICommands = function (content) {
+            // Regex for [CLONE=owner/repo]
+            const cloneMatch = content.match(/\[CLONE=(.*?)\]/);
+            if (cloneMatch && cloneMatch[1]) {
+                const repoName = cloneMatch[1].trim();
+                console.log('[AI-COMMAND] CLONE detected for:', repoName);
+                this.executeClone(repoName);
+                return content.replace(cloneMatch[0], `<i>(Clonando repositorio: ${repoName}...)</i>`);
+            }
+            return content;
+        };
+
+        this.executeClone = async function (repoName) {
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                this.appendMessage('assistant', '⚠️ Necesito tu Token de GitHub para clonar. Configúralo en la pestaña de Proyectos.');
+                return;
+            }
+
+            const listContainer = document.getElementById('ai-projects-list');
+            if (listContainer) listContainer.innerHTML = '<div class="ai-project-loading">Clonando repositorio...</div>';
+
+            try {
+                const response = await fetch('/api/repo/clone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        repo: repoName,
+                        token: token
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    this.appendMessage('assistant', `✅ Repositorio <b>${repoName}</b> clonado y listo para trabajar.`);
+                    // Reload repos and file tree
+                    if (window.loadGitHubRepos) window.loadGitHubRepos();
+                    // Load file tree for this repo immediately
+                    if (window.renderFileTree && data.path) {
+                        // Try to auto-load file tree if possible, or just refresh projects
+                    }
+                } else {
+                    this.appendMessage('assistant', `❌ Error al clonar: ${data.error}`);
+                }
+            } catch (e) {
+                this.appendMessage('assistant', `❌ Error de conexión al clonar: ${e.message}`);
+            }
+        };
+
         console.log('[AI-LOG] AIChat init()');
 
         // Detectar si estamos en modo página completa
@@ -160,10 +210,89 @@ const AIChat = {
         this.loadSession();
 
         // Sincronizar estado inicial
+        // Sincronizar estado inicial
         setTimeout(() => {
-            console.log('[AI-LOG] init -> switchTab inicial a:', this.activeTabId);
             this.switchTab(this.activeTabId);
         }, 300);
+
+        // Auto-load GitHub repos if token exists
+        setTimeout(() => {
+            const token = localStorage.getItem('github_token');
+            // Check if function exists before calling, or call directly if method of this object
+            if (token && this.loadGitHubRepos) {
+                console.log('[AI-LOG] Auto-loading GitHub repos...');
+                this.loadGitHubRepos();
+            }
+        }, 1000);
+    },
+
+    async loadGitHubRepos() {
+        const token = localStorage.getItem('github_token');
+        const listContainer = document.getElementById('ai-projects-list');
+
+        if (!token) return;
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '<div class="ai-project-loading">Sincronizando repositorios...</div>';
+
+        try {
+            const response = await fetch(`/api/github/repos?token=${token}`);
+            const data = await response.json();
+
+            if (data.repos) {
+                this.renderRemoteRepos(data.repos, listContainer);
+            } else {
+                listContainer.innerHTML = '<div class="error">No repos found or token invalid</div>';
+            }
+        } catch (e) {
+            console.error('[AI-LOG] Error loading repos:', e);
+            listContainer.innerHTML = '<div class="error">Connection Error</div>';
+        }
+    },
+
+    renderRemoteRepos(repos, container) {
+        container.innerHTML = '';
+        const title = document.createElement('div');
+        title.className = 'ai-sidebar-subtitle';
+        title.innerHTML = `MIS REPOSITORIOS (${repos.length})`;
+        title.style.cssText = 'padding: 10px; font-size: 11px; font-weight: 600; color: #6b7280; letter-spacing: 0.05em; margin-top: 10px;';
+        container.appendChild(title);
+
+        if (repos.length === 0) {
+            container.innerHTML += '<div style="padding:15px; text-align:center; color:#6b7280; font-size:12px;">No repositories found.</div>';
+            return;
+        }
+
+        repos.forEach(repo => {
+            const item = document.createElement('div');
+            item.className = 'file-item repo-item';
+            item.style.cssText = 'padding: 8px 15px; cursor: pointer; color: #c9d1d9; font-size: 13px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.03);';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.innerHTML = `
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="#c9d1d9" style="margin-right:8px; vertical-align:text-bottom;">
+                    <path fill-rule="evenodd" d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm1.5 0v9c0 .356.094.687.257.975a2.49 2.49 0 01-.007.025h8.75v-9H3.5zM4 14.5a.5.5 0 100-1 .5.5 0 000 1z"></path>
+                </svg>
+                ${repo.name}
+            `;
+
+            const actionBtn = document.createElement('button');
+            actionBtn.innerText = 'CLONAR';
+            actionBtn.style.cssText = 'background: #238636; border: none; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; display: none;';
+
+            item.addEventListener('mouseenter', () => actionBtn.style.display = 'block');
+            item.addEventListener('mouseleave', () => actionBtn.style.display = 'none');
+
+            item.onclick = () => {
+                if (confirm(`¿Quieres clonar y trabajar en ${repo.name}?`)) {
+                    this.executeClone(repo.full_name);
+                }
+            };
+
+            item.appendChild(nameSpan);
+            item.appendChild(actionBtn);
+            container.appendChild(item);
+        });
     },
 
     switchTab(tabId) {
@@ -701,7 +830,7 @@ const AIChat = {
                         <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-1v1a4 4 0 0 1-8 0v-1H7a3 3 0 0 1-3-3v-2a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"></path>
                     </svg>
                 </div>
-                <div class="ai-bubble">${this.formatMessage(content)}</div>
+                <div class="ai-bubble">${this.formatMessage(this.processAICommands ? this.processAICommands(content) : content)}</div>
             `;
         } else {
             msgDiv.innerHTML = `
