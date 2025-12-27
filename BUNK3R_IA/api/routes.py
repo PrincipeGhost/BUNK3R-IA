@@ -236,6 +236,14 @@ def register_brain():
         # Update environment variable for the current process
         os.environ['OLLAMA_BASE_URL'] = tunnel_url
         
+        # Persist to database for multi-worker synchronization
+        try:
+            from BUNK3R_IA.models import GlobalSetting
+            GlobalSetting.set('OLLAMA_BASE_URL', tunnel_url)
+            logger.info(f"OLLAMA_BASE_URL persisted to DB: {tunnel_url}")
+        except Exception as db_err:
+            logger.error(f"Failed to persist OLLAMA_BASE_URL to DB: {db_err}")
+
         # Also update the AIService if already initialized
         from BUNK3R_IA.core.ai_service import get_ai_service
         ai = get_ai_service()

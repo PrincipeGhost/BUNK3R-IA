@@ -463,6 +463,17 @@ class OllamaProvider(AIProvider):
     def is_available(self) -> bool:
         try:
             import requests
+            
+            # Check for updated URL in DB (for multi-worker sync)
+            try:
+                from BUNK3R_IA.models import GlobalSetting
+                db_url = GlobalSetting.get('OLLAMA_BASE_URL')
+                if db_url and db_url not in self.base_url:
+                    self.base_url = db_url.rstrip('/') + '/api/chat'
+                    logger.info(f"OllamaProvider updated from DB: {self.base_url}")
+            except Exception as e:
+                logger.debug(f"Could not check DB for Ollama URL: {e}")
+
             # Simple check to see if the server is up
             response = requests.get(self.base_url.replace("/api/chat", "/api/tags"), timeout=2)
             return response.status_code == 200

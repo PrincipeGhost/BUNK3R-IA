@@ -38,3 +38,22 @@ class OAuth(db.Model):
         'provider',
         name='uq_user_browser_session_key_provider',
     ),)
+class GlobalSetting(db.Model):
+    __tablename__ = 'global_settings'
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @classmethod
+    def get(cls, key, default=None):
+        setting = cls.query.get(key)
+        return setting.value if setting else default
+
+    @classmethod
+    def set(cls, key, value):
+        setting = cls.query.get(key)
+        if not setting:
+            setting = cls(key=key)
+            db.session.add(setting)
+        setting.value = str(value)
+        db.session.commit()
