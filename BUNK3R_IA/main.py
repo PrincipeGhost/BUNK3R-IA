@@ -21,10 +21,9 @@ from flask import Flask, jsonify, render_template, Response, abort, session
 from BUNK3R_IA.config import get_config
 from BUNK3R_IA.api.routes import ai_bp, set_db_manager
 from BUNK3R_IA.api.project_routes import projects_bp
-from BUNK3R_IA.api.github_routes import github_bp
+from BUNK3R_IA.api.github_routes import github_api_bp
 from BUNK3R_IA.api.automation_routes import automation_bp
 from BUNK3R_IA.api.terminal_routes import terminal_bp
-from BUNK3R_IA.api.repo_manager import repo_mgr_bp
 from BUNK3R_IA.api.repo_manager import repo_mgr_bp
 from BUNK3R_IA.api.preview_routes import preview_bp
 from BUNK3R_IA.api.extension_routes import extension_bp
@@ -63,7 +62,7 @@ def create_app(config_class=None):
     
     app.register_blueprint(ai_bp)
     app.register_blueprint(projects_bp)
-    app.register_blueprint(github_bp)
+    app.register_blueprint(github_api_bp)
     app.register_blueprint(automation_bp)
     app.register_blueprint(terminal_bp)
     app.register_blueprint(repo_mgr_bp)

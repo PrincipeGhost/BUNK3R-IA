@@ -1,9 +1,38 @@
 from flask import Blueprint, jsonify, request
 from flask_dance.contrib.github import github
 
-github_bp = Blueprint('github', __name__, url_prefix='/api/github')
+github_api_bp = Blueprint('github_api', __name__, url_prefix='/api/github')
 
-@github_bp.route('/repos', methods=['GET'])
+@github_api_bp.route('/user', methods=['GET'])
+def get_user_info():
+    """Get GitHub user info from token"""
+    import requests
+    token = request.args.get('token')
+    
+    if not token:
+        return jsonify({"error": "Token required"}), 400
+    
+    try:
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        response = requests.get("https://api.github.com/user", headers=headers)
+        
+        if response.ok:
+            user_data = response.json()
+            return jsonify({
+                "username": user_data.get("login"),
+                "name": user_data.get("name"),
+                "avatar": user_data.get("avatar_url"),
+                "email": user_data.get("email")
+            })
+        else:
+            return jsonify({"error": "Invalid token"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@github_api_bp.route('/repos', methods=['GET'])
 def list_repos():
     """Lista los repositorios del usuario authenticated"""
     import requests
@@ -78,7 +107,7 @@ def list_repos():
     except Exception as e:
         return jsonify({"error": str(e), "repos": []}), 200
 
-@github_bp.route('/contents', methods=['GET'])
+@github_api_bp.route('/contents', methods=['GET'])
 def get_repo_contents():
     """Obtiene el contenido (archivos/carpetas) de un repositorio"""
     repo_full_name = request.args.get('repo')

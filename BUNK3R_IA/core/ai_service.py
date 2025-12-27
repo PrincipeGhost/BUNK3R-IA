@@ -239,13 +239,16 @@ class GeminiProvider(AIProvider):
             
             if response.status_code == 200:
                 result = response.json()
+                logger.info(f"Gemini raw response: {result}")
                 candidates = result.get("candidates", [])
                 if candidates:
                     text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
                     return {"success": True, "response": text, "provider": self.name}
                 return {"success": False, "error": "No candidates in response", "provider": self.name}
             else:
-                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                error_text = response.text
+                logger.error(f"Gemini HTTP {response.status_code}: {error_text}")
+                return {"success": False, "error": f"HTTP {response.status_code}: {error_text}", "provider": self.name}
                 
         except Exception as e:
             logger.error(f"Gemini error: {e}")
@@ -862,11 +865,13 @@ Mi objetivo es ser el colaborador más preciso."""
                     logger.info(f"Using provider: {provider.name} (Step {step})")
                     result = provider.chat(conversation, system)
                     
-                    if result.get("success"):
+                    if result.get("success") and result.get("response", "").strip():
                         current_response_text = result.get("response", "")
                         provider_used = provider.name
                         response_success = True
                         break
+                    else:
+                        logger.warning(f"Provider {provider.name} returned empty response, trying next...")
                 except Exception as e:
                     logger.error(f"Provider {provider.name} failed: {e}")
             
