@@ -16,6 +16,50 @@ const AIChat = {
         }
     },
 
+    async init() {
+        this.devLog('Initializing AIChat...');
+        this.startBrainMonitor();
+        // ... rest of init logic if any ...
+    },
+
+    async startBrainMonitor() {
+        const updateUI = (data) => {
+            const dot = document.getElementById('brain-status-dot');
+            const text = document.getElementById('brain-status-text');
+            if (!dot || !text) return;
+
+            if (data.ollama_url && data.ollama_url !== 'Not configured') {
+                dot.style.background = '#00ff00'; // Green
+                dot.style.boxShadow = '0 0 5px #00ff00';
+                text.innerText = 'Cerebro Local Activo';
+                text.style.color = '#00ff00';
+            } else if (data.available_providers && data.available_providers.length > 0) {
+                dot.style.background = '#f0b90b'; // Yellow
+                dot.style.boxShadow = '0 0 5px #f0b90b';
+                text.innerText = 'BUNK3R Cloud Activo';
+                text.style.color = '#f0b90b';
+            } else {
+                dot.style.background = '#ff4444'; // Red
+                dot.style.boxShadow = '0 0 5px #ff4444';
+                text.innerText = 'Cerebro Desconectado';
+                text.style.color = '#ff4444';
+            }
+        };
+
+        const check = async () => {
+            try {
+                const resp = await fetch('/api/system/status');
+                const data = await resp.json();
+                updateUI(data);
+            } catch (e) {
+                updateUI({ status: 'error' });
+            }
+        };
+
+        check();
+        setInterval(check, 20000); // Check every 20s
+    },
+
     async loadProjectFiles(projectId) {
         const listContainer = document.getElementById('ai-projects-list');
         if (!listContainer) return;

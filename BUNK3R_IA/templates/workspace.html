@@ -731,7 +731,15 @@
                             <line x1="12" y1="22" x2="12" y2="15.5" />
                             <polyline points="22,8.5 12,15.5 2,8.5" />
                         </svg>
-                        <span class="ai-chat-sidebar-title">Constructor Inteligente</span>
+                        <div style="display: flex; flex-direction: column;">
+                            <span class="ai-chat-sidebar-title">Constructor Inteligente</span>
+                            <div id="brain-status-indicator"
+                                style="display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8b949e; margin-top: 2px;">
+                                <span id="brain-status-dot"
+                                    style="width: 8px; height: 8px; background: #8b949e; border-radius: 50%; display: inline-block;"></span>
+                                <span id="brain-status-text">Detectando Cerebro...</span>
+                            </div>
+                        </div>
                     </div>
                     <p class="ai-chat-sidebar-subtitle">Describe tu proyecto y lo construire paso a paso usando IA
                         avanzada</p>

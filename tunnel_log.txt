@@ -1,31 +1,31 @@
-2025-12-27T12:16:17Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
-2025-12-27T12:16:17Z INF Requesting new quick Tunnel on trycloudflare.com...
-2025-12-27T12:16:21Z INF +--------------------------------------------------------------------------------------------+
-2025-12-27T12:16:21Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
-2025-12-27T12:16:21Z INF |  https://ethics-its-naturals-string.trycloudflare.com                                      |
-2025-12-27T12:16:21Z INF +--------------------------------------------------------------------------------------------+
-2025-12-27T12:16:21Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]
-2025-12-27T12:16:21Z INF Version 2025.8.1 (Checksum b5d598b00cc3a28cabc5812d9f762819334614bae452db4e7f23eefe7b081556)
-2025-12-27T12:16:21Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
-2025-12-27T12:16:21Z INF Settings: map[ha-connections:1 protocol:quic url:http://localhost:11434]
-2025-12-27T12:16:21Z INF cloudflared will not automatically update on Windows systems.
-2025-12-27T12:16:21Z INF Generated Connector ID: aa8dc6c3-988b-401a-a3be-ebd564dc9aab
-2025-12-27T12:16:21Z INF Initial protocol quic
-2025-12-27T12:16:21Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
-2025-12-27T12:16:21Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
-2025-12-27T12:16:22Z ERR Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]. You need to specify the origin certificate path by specifying the origincert option in the configuration file, or set TUNNEL_ORIGIN_CERT environment variable originCertPath=
-2025-12-27T12:16:22Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
-2025-12-27T12:16:22Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
-2025-12-27T12:16:22Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.23
-2025-12-27T12:16:22Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
-2025-12-27T12:16:22Z INF Starting metrics server on 127.0.0.1:20241/metrics
-2025-12-27T12:16:23Z INF Registered tunnel connection connIndex=0 connection=23c3b142-25fc-45e5-8540-67c609060d9f event=0 ip=198.41.200.23 location=waw05 protocol=quic
-2025-12-27T12:37:00Z INF Initiating graceful shutdown due to signal terminated ...
-2025-12-27T12:37:00Z ERR failed to run the datagram handler error="context canceled" connIndex=0 event=0 ip=198.41.200.23
-2025-12-27T12:37:00Z ERR failed to serve tunnel connection error="control stream encountered a failure while serving" connIndex=0 event=0 ip=198.41.200.23
-2025-12-27T12:37:00Z ERR Serve tunnel error error="control stream encountered a failure while serving" connIndex=0 event=0 ip=198.41.200.23
-2025-12-27T12:37:00Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.23
-2025-12-27T12:37:01Z ERR Connection terminated connIndex=0
-2025-12-27T12:37:01Z ERR no more connections active and exiting
-2025-12-27T12:37:01Z INF Tunnel server stopped
-2025-12-27T12:37:01Z INF Metrics server stopped
+2025-12-27T12:47:13Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2025-12-27T12:47:13Z INF Requesting new quick Tunnel on trycloudflare.com...
+2025-12-27T12:47:17Z INF +--------------------------------------------------------------------------------------------+
+2025-12-27T12:47:17Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2025-12-27T12:47:17Z INF |  https://infants-italic-round-module.trycloudflare.com                                     |
+2025-12-27T12:47:17Z INF +--------------------------------------------------------------------------------------------+
+2025-12-27T12:47:17Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]
+2025-12-27T12:47:17Z INF Version 2025.8.1 (Checksum b5d598b00cc3a28cabc5812d9f762819334614bae452db4e7f23eefe7b081556)
+2025-12-27T12:47:17Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-12-27T12:47:17Z INF Settings: map[ha-connections:1 protocol:quic url:http://localhost:11434]
+2025-12-27T12:47:17Z INF cloudflared will not automatically update on Windows systems.
+2025-12-27T12:47:17Z INF Generated Connector ID: c3752d53-412f-4714-adb9-76592a108af2
+2025-12-27T12:47:17Z INF Initial protocol quic
+2025-12-27T12:47:17Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
+2025-12-27T12:47:17Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
+2025-12-27T12:47:17Z ERR Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]. You need to specify the origin certificate path by specifying the origincert option in the configuration file, or set TUNNEL_ORIGIN_CERT environment variable originCertPath=
+2025-12-27T12:47:17Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-12-27T12:47:17Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
+2025-12-27T12:47:17Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.47
+2025-12-27T12:47:17Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
+2025-12-27T12:47:17Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-12-27T12:47:18Z INF Registered tunnel connection connIndex=0 connection=07bd7cc6-2fc8-4dca-8fb4-756a8463e588 event=0 ip=198.41.192.47 location=ham01 protocol=quic
+2025-12-27T12:56:06Z INF Initiating graceful shutdown due to signal terminated ...
+2025-12-27T12:56:06Z ERR failed to run the datagram handler error="context canceled" connIndex=0 event=0 ip=198.41.192.47
+2025-12-27T12:56:06Z ERR failed to serve tunnel connection error="control stream encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.47
+2025-12-27T12:56:06Z ERR Serve tunnel error error="control stream encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.47
+2025-12-27T12:56:06Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.47
+2025-12-27T12:56:06Z ERR Connection terminated connIndex=0
+2025-12-27T12:56:06Z ERR no more connections active and exiting
+2025-12-27T12:56:06Z INF Tunnel server stopped
+2025-12-27T12:56:06Z INF Metrics server stopped

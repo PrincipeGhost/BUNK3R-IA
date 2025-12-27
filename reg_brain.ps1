@@ -14,13 +14,14 @@ while ($(Get-Date) -lt $timeout) {
 } 
 if ($url) { 
     echo "[+] URL Detectada: $url"; 
-    echo "[+] Registrando en Render..."; 
+    echo "[+] Registrando en Render (esto puede tardar 1 min si el server esta dormido)..."; 
     try { 
         $body = @{ url = $url } | ConvertTo-Json; 
-        Invoke-RestMethod -Method Post -Uri "https://bunk3r-ia.onrender.com/api/system/register-brain" -Body $body -ContentType "application/json"; 
+        $response = Invoke-RestMethod -Method Post -Uri "https://bunk3r-ia.onrender.com/api/system/register-brain" -Body $body -ContentType "application/json" -TimeoutSec 120; 
         echo "[OK] Tu IA local esta ahora conectada a Render"; 
     } catch { 
-        echo "[X] Error al registrar. Hazlo manualmente: $url"; 
+        echo "[X] Error al registrar. Revisa si la URL de Render es correcta o intentalo de nuevo."; 
+        echo "[DEBUG] Detalle: $_"; 
     } 
 } else { echo "[] No se pudo capturar la URL automaticamente."; } 
 while ($true) { Start-Sleep -s 60; } 
