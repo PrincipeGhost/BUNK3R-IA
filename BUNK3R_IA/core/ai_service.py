@@ -805,19 +805,18 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         # 2. El Cerebro (Ollama) analiza la petición (Prioridad 0)
         brain = next((p for p in self.providers if p.name == "ollama"), None)
         
-        # Inyectar contexto del repositorio para que la IA entienda el proyecto
-        repo_context = ""
+        # Inyectar contexto del Arquitecto (CWD, Comandos, Metas)
+        architect_context = ""
         try:
-            from BUNK3R_IA.core.ai_project_context import AIProjectContext
-            # Usar un ID de sesión genérico para el contexto global
-            ctx = AIProjectContext("global_user", "bunk3r_ia")
-            repo_context = ctx.get_context_summary()
+            from BUNK3R_IA.core.context_manager import ContextManager
+            ctx = ContextManager()
+            architect_context = ctx.get_summarized_context()
         except Exception as e:
-            logger.error(f"Error obteniendo contexto del repositorio: {e}")
+            logger.error(f"Error obteniendo contexto del arquitecto: {e}")
 
         system = system_prompt or self.DEFAULT_SYSTEM_PROMPT
-        if repo_context:
-            system = f"{system}\n\n{repo_context}"
+        if architect_context:
+            system = f"{system}\n\n{architect_context}"
         
         if brain and brain.is_available():
             logger.info("🧠 Cerebro (Ollama) activado para analizar la petición...")

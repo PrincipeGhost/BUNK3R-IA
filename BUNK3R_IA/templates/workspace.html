@@ -194,6 +194,10 @@
     </script>
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23F0B90B' width='100' height='100' rx='20'/%3E%3Cpath d='M50 20 L75 35 V65 L50 80 L25 65 V35 Z' fill='%230a0d10'/%3E%3C/svg%3E">
+    <!-- Xterm.js for the Terminal Sandbox -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 </head>
 <style>
     /* INJECTED STYLES FOR ACTIVITY BAR & PROJECTS */
@@ -1731,11 +1735,78 @@
 
             // Resizer Logic (Basic)
             function initResize(e, resizer) {
-                // ... Simplifed or copied ... 
-                // Since user didn't complain about resizing, I'll omit complex logic for now or add a placeholder.
-                // Or better, just skipping resizing logic in this simplified version to avoid bugs.
-                // The panels are flex.
+                // ...
             }
+
+            // --- TERMINAL XTERM.JS INIT ---
+            window.initTerminal = function () {
+                const termContainer = document.getElementById('ai-console-output');
+                if (!termContainer || window.term) return;
+
+                // Clear placeholder
+                termContainer.innerHTML = '';
+
+                const term = new Terminal({
+                    cursorBlink: true,
+                    theme: {
+                        background: '#000000',
+                        foreground: '#0f0',
+                        cursor: '#F0B90B',
+                        selectionBackground: 'rgba(240, 185, 11, 0.3)'
+                    },
+                    fontSize: 13,
+                    fontFamily: '"Fira Code", monospace'
+                });
+
+                const fitAddon = new FitAddon.FitAddon();
+                term.loadAddon(fitAddon);
+                term.open(termContainer);
+                fitAddon.fit();
+
+                term.writeln('\x1b[1;33mBUNK3R OS v2.0 Sandbox Active\x1b[0m');
+                term.writeln('AI Architect connected. Ready to build.\r\n');
+
+                window.term = term;
+
+                // Input handling
+                const consoleInput = document.getElementById('ai-console-input');
+                if (consoleInput) {
+                    consoleInput.addEventListener('keydown', async (e) => {
+                        if (e.key === 'Enter') {
+                            const cmd = consoleInput.value.trim();
+                            if (cmd) {
+                                term.writeln(`\r\n\x1b[1;32m$ ${cmd}\x1b[0m`);
+                                consoleInput.value = '';
+
+                                // Backend Execution Call
+                                try {
+                                    const resp = await fetch('/api/terminal/execute', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ command: cmd })
+                                    });
+                                    const data = await resp.json();
+                                    if (data.output) {
+                                        term.writeln(data.output);
+                                    }
+                                } catch (err) {
+                                    term.writeln('\x1b[1;31mError de conexión con el sandbox\x1b[0m');
+                                }
+                                fitAddon.fit();
+                            }
+                        }
+                    });
+                }
+            };
+
+            // Auto-init terminal when visible
+            const observer = new MutationObserver(() => {
+                const consoleEl = document.getElementById('ai-console');
+                if (consoleEl && consoleEl.style.display !== 'none') {
+                    window.initTerminal();
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style'] });
         });
     </script>
 </body>
