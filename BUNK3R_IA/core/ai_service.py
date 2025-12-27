@@ -448,6 +448,68 @@ class AntigravityBridgeProvider:
         self._provider.refresh_availability()
 
 
+class OllamaProvider(AIProvider):
+    """Local Ollama API Provider - Running on user's PC"""
+    
+    def __init__(self, model: str = None, base_url: str = None):
+        super().__init__("local-ollama")
+        self.name = "ollama"
+        from BUNK3R_IA.config import get_config
+        conf = get_config()
+        self.model = model or getattr(conf, 'OLLAMA_MODEL', 'llama3.2')
+        self.base_url = (base_url or getattr(conf, 'OLLAMA_BASE_URL', 'http://localhost:11434')).rstrip('/') + '/api/chat'
+        self.available = True # We check availability via health check
+    
+    def is_available(self) -> bool:
+        try:
+            import requests
+            # Simple check to see if the server is up
+            response = requests.get(self.base_url.replace("/api/chat", "/api/tags"), timeout=2)
+            return response.status_code == 200
+        except:
+            return False
+
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            
+            # Formatear mensajes para Ollama
+            for msg in messages:
+                chat_messages.append({
+                    "role": msg.get("role", "user"),
+                    "content": msg.get("content", "")
+                })
+            
+            response = requests.post(
+                self.base_url,
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.7,
+                        "num_predict": 4096
+                    }
+                },
+                timeout=180
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"Ollama HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Ollama error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
 class AIService:
     """
     Multi-provider AI service with automatic fallback
@@ -487,17 +549,23 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         
         self._initialize_providers()
     
-    def _initialize_providers(self):
-        """Initialize all available AI providers - ordered by reliability"""
-        
-        # Priority 0: Antigravity Bridge (free, unlimited, user's PC)
+        # Priority 0: Local Ollama (The Brain)
+        try:
+            ollama_provider = OllamaProvider()
+            if ollama_provider.is_available():
+                self.providers.append(ollama_provider)
+                logger.info("Ollama provider initialized (Priority 0 - The Brain)")
+        except Exception as e:
+            logger.warning(f"Could not initialize Ollama provider: {e}")
+
+        # Priority 1: Antigravity Bridge (free, unlimited, user's PC)
         antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', 'http://localhost:8888')
         if antigravity_url:
             try:
                 antigravity_provider = AntigravityBridgeProvider()
                 if antigravity_provider.available:
                     self.providers.append(antigravity_provider) # type: ignore
-                    logger.info("Antigravity Bridge provider initialized (Priority 0 - Primary)")
+                    logger.info("Antigravity Bridge provider initialized (Priority 1)")
             except Exception as e:
                 logger.warning(f"Could not initialize Antigravity provider: {e}")
         

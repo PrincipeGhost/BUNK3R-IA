@@ -28,6 +28,8 @@ class Config:
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
     HF_TOKEN = os.getenv('HF_TOKEN', '')
     CEREBRAS_API_KEY = os.getenv('CEREBRAS_API_KEY', '')
+    OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
+    OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
     
     ANTIGRAVITY_BRIDGE_URL = os.getenv('ANTIGRAVITY_BRIDGE_URL', '')
     ANTIGRAVITY_TIMEOUT = int(os.getenv('ANTIGRAVITY_TIMEOUT', 180))
