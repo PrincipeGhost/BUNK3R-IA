@@ -808,8 +808,14 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         # Inyectar contexto del Arquitecto (CWD, Comandos, Metas)
         architect_context = ""
         try:
+            from flask_login import current_user
             from BUNK3R_IA.core.context_manager import ContextManager
-            ctx = ContextManager()
+            
+            user_id = "anonymous"
+            if current_user and current_user.is_authenticated:
+                user_id = str(current_user.id)
+            
+            ctx = ContextManager(user_id)
             architect_context = ctx.get_summarized_context()
         except Exception as e:
             logger.error(f"Error obteniendo contexto del arquitecto: {e}")

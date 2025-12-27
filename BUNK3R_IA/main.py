@@ -24,6 +24,7 @@ from BUNK3R_IA.api.project_routes import projects_bp
 from BUNK3R_IA.api.github_routes import github_bp
 from BUNK3R_IA.api.automation_routes import automation_bp
 from BUNK3R_IA.api.terminal_routes import terminal_bp
+from BUNK3R_IA.api.repo_manager import repo_mgr_bp
 from BUNK3R_IA.models import db
 from BUNK3R_IA.replit_auth import login_manager, require_login
 
@@ -62,6 +63,7 @@ def create_app(config_class=None):
     app.register_blueprint(github_bp)
     app.register_blueprint(automation_bp)
     app.register_blueprint(terminal_bp)
+    app.register_blueprint(repo_mgr_bp)
     
     @app.before_request
     def make_session_permanent():
