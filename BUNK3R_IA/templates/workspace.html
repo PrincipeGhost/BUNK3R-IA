@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,22 +8,26 @@
     <title>BUNK3R IA - Constructor Inteligente</title>
     <style>
         /* CSS inicial para evitar FOUC y asegurar fondo oscuro */
-        html, body { 
-            margin: 0; 
+        html,
+        body {
+            margin: 0;
             padding: 0;
-            background: #0d1117 !important; 
-            color: #c9d1d9 !important; 
+            background: #0d1117 !important;
+            color: #c9d1d9 !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;
             overflow: hidden;
             height: 100% !important;
             width: 100% !important;
         }
+
         header.mobile-header {
             display: none !important;
         }
+
         nav.mobile-menu {
             display: none !important;
         }
+
         .workspace-main {
             display: flex !important;
             flex-direction: row !important;
@@ -31,6 +36,7 @@
             background: #0d1117 !important;
             overflow: hidden !important;
         }
+
         .ai-workspace-container {
             display: flex !important;
             flex-direction: row !important;
@@ -40,6 +46,7 @@
             background: #0d1117 !important;
             overflow: hidden !important;
         }
+
         .ai-panel-chat {
             display: none !important;
             flex-direction: column !important;
@@ -51,6 +58,7 @@
             min-height: 0 !important;
             min-width: 0 !important;
         }
+
         .ai-panel-chat.active-panel {
             display: flex !important;
             width: 300px !important;
@@ -60,6 +68,7 @@
             flex-direction: column !important;
             min-height: 0 !important;
         }
+
         .ai-workspace-container {
             display: flex !important;
             flex-direction: row !important;
@@ -70,28 +79,34 @@
             overflow: hidden !important;
             align-items: stretch !important;
         }
+
         .ai-chat-sidebar-header {
             flex-shrink: 0 !important;
             padding: 20px 16px !important;
             border-bottom: 1px solid #30363d !important;
         }
+
         .ai-chat-messages {
             flex: 1 !important;
             overflow-y: auto !important;
             padding: 16px !important;
             min-height: 0 !important;
         }
+
         .ai-chat-input-container {
             flex-shrink: 0 !important;
             padding: 16px !important;
             border-top: 1px solid #30363d !important;
         }
+
         .ai-panel.hidden {
             display: none !important;
         }
+
         .ai-panel-chat.hidden {
             display: none !important;
         }
+
         .panel-resizer {
             width: 10px !important;
             margin: 0 -5px !important;
@@ -102,6 +117,7 @@
             flex-shrink: 0 !important;
             position: relative !important;
         }
+
         .panel-resizer::after {
             content: "";
             position: absolute;
@@ -111,14 +127,18 @@
             width: 1px;
             background: rgba(255, 255, 255, 0.1);
         }
-        .panel-resizer:hover, .panel-resizer.resizing {
+
+        .panel-resizer:hover,
+        .panel-resizer.resizing {
             background: #F0B90B !important;
         }
+
         .modern-input {
             background: rgba(13, 17, 23, 0.95) !important;
             padding: 16px !important;
             border-top: 1px solid rgba(240, 185, 11, 0.1) !important;
         }
+
         .ai-chat-input-wrapper-v2 {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(240, 185, 11, 0.2);
@@ -129,11 +149,13 @@
             gap: 10px;
             transition: all 0.2s ease;
         }
+
         .ai-chat-input-wrapper-v2:focus-within {
             border-color: #F0B90B;
             background: rgba(240, 185, 11, 0.05);
             box-shadow: 0 0 15px rgba(240, 185, 11, 0.1);
         }
+
         .ai-chat-input-v2 {
             width: 100%;
             background: transparent;
@@ -145,11 +167,13 @@
             min-height: 40px;
             font-family: inherit;
         }
+
         .ai-chat-controls-v2 {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .build-btn-v2 {
             background: #F0B90B !important;
             color: #0d1117 !important;
@@ -164,10 +188,12 @@
             cursor: pointer !important;
             transition: all 0.2s !important;
         }
+
         .build-btn-v2:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(240, 185, 11, 0.3);
         }
+
         .icon-btn-v2 {
             background: rgba(255, 255, 255, 0.05) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -181,13 +207,14 @@
             cursor: pointer !important;
             transition: all 0.2s !important;
         }
+
         .icon-btn-v2:hover {
             background: rgba(255, 255, 255, 0.1) !important;
             color: #fff !important;
         }
     </style>
     <script>
-        (function() {
+        (function () {
             window.App = {
                 user: {
                     id: "{{ current_user.id if current_user.is_authenticated else 'anonymous' }}",
@@ -241,7 +268,7 @@
         height: 24px;
     }
 
-            /* PROJECT PANEL */
+    /* PROJECT PANEL */
     .ai-panel-projects {
         flex: 0 0 280px;
         min-width: 280px;
@@ -251,29 +278,35 @@
         display: none;
         /* Hidden by default */
         flex-direction: column;
-        overflow: hidden; /* Ensure container doesn't overflow */
+        overflow: hidden;
+        /* Ensure container doesn't overflow */
     }
 
     #ai-projects-list {
         scrollbar-width: thin;
         scrollbar-color: #30363d #0d1117;
         overflow-y: auto !important;
-        height: 100%; /* Force height for scrolling */
-        max-height: calc(100vh - 60px); /* Account for header */
+        height: 100%;
+        /* Force height for scrolling */
+        max-height: calc(100vh - 60px);
+        /* Account for header */
     }
 
     #ai-projects-list::-webkit-scrollbar {
         width: 8px !important;
         display: block !important;
     }
+
     #ai-projects-list::-webkit-scrollbar-track {
         background: #0d1117 !important;
     }
+
     #ai-projects-list::-webkit-scrollbar-thumb {
         background: #30363d !important;
         border-radius: 10px !important;
         border: 2px solid #0d1117 !important;
     }
+
     #ai-projects-list::-webkit-scrollbar-thumb:hover {
         background: #484f58 !important;
     }
@@ -352,235 +385,258 @@
         background: rgba(16, 185, 129, 0.1);
     }
 </style>
-    <style>
-        .ai-tabs {
-            display: flex !important;
-            background: #2d333b !important;
-            border-bottom: 1px solid #30363d !important;
-            height: 35px !important;
-            min-height: 35px !important;
-            overflow-x: auto !important;
-            scrollbar-width: none !important;
-            z-index: 1000 !important;
-            visibility: visible !important;
-            width: 100% !important;
-            position: relative;
-        }
-        #ai-tabs-container {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        .ai-tab-item {
-            padding: 0 15px !important;
-            cursor: pointer !important;
-            font-size: 12px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            border-right: 1px solid #30363d !important;
-            height: 100% !important;
-            background: #2d333b !important;
-            color: #8b949e !important;
-            user-select: none;
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
-        .ai-tab-item:hover {
-            background: #343b44 !important;
-        }
-        .ai-tab-item.active {
-            background: #1e1e1e !important;
-            color: #fff !important;
-            border-bottom: 2px solid #F0B90B !important;
-        }
-        .tab-close-btn {
-            margin-left: 8px;
-            opacity: 0.6;
-            font-size: 16px;
-        }
-        .tab-close-btn:hover {
-            opacity: 1;
-            color: #ff4444;
-        }
-        /* Terminal styling */
-        #ai-console {
-            background: #000 !important;
-            color: #0f0 !important;
-            font-family: 'Fira Code', monospace !important;
-            display: none;
-            flex-direction: column;
-            height: 100% !important;
-            width: 100% !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 35000 !important; /* Aún más alto */
-        }
-        #ai-preview-panel {
-            background: #fff !important;
-            display: none;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 35000 !important;
-        }
-        #editor-wrapper {
-            background: #1e1e1e !important;
-            display: none;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 35000 !important;
-        }
-        #ai-console-output {
-            flex: 1 !important;
-            overflow-y: auto !important;
-            padding: 15px !important;
-            white-space: pre-wrap !important;
-        }
-        .console-input-wrapper {
-            padding: 10px !important;
-            border-top: 1px solid #30363d !important;
-            display: flex !important;
-            align-items: center !important;
-            background: #161b22 !important;
-        }
-        #ai-console-input {
-            flex: 1 !important;
-            background: transparent !important;
-            border: none !important;
-            color: #fff !important;
-            outline: none !important;
-            font-family: inherit !important;
-        }
-        /* Eliminar estado vacío de raíz */
-        .hidden-panel {
-            display: none !important;
-        }
-        #ai-console, #ai-preview-panel, #editor-wrapper {
-            position: fixed !important;
-            top: 50px !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: calc(100vh - 50px) !important;
-            z-index: 2147483647 !important;
-            background: #000000 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            display: flex !important;
-            pointer-events: all !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            overflow: hidden !important;
-        }
-        #ai-console.active-panel, #ai-preview-panel.active-panel, #editor-wrapper.active-panel {
-            display: flex !important;
-        }
-        #editor-wrapper.active-panel {
-            display: block !important;
-        }
-        .ai-tabs {
-            position: relative;
-            z-index: 2147483647 !important;
-            background: #161b22;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #333;
-        }
-        .ai-tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            color: #8b949e;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            z-index: 2147483647 !important;
-        }
-        .ai-tab.active {
-            color: #58a6ff;
-            border-bottom-color: #58a6ff;
-            background: #1f242c;
-        }
-        #ai-console-output {
-            flex: 1 !important;
-            overflow-y: auto !important;
-            padding: 20px !important;
-            color: #0f0 !important;
-            font-family: 'Fira Code', monospace !important;
-            background: #000000 !important;
-            white-space: pre-wrap !important;
-            min-height: 100px;
-            display: block !important;
-            visibility: visible !important;
-        }
-        .console-input-wrapper {
-            padding: 15px 20px !important;
-            border-top: 1px solid #333 !important;
-            display: flex !important;
-            align-items: center !important;
-            background: #111 !important;
-            min-height: 50px;
-        }
-        #editor-wrapper {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            z-index: 1000 !important;
-            background: #1e1e1e !important;
-            display: none; 
-            width: 100% !important;
-            height: 100% !important;
-            border: 1px solid #30363d !important;
-            pointer-events: all !important;
-        }
-        #ai-real-editor {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            z-index: 1001 !important;
-            width: 100% !important;
-            height: 100% !important;
-            border: none !important;
-            background: #1e1e1e !important;
-            color: #ffffff !important;
-            font-family: monospace !important;
-            font-size: 14px !important; 
-            padding: 20px !important;
-            resize: none !important;
-            outline: none !important;
-            display: block !important;
-            pointer-events: all !important;
-        }
-        .panel-content {
-            position: relative !important;
-            height: 100%;
-            width: 100%;
-            z-index: 100 !important;
-            overflow: hidden !important;
-        }
-        #ai-preview-panel, #ai-console {
-            position: absolute !important;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 2147483647 !important;
-            background: #000000 !important;
-        }
-    </style>
+<style>
+    .ai-tabs {
+        display: flex !important;
+        background: #2d333b !important;
+        border-bottom: 1px solid #30363d !important;
+        height: 35px !important;
+        min-height: 35px !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+        z-index: 1000 !important;
+        visibility: visible !important;
+        width: 100% !important;
+        position: relative;
+    }
+
+    #ai-tabs-container {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .ai-tab-item {
+        padding: 0 15px !important;
+        cursor: pointer !important;
+        font-size: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        border-right: 1px solid #30363d !important;
+        height: 100% !important;
+        background: #2d333b !important;
+        color: #8b949e !important;
+        user-select: none;
+        white-space: nowrap;
+        transition: background 0.2s;
+    }
+
+    .ai-tab-item:hover {
+        background: #343b44 !important;
+    }
+
+    .ai-tab-item.active {
+        background: #1e1e1e !important;
+        color: #fff !important;
+        border-bottom: 2px solid #F0B90B !important;
+    }
+
+    .tab-close-btn {
+        margin-left: 8px;
+        opacity: 0.6;
+        font-size: 16px;
+    }
+
+    .tab-close-btn:hover {
+        opacity: 1;
+        color: #ff4444;
+    }
+
+    /* Terminal styling */
+    #ai-console {
+        background: #000 !important;
+        color: #0f0 !important;
+        font-family: 'Fira Code', monospace !important;
+        display: none;
+        flex-direction: column;
+        height: 100% !important;
+        width: 100% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 35000 !important;
+        /* Aún más alto */
+    }
+
+    #ai-preview-panel {
+        background: #fff !important;
+        display: none;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 35000 !important;
+    }
+
+    #editor-wrapper {
+        background: #1e1e1e !important;
+        display: none;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 35000 !important;
+    }
+
+    #ai-console-output {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding: 15px !important;
+        white-space: pre-wrap !important;
+    }
+
+    .console-input-wrapper {
+        padding: 10px !important;
+        border-top: 1px solid #30363d !important;
+        display: flex !important;
+        align-items: center !important;
+        background: #161b22 !important;
+    }
+
+    #ai-console-input {
+        flex: 1 !important;
+        background: transparent !important;
+        border: none !important;
+        color: #fff !important;
+        outline: none !important;
+        font-family: inherit !important;
+    }
+
+    /* Eliminar estado vacío de raíz */
+    .hidden-panel {
+        display: none !important;
+    }
+
+    #ai-console.active-panel,
+    #ai-preview-panel.active-panel,
+    #editor-wrapper.active-panel {
+        position: fixed !important;
+        top: 50px !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: calc(100vh - 50px) !important;
+        z-index: 2147483647 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+        pointer-events: all !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+    }
+
+    #editor-wrapper.active-panel {
+        display: block !important;
+    }
+
+    /* Clases de utilidad para panels */
+    .hidden-panel {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .ai-tabs {
+        position: relative;
+        z-index: 2147483647 !important;
+        background: #161b22;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #333;
+    }
+
+    .ai-tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        color: #8b949e;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        z-index: 2147483647 !important;
+    }
+
+    .ai-tab.active {
+        color: #58a6ff;
+        border-bottom-color: #58a6ff;
+        background: #1f242c;
+    }
+
+    #ai-console-output {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding: 20px !important;
+        color: #0f0 !important;
+        font-family: 'Fira Code', monospace !important;
+        background: #000000 !important;
+        white-space: pre-wrap !important;
+        min-height: 100px;
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    .console-input-wrapper {
+        padding: 15px 20px !important;
+        border-top: 1px solid #333 !important;
+        display: flex !important;
+        align-items: center !important;
+        background: #111 !important;
+        min-height: 50px;
+    }
+
+    #editor-wrapper {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 1000 !important;
+        background: #1e1e1e !important;
+        display: none;
+        width: 100% !important;
+        height: 100% !important;
+        border: 1px solid #30363d !important;
+        pointer-events: all !important;
+    }
+
+    #ai-real-editor {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 1001 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+        background: #1e1e1e !important;
+        color: #ffffff !important;
+        font-family: monospace !important;
+        font-size: 14px !important;
+        padding: 20px !important;
+        resize: none !important;
+        outline: none !important;
+        display: block !important;
+        pointer-events: all !important;
+    }
+
+    .panel-content {
+        position: relative !important;
+        height: 100%;
+        width: 100%;
+        z-index: 100 !important;
+        overflow: hidden !important;
+    }
+
+    /* Redundant block removed */
+</style>
 </head>
+
 <body>
     <header class="mobile-header">
         <div class="mobile-header-left">
@@ -657,22 +713,31 @@
                     </button>
                 </div>
                 <div class="activity-bottom">
-                    <div class="user-auth-info" style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                    <div class="user-auth-info"
+                        style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
                         {% if current_user.is_authenticated %}
-                            <img src="{{ current_user.profile_image_url }}" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #F0B90B; margin-bottom: 5px;">
-                            <button onclick="window.location.href='{{ url_for('logout') }}'" title="Cerrar Sesión" style="color: #6b7280; background:none; border:none; cursor:pointer; padding:0; display:block; width:100%; text-align:center;">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
-                            </button>
+                        <img src="{{ current_user.profile_image_url }}"
+                            style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #F0B90B; margin-bottom: 5px;">
+                        <button onclick="window.location.href='{{ url_for('logout') }}'" title="Cerrar Sesión"
+                            style="color: #6b7280; background:none; border:none; cursor:pointer; padding:0; display:block; width:100%; text-align:center;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                        </button>
                         {% else %}
-                            <button onclick="window.location.href='{{ url_for('login_route') }}'" title="Iniciar Sesión con GitHub" style="color: #F0B90B; background:none; border:none; cursor:pointer; padding:0; display:block; width:100%; text-align:center;">
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                                </svg>
-                            </button>
+                        <button onclick="window.location.href='{{ url_for('login_route') }}'"
+                            title="Iniciar Sesión con GitHub"
+                            style="color: #F0B90B; background:none; border:none; cursor:pointer; padding:0; display:block; width:100%; text-align:center;">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                                </path>
+                            </svg>
+                        </button>
                         {% endif %}
                     </div>
                     <button class="activity-btn" data-view="secrets" title="Bóveda de Secretos">
@@ -692,12 +757,13 @@
             </div>
 
 
-                <!-- PANEL GITHUB (NUEVO) - ELIMINADO POR UNIFICACIÓN -->
-            
+            <!-- PANEL GITHUB (NUEVO) - ELIMINADO POR UNIFICACIÓN -->
+
             <div class="ai-panel ai-panel-chat active-panel" id="panel-chat">
                 <div class="ai-chat-sidebar-header">
                     <div class="ai-chat-sidebar-logo">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
                             <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
                             <line x1="12" y1="22" x2="12" y2="15.5" />
                             <polyline points="22,8.5 12,15.5 2,8.5" />
@@ -742,11 +808,13 @@
                 </div>
                 <div class="ai-chat-input-container modern-input">
                     <div class="ai-chat-input-wrapper-v2">
-                        <textarea class="ai-chat-input-v2" id="ai-chat-input" placeholder="Describe lo que quieres crear..." rows="1"></textarea>
+                        <textarea class="ai-chat-input-v2" id="ai-chat-input"
+                            placeholder="Describe lo que quieres crear..." rows="1"></textarea>
                         <div class="ai-chat-controls-v2">
                             <div class="controls-left">
                                 <button class="build-btn-v2" id="ai-chat-send">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
                                         <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
                                     </svg>
                                     <span>Build</span>
@@ -754,7 +822,8 @@
                             </div>
                             <div class="controls-right">
                                 <button class="icon-btn-v2" id="ai-chat-send-arrow" title="Enviar mensaje">
-                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
                                         <line x1="12" y1="19" x2="12" y2="5" />
                                         <polyline points="5 12 12 5 19 12" />
                                     </svg>
@@ -768,18 +837,23 @@
             <div class="panel-resizer" id="main-resizer"></div>
 
             <!-- PANEL DE PROYECTOS (UNIFICADO) -->
-            <div class="ai-panel ai-panel-projects hidden" id="panel-projects" style="background:#0d1117; display: none; flex-direction: column; height: 100%;">
-                <div class="ai-projects-header" style="background:#161b22; border-bottom:1px solid #30363d; padding: 12px; flex-shrink: 0;">
+            <div class="ai-panel ai-panel-projects hidden" id="panel-projects"
+                style="background:#0d1117; display: none; flex-direction: column; height: 100%;">
+                <div class="ai-projects-header"
+                    style="background:#161b22; border-bottom:1px solid #30363d; padding: 12px; flex-shrink: 0;">
                     <span class="ai-projects-title" style="color:#c9d1d9; font-weight: 600;">Explorador</span>
                     <div style="display:flex; gap:8px;">
                         <button class="ai-projects-add-btn" id="btn-project-github-settings" title="Configurar Token">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
                         </button>
                         <button class="ai-projects-add-btn" id="btn-new-project" title="Nuevo Proyecto">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19" />
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
@@ -788,14 +862,18 @@
                 </div>
 
                 <!-- Token Input Section -->
-                <div id="project-github-auth-section" style="display:none; padding:15px; border-bottom:1px solid #30363d;">
-                    <input type="text" id="project-github-token-input" placeholder="Pegar Personal Access Token(ghp_...)"
+                <div id="project-github-auth-section"
+                    style="display:none; padding:15px; border-bottom:1px solid #30363d;">
+                    <input type="text" id="project-github-token-input"
+                        placeholder="Pegar Personal Access Token(ghp_...)"
                         style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; margin-bottom:8px;">
                     <button id="btn-project-save-token"
-                        style="width:100%; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer;">Guardar Token</button>
+                        style="width:100%; padding:6px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer;">Guardar
+                        Token</button>
                 </div>
 
-                <div class="ai-projects-list" id="ai-projects-list" style="background:#0d1117; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #30363d #0d1117;">
+                <div class="ai-projects-list" id="ai-projects-list"
+                    style="background:#0d1117; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #30363d #0d1117;">
                     <div class="ai-project-loading">Cargando proyectos...</div>
                 </div>
             </div>
@@ -805,59 +883,73 @@
             <div class="ai-center-view"
                 style="flex:1; display:flex; flex-direction:column; background:#1e1e1e; min-width:0; position:relative; overflow:hidden;">
                 <!-- TABS HEADER -->
-                <div class="ai-tabs" id="ai-tabs-container" style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #2d333b !important; border-bottom: 1px solid #30363d !important; height: 35px !important; min-height: 35px !important; z-index: 1000 !important; position: relative !important;">
+                <div class="ai-tabs" id="ai-tabs-container"
+                    style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #2d333b !important; border-bottom: 1px solid #30363d !important; height: 35px !important; min-height: 35px !important; z-index: 1000 !important; position: relative !important;">
                     <!-- Tabs injected by JS -->
                 </div>
 
                 <!-- EDITOR/CONSOLE CONTAINER -->
                 <div id="file-editor-container"
                     style="flex:1; width:100%; overflow:hidden; position:relative; background:#1e1e1e; display:flex; flex-direction:column; z-index:10;">
-                    
-                    <div id="editor-toolbar" style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333; z-index:20;">
-                        <button id="btn-save-file" style="background:#007acc; color:white; border:none; padding:4px 12px; border-radius:3px; cursor:pointer; font-size:12px;">Guardar</button>
+
+                    <div id="editor-toolbar"
+                        style="background:#252526; padding:5px 10px; display:none; justify-content:flex-end; border-bottom:1px solid #333; z-index:20;">
+                        <button id="btn-save-file"
+                            style="background:#007acc; color:white; border:none; padding:4px 12px; border-radius:3px; cursor:pointer; font-size:12px;">Guardar</button>
                     </div>
 
-                    <div id="editor-wrapper" style="display:none; flex:1; flex-direction:column; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: #1e1e1e; z-index: 50;">
-                        <textarea id="ai-real-editor" style="flex:1; width:100%; height:100%; background:#1e1e1e; color:#d4d4d4; border:none; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none;"></textarea>
+                    <div id="editor-wrapper"
+                        style="display:none; flex:1; flex-direction:column; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: #1e1e1e; z-index: 50;">
+                        <textarea id="ai-real-editor"
+                            style="flex:1; width:100%; height:100%; background:#1e1e1e; color:#d4d4d4; border:none; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none;"></textarea>
                     </div>
 
-                    <div id="ai-console" class="hidden-panel" style="display: none; flex-direction: column; background: #000; color: #fff; font-family: monospace; padding: 10px; height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 10000;">
-                        <div id="ai-console-output" style="flex: 1; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; font-size: 12px; color: #0f0;">
+                    <div id="ai-console" class="hidden-panel"
+                        style="display: none; flex-direction: column; background: #000; color: #fff; font-family: monospace; padding: 10px; height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 10000;">
+                        <div id="ai-console-output"
+                            style="flex: 1; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; font-size: 12px; color: #0f0;">
                             BUNK3R Terminal v1.0 Ready...
                         </div>
                         <div style="display: flex; align-items: center; border-top: 1px solid #333; padding-top: 5px;">
                             <span style="color: #F0B90B; margin-right: 5px; font-weight: bold;">$</span>
-                            <input type="text" id="ai-console-input" style="flex: 1; background: transparent; border: none; color: #fff; outline: none; font-family: monospace; font-size: 14px;" placeholder="Escribe un comando...">
+                            <input type="text" id="ai-console-input"
+                                style="flex: 1; background: transparent; border: none; color: #fff; outline: none; font-family: monospace; font-size: 14px;"
+                                placeholder="Escribe un comando...">
                         </div>
                     </div>
 
-                    <div id="ai-preview-panel" style="display: flex; flex: 1; background: #fff; height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 80;">
-                        <div id="ai-preview-empty" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
-                             <p>Vista Previa en Tiempo Real</p>
+                    <div id="ai-preview-panel"
+                        style="display: flex; flex: 1; background: #fff; height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 80;">
+                        <div id="ai-preview-empty"
+                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
+                            <p>Vista Previa en Tiempo Real</p>
                         </div>
-                        <iframe id="ai-preview-iframe" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+                        <iframe id="ai-preview-iframe"
+                            style="width: 100%; height: 100%; border: none; display: none;"></iframe>
                     </div>
                 </div>
 
-                    <div class="ai-empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#6b7280; user-select:none; z-index: 1;">
-                        <p style="font-size:14px;">Selecciona un archivo del explorador para editar o abre la Terminal</p>
-                    </div>
+                <div class="ai-empty-state"
+                    style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#6b7280; user-select:none; z-index: 1;">
+                    <p style="font-size:14px;">Selecciona un archivo del explorador para editar o abre la Terminal</p>
                 </div>
-                
-                <!-- BOTÓN PARA OCULTAR BARRA LATERAL -->
-                <div id="toggle-sidebar-btn" onclick="toggleSidebarInternal()" style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:10000; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline id="toggle-icon" points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </div>
-                
-                <script>
+            </div>
+
+            <!-- BOTÓN PARA OCULTAR BARRA LATERAL -->
+            <div id="toggle-sidebar-btn" onclick="toggleSidebarInternal()"
+                style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:24px; height:48px; background:#2d333b; border:1px solid #30363d; border-left:none; color:#f0b90b; cursor:pointer; z-index:10000; display:flex; align-items:center; justify-content:center; border-top-right-radius:8px; border-bottom-right-radius:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline id="toggle-icon" points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </div>
+
+            <script>
                 function toggleSidebarInternal() {
                     const panel = document.getElementById('panel-projects');
                     const btn = document.getElementById('toggle-sidebar-btn');
                     const icon = document.getElementById('toggle-icon');
                     if (!panel) return;
-                    
+
                     const isHidden = panel.style.display === 'none';
                     if (isHidden) {
                         panel.style.display = 'flex';
@@ -867,8 +959,8 @@
                         icon.setAttribute('points', '9 18 15 12 9 6');
                     }
                 }
-                </script>
-            </div>
+            </script>
+        </div>
         </div>
     </main>
 
@@ -877,7 +969,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Inicializar AIChat
             AIChat.init();
-            
+
             // --- GLOBAL STATE ---
             window.currentRepo = null;
             window.currentToken = null;
@@ -914,7 +1006,7 @@
             // Función para cambiar de vista
             function switchView(view) {
                 if (!view) return;
-                
+
                 console.log('Switching to view:', view);
 
                 // Update buttons
@@ -935,7 +1027,7 @@
 
                 // Mapeo unificado: todo lo que sea github o projects va al mismo panel
                 let targetId = (view === 'github' || view === 'projects') ? 'panel-projects' : `panel-${view}`;
-                
+
                 const target = document.getElementById(targetId);
                 const toggleBtn = document.getElementById('toggle-sidebar-btn');
 
@@ -944,7 +1036,7 @@
                     target.style.display = 'flex';
                     target.classList.remove('hidden');
                     target.classList.add('active-panel');
-                    
+
                     // Solo mostrar el botón de colapsar si estamos en proyectos
                     if (toggleBtn) {
                         toggleBtn.style.display = (view === 'projects' || view === 'github') ? 'flex' : 'none';
@@ -979,14 +1071,14 @@
                 btn.addEventListener('click', () => {
                     const view = btn.dataset.view;
                     if (!view) return;
-                    
+
                     // Mapear vista a ruta
                     const routeMap = {
                         'chat': '/chat',
                         'projects': '/explorer',
                         'github': '/explorer'
                     };
-                    
+
                     const path = routeMap[view] || '/chat';
                     navigateTo(path, view);
                 });
@@ -1002,13 +1094,13 @@
             function initializeRoute() {
                 const path = window.location.pathname;
                 let view = 'chat';
-                
+
                 if (path.includes('explorer')) {
                     view = 'projects';
                 } else if (path.includes('chat') || path === '/') {
                     view = 'chat';
                 }
-                
+
                 switchView(view);
             }
 
@@ -1016,7 +1108,7 @@
             initializeRoute();
 
             // --- GITHUB REPOS LOGIC (UNIFICADA EN PROYECTOS) ---
-            window.loadGitHubRepos = async function() {
+            window.loadGitHubRepos = async function () {
                 const listContainer = document.getElementById('ai-projects-list');
                 if (!listContainer) return;
 
@@ -1034,7 +1126,7 @@
                     const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=20', {
                         headers: { 'Authorization': 'token ' + storedToken }
                     });
-                    
+
                     if (!response.ok) {
                         if (response.status === 401) {
                             localStorage.removeItem('github_token');
@@ -1042,7 +1134,7 @@
                         }
                         throw new Error('Auth Failed');
                     }
-                    
+
                     const repos = await response.json();
 
                     if (repos && repos.length > 0) {
@@ -1059,7 +1151,7 @@
                             item.style.cursor = 'pointer';
                             item.style.transition = 'all 0.2s';
                             item.dataset.expanded = 'false';
-                            
+
                             item.innerHTML = `
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <svg class="folder-arrow" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s; color:#8b949e;">
@@ -1071,7 +1163,7 @@
                                     <div style="font-weight:600; color:#EAECEF; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${repo.name}</div>
                                 </div>
                             `;
-                            
+
                             item.onmouseenter = () => {
                                 item.style.background = 'rgba(255, 255, 255, 0.06)';
                                 item.style.borderColor = 'rgba(240, 185, 11, 0.3)';
@@ -1084,7 +1176,7 @@
                             item.onclick = async (e) => {
                                 e.stopPropagation();
                                 const isExpanded = item.dataset.expanded === 'true';
-                                
+
                                 if (isExpanded) {
                                     const subContainer = item.nextElementSibling;
                                     if (subContainer && subContainer.classList.contains('ai-sub-tree')) {
@@ -1119,7 +1211,7 @@
 
                                     const contentsResp = await fetch(`/api/github/contents?repo=${repo.full_name}&token=${storedToken || ''}`);
                                     const contentsData = await contentsResp.json();
-                                    
+
                                     subContainer.innerHTML = '';
                                     if (contentsData.files && contentsData.files.length > 0) {
                                         window.renderFileTree(contentsData.files, subContainer, repo.full_name, storedToken);
@@ -1237,7 +1329,7 @@
                 if (!container.classList.contains('ai-sub-tree')) {
                     container.innerHTML = '';
                 }
-                
+
                 if (!files || files.length === 0) {
                     if (!container.classList.contains('ai-sub-tree')) {
                         container.innerHTML = '<div style="padding:10px; color:#8b949e; font-size:13px;">Repositorio vacío</div>';
@@ -1299,7 +1391,7 @@
                         } else {
                             if (chevronEl) chevronEl.style.transform = 'rotate(90deg)';
                             div.dataset.expanded = 'true';
-                            
+
                             const subContainer = document.createElement('div');
                             subContainer.className = 'ai-sub-tree';
                             subContainer.innerHTML = '<div style="padding:4px 30px; font-size:11px; color:#8b949e;">Cargando...</div>';
@@ -1370,7 +1462,7 @@
             function renderTabs() {
                 const tabsContainer = document.querySelector('.ai-tabs');
                 if (!tabsContainer) return;
-                tabsContainer.innerHTML = ''; 
+                tabsContainer.innerHTML = '';
 
                 window.openTabs.forEach((tab, index) => {
                     const tabBtn = document.createElement('div');
@@ -1383,7 +1475,7 @@
 
                     const closeSpan = document.createElement('span');
                     closeSpan.className = 'tab-close';
-                    closeSpan.innerHTML = '×'; 
+                    closeSpan.innerHTML = '×';
                     closeSpan.onclick = (e) => { e.stopPropagation(); closeTab(index); };
 
                     tabBtn.appendChild(closeSpan);

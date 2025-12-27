@@ -9,13 +9,13 @@ const AIChat = {
     currentPhase: 0,
     esperandoConfirmacion: false,
     esperandoClarificacion: false,
-    
+
     devLog(...args) {
         if (window.App?.isDevMode || window.App?.isDemoMode) {
             console.log('[AI-DEV]', ...args);
         }
     },
-    
+
     async loadProjectFiles(projectId) {
         const listContainer = document.getElementById('ai-projects-list');
         if (!listContainer) return;
@@ -23,7 +23,7 @@ const AIChat = {
         try {
             const response = await fetch(`/api/projects/${projectId}/files`);
             const data = await response.json();
-            
+
             if (data.files) {
                 listContainer.innerHTML = '';
                 this.renderFileStructure(data.files, listContainer);
@@ -42,7 +42,7 @@ const AIChat = {
             item.style.color = '#c9d1d9';
             item.style.fontSize = '13px';
             item.style.padding = '4px 10px';
-            
+
             if (file.type === 'folder') {
                 item.innerHTML = `📁 ${file.name}`;
                 container.appendChild(item);
@@ -69,13 +69,13 @@ const AIChat = {
     renderTabs() {
         const container = document.getElementById('ai-tabs-container');
         if (!container) return;
-        
+
         container.innerHTML = '';
         this.openTabs.forEach(tab => {
             const tabEl = document.createElement('div');
             tabEl.className = `ai-tab-item ${this.activeTabId === tab.id ? 'active' : ''}`;
             tabEl.innerHTML = `<span>${tab.name}</span>`;
-            
+
             if (tab.type === 'file') {
                 const closeBtn = document.createElement('span');
                 closeBtn.innerHTML = '×';
@@ -86,22 +86,35 @@ const AIChat = {
                 };
                 tabEl.appendChild(closeBtn);
             }
-            
+
             tabEl.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('[AI-LOG] Click en pestaña:', tab.id);
                 this.switchTab(tab.id);
             };
-            
+
             container.appendChild(tabEl);
         });
     },
 
     init() {
         console.log('[AI-LOG] AIChat init()');
+
+        // Detectar si estamos en modo página completa
+        const pageContainer = document.getElementById('ai-chat-screen');
+        if (pageContainer && !pageContainer.classList.contains('hidden')) {
+            this.isPageMode = true;
+            this.initPageMode();
+        } else {
+            this.isPageMode = false;
+            this.initWidgetMode();
+        }
+
         this.renderTabs();
-        
+        this.loadFromStorage();
+        this.loadSession();
+
         // Sincronizar estado inicial
         setTimeout(() => {
             console.log('[AI-LOG] init -> switchTab inicial a:', this.activeTabId);
@@ -110,40 +123,39 @@ const AIChat = {
     },
 
     switchTab(tabId) {
-        console.log('[AI-LOG] switchTab INICIO ->', tabId);
+        console.log('[AI-LOG] switchTab ->', tabId);
         this.activeTabId = tabId;
+        this.activeTab = tabId; // Sincronizar ambos nombres de propiedad
         this.renderTabs();
-        
+
         const consolePanel = document.getElementById('ai-console');
         const editorWrapper = document.getElementById('editor-wrapper');
         const previewPanel = document.getElementById('ai-preview-panel');
         const toolbar = document.getElementById('editor-toolbar');
-        const emptyState = document.querySelector('.ai-empty-state');
+        const emptyState = document.getElementById('ai-preview-empty');
 
-        // Reset all panels
-        [consolePanel, editorWrapper, previewPanel, toolbar, emptyState].forEach(p => {
+        // Ocultar todos los paneles forzando con !important
+        const allPanels = [consolePanel, editorWrapper, previewPanel, toolbar, emptyState];
+        allPanels.forEach(p => {
             if (p) {
                 p.classList.remove('active-panel');
                 p.style.setProperty('display', 'none', 'important');
-                p.style.setProperty('z-index', '1', 'important');
+                p.style.setProperty('visibility', 'hidden', 'important');
                 p.classList.add('hidden-panel');
             }
         });
 
-        console.log('[AI-LOG] Activando tabId:', tabId);
-
         if (tabId === 'console') {
             if (consolePanel) {
-                console.log('[AI-LOG] Mostrando Terminal Panel');
                 consolePanel.classList.add('active-panel');
                 consolePanel.style.setProperty('display', 'flex', 'important');
+                consolePanel.style.setProperty('visibility', 'visible', 'important');
                 consolePanel.style.setProperty('z-index', '2147483647', 'important');
                 consolePanel.classList.remove('hidden-panel');
-                
+
                 const output = document.getElementById('ai-console-output');
                 if (output) {
                     output.style.setProperty('display', 'block', 'important');
-                    output.style.setProperty('visibility', 'visible', 'important');
                 }
 
                 setTimeout(() => {
@@ -153,25 +165,27 @@ const AIChat = {
             }
         } else if (tabId === 'preview') {
             if (previewPanel) {
-                console.log('[AI-LOG] Mostrando Preview Panel');
                 previewPanel.classList.add('active-panel');
                 previewPanel.style.setProperty('display', 'flex', 'important');
+                previewPanel.style.setProperty('visibility', 'visible', 'important');
                 previewPanel.style.setProperty('z-index', '2147483647', 'important');
                 previewPanel.classList.remove('hidden-panel');
+                this.updatePreview();
             }
-        } else if (tabId.startsWith('file-')) {
+        } else {
+            // Caso de archivo (file-...) o tabs antiguas (html, css, js)
             if (editorWrapper) {
-                console.log('[AI-LOG] Mostrando Editor Panel');
                 editorWrapper.classList.add('active-panel');
                 editorWrapper.style.setProperty('display', 'block', 'important');
+                editorWrapper.style.setProperty('visibility', 'visible', 'important');
                 editorWrapper.style.setProperty('z-index', '2147483647', 'important');
                 editorWrapper.classList.remove('hidden-panel');
                 if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
-                
+
                 const tab = this.openTabs.find(t => t.id === tabId);
-                if (tab) {
-                    const editor = document.getElementById('ai-real-editor');
-                    if (editor) editor.value = tab.content || '';
+                const editor = document.getElementById('ai-real-editor');
+                if (tab && editor) {
+                    editor.value = tab.content || '';
                 }
             }
         }
@@ -191,14 +205,14 @@ const AIChat = {
 
     async openFile(path, name) {
         console.log('[AI-LOG] openFile INICIO -> path:', path, 'name:', name);
-        
+
         // Normalización para Replit: quitar ./ si existe
         let cleanPath = path;
         if (path.startsWith('./')) cleanPath = path.substring(2);
-        
+
         const tabId = `file-${cleanPath.replace(/\//g, '-')}`;
         console.log('[AI-LOG] openFile -> tabId:', tabId);
-        
+
         const existingTab = this.openTabs.find(t => t.id === tabId);
         if (existingTab) {
             console.log('[AI-LOG] openFile -> Tab ya existe, activando...');
@@ -210,13 +224,13 @@ const AIChat = {
         try {
             const url = `/api/projects/file/content?path=${encodeURIComponent(cleanPath)}`;
             console.log('[AI-LOG] openFile -> URL:', url);
-            
+
             const response = await fetch(url);
             console.log('[AI-LOG] openFile -> Status API:', response.status);
-            
+
             const data = await response.json();
             console.log('[AI-LOG] openFile -> Datos recibidos:', data);
-            
+
             if (data.success) {
                 console.log('[AI-LOG] openFile -> ÉXITO, contenido recibido, length:', data.content ? data.content.length : 0);
                 const newTab = {
@@ -228,7 +242,7 @@ const AIChat = {
                 };
                 this.openTabs.push(newTab);
                 this.activeTabId = tabId;
-                
+
                 this.renderTabs();
                 this.switchTab(tabId);
             } else {
@@ -272,50 +286,37 @@ const AIChat = {
         }
     },
 
-    init() {
-        const pageContainer = document.getElementById('ai-chat-screen');
-        if (pageContainer && !pageContainer.classList.contains('hidden')) {
-            this.isPageMode = true;
-            this.initPageMode();
-        } else {
-            this.isPageMode = false;
-            this.initWidgetMode();
-        }
-        this.loadFromStorage();
-        this.loadSession();
-    },
-    
     initPageMode() {
         const input = document.getElementById('ai-chat-input');
         const send = document.getElementById('ai-chat-send');
         const sendArrow = document.getElementById('ai-chat-send-arrow');
-        
+
         if (!input) return;
-        
+
         input.removeEventListener('input', this.handleInputChange);
         input.removeEventListener('keydown', this.handleKeyDown);
-        
+
         this.handleInputChange = () => {
             if (send) send.disabled = !input.value.trim();
             if (sendArrow) sendArrow.disabled = !input.value.trim();
             this.autoResize(input);
         };
-        
+
         this.handleKeyDown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 this.sendCodeRequest();
             }
         };
-        
+
         this.handleSendClick = () => this.sendCodeRequest();
-        
+
         input.addEventListener('input', this.handleInputChange);
         input.addEventListener('keydown', this.handleKeyDown);
-        
+
         if (send) send.addEventListener('click', this.handleSendClick);
         if (sendArrow) sendArrow.addEventListener('click', this.handleSendClick);
-        
+
         this.bindQuickActions();
         this.bindFileTabs();
         this.bindRefreshButton();
@@ -323,29 +324,23 @@ const AIChat = {
         this.bindConsole();
         this.bindSidebarToggle();
         this.bindResizer();
-        
-        // CORRECCIÓN: Asegurar que el estado inicial cargue correctamente las pestañas y el panel
-        setTimeout(() => {
-            this.renderTabs();
-            this.switchTab('preview');
-        }, 100);
-        
+
         // Configurar el botón de guardar si no se ha hecho
         const saveBtn = document.getElementById('btn-save-file');
         if (saveBtn) {
             saveBtn.onclick = () => AIChat.saveCurrentFile();
         }
-        
+
         input.focus();
     },
-    
+
     consoleHistory: [],
     consoleHistoryIndex: -1,
-    
+
     bindConsole() {
         const consoleInput = document.getElementById('ai-console-input');
         if (!consoleInput) return;
-        
+
         consoleInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -372,37 +367,37 @@ const AIChat = {
             }
         });
     },
-    
+
     async runConsoleCommand(command) {
         const output = document.getElementById('ai-console-output');
         if (!output) return;
-        
+
         this.consoleHistory.push(command);
         this.consoleHistoryIndex = -1;
-        
+
         const cmdLine = document.createElement('div');
         cmdLine.className = 'console-line command';
         cmdLine.innerHTML = `<span class="console-prompt-display">$</span>${this.escapeHtml(command)}`;
         output.appendChild(cmdLine);
-        
+
         const loadingLine = document.createElement('div');
         loadingLine.className = 'console-loading';
         loadingLine.textContent = 'Ejecutando...';
         output.appendChild(loadingLine);
         output.scrollTop = output.scrollHeight;
-        
+
         try {
             const headers = App.getAuthHeaders ? App.getAuthHeaders() : { 'Content-Type': 'application/json' };
-            
+
             const response = await fetch('/api/projects/command/run', {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ command, timeout: 30 })
             });
-            
+
             const data = await response.json();
             loadingLine.remove();
-            
+
             if (data.success) {
                 if (data.stdout) {
                     const outLine = document.createElement('div');
@@ -435,16 +430,16 @@ const AIChat = {
             errLine.textContent = `Error: ${error.message}`;
             output.appendChild(errLine);
         }
-        
+
         output.scrollTop = output.scrollHeight;
     },
-    
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     },
-    
+
     bindQuickActions() {
         document.querySelectorAll('.ai-quick-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -465,14 +460,14 @@ const AIChat = {
                     if (input) {
                         input.value = prompt;
                         // Forzar el redimensionamiento del textarea si existe la lógica
-                        input.dispatchEvent(new Event('input')); 
+                        input.dispatchEvent(new Event('input'));
                         this.sendCodeRequest();
                     }
                 }
             });
         });
     },
-    
+
     bindFileTabs() {
         document.querySelectorAll('.ai-file-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -480,7 +475,7 @@ const AIChat = {
             });
         });
     },
-    
+
     bindRefreshButton() {
         const refreshBtn = document.getElementById('ai-preview-refresh');
         if (refreshBtn) {
@@ -489,7 +484,7 @@ const AIChat = {
             });
         }
     },
-    
+
     bindCodeEditor() {
         const textarea = document.getElementById('ai-code-textarea');
         if (textarea) {
@@ -504,7 +499,7 @@ const AIChat = {
                     }
                 }
             });
-            
+
             textarea.addEventListener('keydown', (e) => {
                 if (e.key === 'Tab') {
                     e.preventDefault();
@@ -516,74 +511,31 @@ const AIChat = {
             });
         }
     },
-    
-    switchTab(tabName) {
-        this.activeTab = tabName;
-        
-        document.querySelectorAll('.ai-file-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.file === tabName);
-        });
-        
-        const iframe = document.getElementById('ai-preview-iframe');
-        const codeEditor = document.getElementById('ai-code-editor');
-        const emptyState = document.getElementById('ai-preview-empty');
-        const textarea = document.getElementById('ai-code-textarea');
-        const consolePanel = document.getElementById('ai-console');
-        
-        if (consolePanel) consolePanel.classList.add('hidden');
-        if (codeEditor) codeEditor.classList.add('hidden');
-        if (iframe) iframe.classList.add('hidden');
-        if (emptyState) emptyState.classList.add('hidden');
-        
-        if (tabName === 'preview') {
-            const hasFiles = Object.keys(this.files).length > 0;
-            if (hasFiles) {
-                if (iframe) iframe.classList.remove('hidden');
-            } else {
-                if (emptyState) emptyState.classList.remove('hidden');
-            }
-            this.updatePreview();
-        } else if (tabName === 'console') {
-            if (consolePanel) {
-                consolePanel.classList.remove('hidden');
-                const consoleInput = document.getElementById('ai-console-input');
-                if (consoleInput) consoleInput.focus();
-            }
-        } else {
-            if (codeEditor) codeEditor.classList.remove('hidden');
-            
-            const fileMap = { html: 'index.html', css: 'styles.css', js: 'script.js' };
-            const filename = fileMap[tabName];
-            if (textarea && filename && this.files[filename]) {
-                textarea.value = this.files[filename];
-            } else if (textarea) {
-                textarea.value = '';
-            }
-        }
-    },
-    
+
+    // switchTab anterior eliminada por duplicación ,
+
     initWidgetMode() {
         return;
     },
-    
+
     createChatWidget() {
         return;
     },
-    
+
     bindWidgetEvents() {
         return;
     },
-    
+
     bindSidebarToggle() {
         // Selector más robusto que no dependa solo del ID si hay duplicados o problemas de carga
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('#toggle-sidebar-btn');
             if (!btn) return;
-            
+
             console.log('SIDEBAR TOGGLE CLICK DETECTED');
             e.preventDefault();
             e.stopPropagation();
-            
+
             const panel = document.getElementById('panel-projects');
             if (!panel) {
                 console.error('Panel projects not found');
@@ -592,7 +544,7 @@ const AIChat = {
 
             // Cambiar estado
             const isHidden = panel.style.display === 'none' || panel.classList.contains('hidden');
-            
+
             if (isHidden) {
                 panel.style.display = 'flex';
                 panel.classList.remove('hidden');
@@ -618,7 +570,7 @@ const AIChat = {
             resizer.classList.add('resizing');
             document.body.style.userSelect = 'none';
             e.preventDefault();
-            
+
             // Inyectar overlay para evitar que el iframe capture eventos
             const overlay = document.createElement('div');
             overlay.id = 'resizer-overlay';
@@ -641,7 +593,7 @@ const AIChat = {
 
             if (newWidth >= 100 && newWidth <= window.innerWidth * 0.8) {
                 console.log('[RESIZER] Aplicando ancho:', newWidth);
-                
+
                 // Aplicar a ambos para asegurar compatibilidad
                 leftPanel.style.setProperty('width', newWidth + 'px', 'important');
                 leftPanel.style.setProperty('flex', '0 0 ' + newWidth + 'px', 'important');
@@ -656,7 +608,7 @@ const AIChat = {
                 document.body.style.cursor = 'default';
                 resizer.classList.remove('resizing');
                 document.body.style.userSelect = 'auto';
-                
+
                 const overlay = document.getElementById('resizer-overlay');
                 if (overlay) overlay.remove();
             }
@@ -667,12 +619,12 @@ const AIChat = {
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
     },
-    
+
     toggle() {
         this.isOpen = !this.isOpen;
         const container = document.getElementById('ai-chat-container-widget');
         const toggle = document.getElementById('ai-chat-toggle');
-        
+
         if (this.isOpen) {
             if (container) container.classList.remove('hidden');
             if (toggle) toggle.classList.add('active');
@@ -681,7 +633,7 @@ const AIChat = {
             if (toggle) toggle.classList.remove('active');
         }
     },
-    
+
     close() {
         this.isOpen = false;
         const container = document.getElementById('ai-chat-container-widget');
@@ -689,27 +641,27 @@ const AIChat = {
         if (container) container.classList.add('hidden');
         if (toggle) toggle.classList.remove('active');
     },
-    
+
     getMessagesContainer() {
         return document.getElementById('ai-chat-messages');
     },
-    
+
     getInput() {
         return document.getElementById('ai-chat-input');
     },
-    
+
     getSendButton() {
         return document.getElementById('ai-chat-send');
     },
-    
+
     getProviderIndicator() {
         return document.getElementById('ai-provider-info');
     },
-    
+
     getApiHeaders() {
         return { 'Content-Type': 'application/json' };
     },
-    
+
     loadFromStorage() {
         try {
             const saved = localStorage.getItem('bunkr_ai_project');
@@ -724,7 +676,7 @@ const AIChat = {
             console.error('Error loading project:', e);
         }
     },
-    
+
     saveToStorage() {
         try {
             localStorage.setItem('bunkr_ai_project', JSON.stringify({
@@ -735,16 +687,16 @@ const AIChat = {
             console.error('Error saving project:', e);
         }
     },
-    
+
     async loadSession() {
         try {
             const response = await fetch('/api/ai-constructor/session', {
                 method: 'GET',
                 headers: this.getApiHeaders()
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success && data.hasSession) {
                 this.currentSession = data.session;
                 this.currentPhase = data.session.fase_actual || 0;
@@ -756,17 +708,17 @@ const AIChat = {
             this.devLog('No active session');
         }
     },
-    
+
     appendMessage(role, content, save = true) {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         const welcomeMsg = container.querySelector('.ai-chat-welcome');
         if (welcomeMsg) welcomeMsg.style.display = 'none';
-        
+
         const msgDiv = document.createElement('div');
         msgDiv.className = `ai-message ai-message-${role}`;
-        
+
         if (role === 'assistant') {
             msgDiv.innerHTML = `
                 <div class="ai-avatar">
@@ -781,23 +733,23 @@ const AIChat = {
                 <div class="ai-bubble">${this.escapeHtml(content)}</div>
             `;
         }
-        
+
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight;
-        
+
         if (save) {
             this.messages.push({ role, content });
         }
     },
-    
+
     appendPhaseIndicator(phase, phaseName, isActive = true) {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         const phaseDiv = document.createElement('div');
         phaseDiv.className = `ai-phase-indicator ${isActive ? 'active' : 'completed'}`;
         phaseDiv.id = `phase-indicator-${phase}`;
-        
+
         const phaseIcons = {
             1: '1',
             2: '2',
@@ -808,7 +760,7 @@ const AIChat = {
             7: '7',
             8: '8'
         };
-        
+
         phaseDiv.innerHTML = `
             <div class="phase-badge">
                 <span class="phase-number">${phaseIcons[phase] || phase}</span>
@@ -818,11 +770,11 @@ const AIChat = {
                 <span class="phase-status">${isActive ? 'En progreso...' : 'Completada'}</span>
             </div>
         `;
-        
+
         container.appendChild(phaseDiv);
         container.scrollTop = container.scrollHeight;
     },
-    
+
     updatePhaseIndicator() {
         const existingIndicator = document.getElementById(`phase-indicator-${this.currentPhase}`);
         if (existingIndicator) {
@@ -832,15 +784,15 @@ const AIChat = {
             if (statusEl) statusEl.textContent = 'Completada';
         }
     },
-    
+
     appendConfirmationButtons(plan) {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         const buttonsDiv = document.createElement('div');
         buttonsDiv.className = 'ai-confirmation-buttons';
         buttonsDiv.id = 'ai-plan-confirmation';
-        
+
         buttonsDiv.innerHTML = `
             <div class="ai-plan-actions">
                 <button class="ai-btn ai-btn-confirm" id="ai-confirm-plan">
@@ -858,53 +810,53 @@ const AIChat = {
                 </button>
             </div>
         `;
-        
+
         container.appendChild(buttonsDiv);
         container.scrollTop = container.scrollHeight;
-        
+
         document.getElementById('ai-confirm-plan').addEventListener('click', () => {
             this.respondToConfirmation(true);
         });
-        
+
         document.getElementById('ai-cancel-plan').addEventListener('click', () => {
             this.respondToConfirmation(false);
         });
     },
-    
+
     removeConfirmationButtons() {
         const buttons = document.getElementById('ai-plan-confirmation');
         if (buttons) buttons.remove();
     },
-    
+
     async respondToConfirmation(confirmed) {
         this.removeConfirmationButtons();
         const message = confirmed ? 'Si, continuar' : 'No, quiero ajustar';
         this.appendMessage('user', message);
-        
+
         await this.sendConstructorMessage(message);
     },
-    
+
     appendCodeAction(action, filename) {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         const actionDiv = document.createElement('div');
         actionDiv.className = `ai-code-action ${action === 'update' ? 'update' : ''}`;
-        
-        const icon = action === 'create' ? 
+
+        const icon = action === 'create' ?
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>' :
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-        
+
         actionDiv.innerHTML = `
             ${icon}
             <span class="ai-code-action-text">${action === 'create' ? 'Archivo creado' : 'Archivo actualizado'}</span>
             <span class="ai-code-action-file">${this.escapeHtml(filename)}</span>
         `;
-        
+
         container.appendChild(actionDiv);
         container.scrollTop = container.scrollHeight;
     },
-    
+
     formatMessage(text) {
         let formatted = this.escapeHtml(text);
         formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
@@ -914,17 +866,17 @@ const AIChat = {
         formatted = formatted.replace(/\n/g, '<br>');
         return formatted;
     },
-    
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     },
-    
+
     showTyping() {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         const typing = document.createElement('div');
         typing.className = 'ai-message ai-message-assistant ai-typing';
         typing.id = 'ai-typing-indicator';
@@ -943,11 +895,11 @@ const AIChat = {
         container.appendChild(typing);
         container.scrollTop = container.scrollHeight;
     },
-    
+
     showPhaseProgress(phase, phaseName) {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         let progressDiv = document.getElementById('ai-phase-progress');
         if (!progressDiv) {
             progressDiv = document.createElement('div');
@@ -955,31 +907,31 @@ const AIChat = {
             progressDiv.id = 'ai-phase-progress';
             container.appendChild(progressDiv);
         }
-        
+
         progressDiv.innerHTML = `
             <div class="phase-progress-content">
                 <div class="phase-spinner"></div>
                 <span class="phase-text">Fase ${phase}: ${this.escapeHtml(phaseName)}</span>
             </div>
         `;
-        
+
         container.scrollTop = container.scrollHeight;
     },
-    
+
     hidePhaseProgress() {
         const progress = document.getElementById('ai-phase-progress');
         if (progress) progress.remove();
     },
-    
+
     hideTyping() {
         const typing = document.getElementById('ai-typing-indicator');
         if (typing) typing.remove();
     },
-    
+
     updatePreview() {
         const iframe = document.getElementById('ai-preview-iframe');
         const emptyState = document.getElementById('ai-preview-empty');
-        
+
         if (!iframe) {
             console.warn('AIChat: iframe not found');
             return;
@@ -993,24 +945,24 @@ const AIChat = {
             iframe.style.display = 'none';
             if (emptyState) emptyState.style.display = 'flex';
         }
-        
+
         let html = this.files['index.html'] || this.files['html'] || '';
         let css = this.files['styles.css'] || this.files['style.css'] || this.files['css'] || '';
         let js = this.files['script.js'] || this.files['main.js'] || this.files['app.js'] || this.files['js'] || '';
-        
+
         this.devLog('AIChat updatePreview - files:', Object.keys(this.files), 'html:', !!html, 'css:', !!css, 'js:', !!js);
-        
+
         if (!html && !css && !js) {
             if (emptyState) emptyState.classList.remove('hidden');
             iframe.classList.add('hidden');
             return;
         }
-        
+
         if (emptyState) emptyState.classList.add('hidden');
         iframe.classList.remove('hidden');
-        
+
         let processedHtml = html;
-        
+
         if (!processedHtml && (css || js)) {
             processedHtml = `<!DOCTYPE html>
 <html lang="es">
@@ -1042,7 +994,7 @@ const AIChat = {
                     processedHtml = `<style>${css}</style>` + processedHtml;
                 }
             }
-            
+
             const scriptPatterns = [
                 '<script src="script.js"></script>',
                 '<script src="main.js"></script>',
@@ -1064,37 +1016,37 @@ const AIChat = {
                 }
             }
         }
-        
+
         this.devLog('AIChat updatePreview - setting srcdoc, length:', processedHtml.length);
         iframe.srcdoc = processedHtml;
     },
-    
+
     async sendCodeRequest() {
         const input = this.getInput();
         const send = this.getSendButton();
-        
+
         if (!input) return;
-        
+
         const message = input.value.trim();
-        
+
         if (!message || this.isLoading) return;
-        
+
         this.isLoading = true;
         input.value = '';
         input.style.height = 'auto';
         if (send) send.disabled = true;
-        
+
         this.appendMessage('user', message);
-        
+
         const isCodeRequest = this.isCodeGenerationRequest(message);
-        
+
         if (isCodeRequest) {
             await this.sendConstructorMessage(message);
         } else {
             await this.sendSimpleChat(message);
         }
     },
-    
+
     async sendSimpleChat(message) {
         this.showTyping();
         try {
@@ -1102,16 +1054,16 @@ const AIChat = {
             const response = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: this.getApiHeaders(),
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     message: message,
                     user_id: 'demo_user'
                 })
             });
-            
+
             const data = await response.json();
             console.log('[AI-LOG] Simple chat response:', data);
             this.hideTyping();
-            
+
             if (data.success) {
                 this.appendMessage('assistant', data.response || data.message || 'Respuesta recibida');
             } else {
@@ -1122,12 +1074,12 @@ const AIChat = {
             this.appendMessage('assistant', 'Error de conexion. Verifica tu internet e intenta de nuevo.');
             console.error('Chat error:', error);
         }
-        
+
         this.isLoading = false;
         const send = this.getSendButton();
         if (send) send.disabled = false;
     },
-    
+
     isCodeGenerationRequest(message) {
         const codeKeywords = [
             'crea', 'genera', 'construye', 'haz', 'diseña',
@@ -1139,10 +1091,10 @@ const AIChat = {
         const lowerMessage = message.toLowerCase();
         return codeKeywords.some(kw => lowerMessage.includes(kw));
     },
-    
+
     async sendConstructorMessage(message) {
         this.showTyping();
-        
+
         try {
             const response = await fetch('/api/ai-constructor/process', {
                 method: 'POST',
@@ -1153,11 +1105,11 @@ const AIChat = {
                     projectName: 'BUNK3R Project'
                 })
             });
-            
+
             const data = await response.json();
             this.hideTyping();
             this.hidePhaseProgress();
-            
+
             if (data.success) {
                 this.handleConstructorResponse(data);
             } else {
@@ -1173,56 +1125,56 @@ const AIChat = {
             this.appendMessage('assistant', 'Error de conexion. Verifica tu internet e intenta de nuevo.');
             console.error('AI Constructor error:', error);
         }
-        
+
         this.isLoading = false;
         const send = this.getSendButton();
         if (send) send.disabled = false;
     },
-    
+
     handleConstructorResponse(data) {
         if (data.fase && data.fase_nombre) {
             this.currentPhase = data.fase;
             this.appendPhaseIndicator(data.fase, data.fase_nombre, false);
         }
-        
+
         if (data.session) {
             this.currentSession = data.session;
             this.esperandoConfirmacion = data.session.esperando_confirmacion || false;
             this.esperandoClarificacion = data.session.esperando_clarificacion || false;
         }
-        
+
         if (data.response) {
             this.appendMessage('assistant', data.response);
         }
-        
+
         if (data.plan && data.esperando_input) {
             this.appendConfirmationButtons(data.plan);
         }
-        
+
         if (data.files) {
             this.processFiles(data.files);
         }
-        
+
         if (data.verification) {
             this.showVerificationResult(data.verification);
         }
-        
+
         const indicator = this.getProviderIndicator();
         if (indicator && data.fase_nombre) {
             indicator.innerHTML = `<span class="provider-label">Fase: ${this.escapeHtml(data.fase_nombre)}</span>`;
         }
     },
-    
+
     showVerificationResult(verification) {
         const container = this.getMessagesContainer();
         if (!container) return;
-        
+
         const score = verification.puntuacion || 0;
         const scoreClass = score >= 80 ? 'good' : (score >= 50 ? 'warning' : 'error');
-        
+
         const verificationDiv = document.createElement('div');
         verificationDiv.className = 'ai-verification-result';
-        
+
         let errorsHtml = '';
         if (verification.errores && verification.errores.length > 0) {
             errorsHtml = `<div class="verification-errors">
@@ -1230,7 +1182,7 @@ const AIChat = {
                 <ul>${verification.errores.map(e => `<li>${this.escapeHtml(e)}</li>`).join('')}</ul>
             </div>`;
         }
-        
+
         let warningsHtml = '';
         if (verification.advertencias && verification.advertencias.length > 0) {
             warningsHtml = `<div class="verification-warnings">
@@ -1238,7 +1190,7 @@ const AIChat = {
                 <ul>${verification.advertencias.map(w => `<li>${this.escapeHtml(w)}</li>`).join('')}</ul>
             </div>`;
         }
-        
+
         verificationDiv.innerHTML = `
             <div class="verification-header">
                 <span class="verification-title">Verificacion</span>
@@ -1261,36 +1213,36 @@ const AIChat = {
             ${errorsHtml}
             ${warningsHtml}
         `;
-        
+
         container.appendChild(verificationDiv);
         container.scrollTop = container.scrollHeight;
     },
-    
+
     processFiles(files) {
         this.devLog('AIChat processFiles - received files:', Object.keys(files));
-        
+
         for (const [filename, content] of Object.entries(files)) {
             const isNew = !this.files[filename];
             this.files[filename] = content;
             this.devLog(`AIChat processFiles - ${isNew ? 'created' : 'updated'}: ${filename} (${content.length} chars)`);
             this.appendCodeAction(isNew ? 'create' : 'update', filename);
         }
-        
+
         this.devLog('AIChat processFiles - all files now:', Object.keys(this.files));
-        
+
         this.switchTab('preview');
         this.saveToStorage();
     },
-    
+
     async resetSession() {
         try {
             const response = await fetch('/api/ai-constructor/reset', {
                 method: 'POST',
                 headers: this.getApiHeaders()
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 this.currentSession = null;
                 this.currentPhase = 0;
@@ -1302,16 +1254,16 @@ const AIChat = {
             console.error('Error resetting session:', e);
         }
     },
-    
+
     async clearChat() {
         if (!confirm('Limpiar el proyecto actual?')) return;
-        
+
         this.messages = [];
         this.files = {};
         localStorage.removeItem('bunkr_ai_project');
-        
+
         await this.resetSession();
-        
+
         const container = this.getMessagesContainer();
         if (container) {
             container.innerHTML = `
@@ -1347,7 +1299,7 @@ const AIChat = {
             `;
             this.bindQuickActions();
         }
-        
+
         this.switchTab('preview');
     }
 };
@@ -1360,11 +1312,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 });
 
-AIChat.initStreamingCleanup = function() {
+AIChat.initStreamingCleanup = function () {
     window.addEventListener('beforeunload', () => {
         this.closeEventSource();
     });
-    
+
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && this.currentEventSource) {
             this.devLog('Page hidden, keeping connection alive');
@@ -1372,7 +1324,7 @@ AIChat.initStreamingCleanup = function() {
     });
 };
 
-AIChat.hookNavigation = function() {
+AIChat.hookNavigation = function () {
     document.querySelectorAll('.bottom-nav-item[data-nav="ai-chat"]').forEach(btn => {
         btn.addEventListener('click', () => {
             setTimeout(() => {
@@ -1381,7 +1333,7 @@ AIChat.hookNavigation = function() {
             }, 100);
         });
     });
-    
+
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.addEventListener('click', (e) => {
@@ -1399,11 +1351,11 @@ AIChat.hookNavigation = function() {
 AIChat.streamingEnabled = true;
 AIChat.currentEventSource = null;
 
-AIChat.sendStreamingMessage = async function(message) {
+AIChat.sendStreamingMessage = async function (message) {
     if (!this.streamingEnabled) {
         return this.sendConstructorMessage(message);
     }
-    
+
     let container = this.getMessagesContainer();
     if (!container) {
         container = document.getElementById('ai-chat-messages');
@@ -1412,7 +1364,7 @@ AIChat.sendStreamingMessage = async function(message) {
             return this.sendConstructorMessage(message);
         }
     }
-    
+
     const msgDiv = document.createElement('div');
     msgDiv.className = 'ai-message ai-message-assistant ai-streaming';
     msgDiv.id = 'ai-streaming-response';
@@ -1428,21 +1380,21 @@ AIChat.sendStreamingMessage = async function(message) {
     `;
     container.appendChild(msgDiv);
     container.scrollTop = container.scrollHeight;
-    
+
     const contentEl = msgDiv.querySelector('.ai-streaming-content');
     let fullContent = '';
-    
+
     try {
         const userId = 'anonymous';
         const url = `/api/ai/chat/stream?user_id=${encodeURIComponent(userId)}&message=${encodeURIComponent(message)}`;
-        
+
         this.currentEventSource = new EventSource(url);
-        
+
         this.currentEventSource.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                
-                switch(data.type) {
+
+                switch (data.type) {
                     case 'start':
                         this.devLog('Streaming started:', data.metadata);
                         const indicator = this.getProviderIndicator();
@@ -1450,13 +1402,13 @@ AIChat.sendStreamingMessage = async function(message) {
                             indicator.innerHTML = `<span class="provider-label">${data.metadata.provider}</span>`;
                         }
                         break;
-                        
+
                     case 'token':
                         fullContent += data.data;
                         contentEl.innerHTML = this.formatMessage(fullContent) + '<span class="ai-cursor"></span>';
                         container.scrollTop = container.scrollHeight;
                         break;
-                        
+
                     case 'complete':
                         contentEl.innerHTML = this.formatMessage(fullContent);
                         msgDiv.classList.remove('ai-streaming');
@@ -1465,14 +1417,14 @@ AIChat.sendStreamingMessage = async function(message) {
                         this.closeEventSource();
                         this.finishStreamingUI();
                         break;
-                        
+
                     case 'error':
                         contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(data.data)}</span>`;
                         msgDiv.classList.remove('ai-streaming');
                         this.closeEventSource();
                         this.finishStreamingUI();
                         break;
-                        
+
                     case 'metadata':
                         this.devLog('Streaming metadata:', data);
                         break;
@@ -1481,7 +1433,7 @@ AIChat.sendStreamingMessage = async function(message) {
                 console.error('Error parsing SSE:', e);
             }
         };
-        
+
         this.currentEventSource.onerror = (error) => {
             console.error('SSE error:', error);
             if (fullContent) {
@@ -1494,7 +1446,7 @@ AIChat.sendStreamingMessage = async function(message) {
             this.closeEventSource();
             this.finishStreamingUI();
         };
-        
+
     } catch (error) {
         console.error('Streaming error:', error);
         contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(error.message)}</span>`;
@@ -1505,48 +1457,48 @@ AIChat.sendStreamingMessage = async function(message) {
     }
 };
 
-AIChat.closeEventSource = function() {
+AIChat.closeEventSource = function () {
     if (this.currentEventSource) {
         this.currentEventSource.close();
         this.currentEventSource = null;
     }
 };
 
-AIChat.finishStreamingUI = function() {
+AIChat.finishStreamingUI = function () {
     this.isLoading = false;
-    
+
     const send = this.getSendButton();
     if (send) send.disabled = false;
-    
+
     const input = this.getInput();
     if (input) {
         input.disabled = false;
         input.focus();
     }
-    
+
     const indicator = this.getProviderIndicator();
     if (indicator) {
         indicator.innerHTML = '';
     }
-    
+
     this.devLog('Streaming finished, UI reset');
 };
 
-AIChat.toggleStreaming = function(enabled) {
+AIChat.toggleStreaming = function (enabled) {
     this.streamingEnabled = enabled;
     this.devLog('Streaming', enabled ? 'enabled' : 'disabled');
 };
 
-AIChat.sendQuickStreamMessage = async function(message) {
+AIChat.sendQuickStreamMessage = async function (message) {
     const input = this.getInput();
     const send = this.getSendButton();
-    
+
     if (this.isLoading) return;
-    
+
     this.isLoading = true;
     if (input) input.value = '';
     if (send) send.disabled = true;
-    
+
     this.appendMessage('user', message);
     await this.sendStreamingMessage(message);
 };
