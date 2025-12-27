@@ -772,8 +772,9 @@
         </div>
     </nav>
 
-    <main class="workspace-main">
-        <div class="ai-workspace-container">
+    <main class="workspace-main" style="display:flex; height:100vh; overflow:hidden;">
+        <div class="ai-workspace-container"
+            style="display:flex; flex-direction:row; width:100%; height:100%; overflow:hidden;">
             <div class="activity-bar">
                 <div class="activity-top">
                     <button class="activity-btn active" data-view="projects" title="Archivos">
@@ -833,8 +834,10 @@
             <div class="panel-resizer" id="main-resizer"></div>
 
             <!-- PERMANENT AI SIDEBAR RIGHT -->
-            <div class="ai-sidebar-right">
-                <div class="ai-panel ai-panel-chat active-panel" id="panel-chat" style="display: flex !important;">
+            <div class="ai-sidebar-right"
+                style="width: 350px; min-width: 300px; border-left: 1px solid #30363d; display: flex; flex-direction: column; background: #0d1117; z-index: 50;">
+                <div class="ai-panel ai-panel-chat active-panel" id="panel-chat"
+                    style="display: flex !important; flex: 1; flex-direction: column;">
                     <div class="ai-chat-sidebar-header">
                         <div class="ai-chat-sidebar-logo">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
