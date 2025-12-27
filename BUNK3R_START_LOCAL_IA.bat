@@ -49,13 +49,14 @@ echo     Start-Sleep -s 1; >> reg_brain.ps1
 echo } >> reg_brain.ps1
 echo if ($url) { >> reg_brain.ps1
 echo     echo "[+] URL Detectada: $url"; >> reg_brain.ps1
-echo     echo "[+] Registrando en Render..."; >> reg_brain.ps1
+echo     echo "[+] Registrando en Render (esto puede tardar 1 min si el server esta dormido)..."; >> reg_brain.ps1
 echo     try { >> reg_brain.ps1
 echo         $body = @{ url = $url } ^| ConvertTo-Json; >> reg_brain.ps1
-echo         Invoke-RestMethod -Method Post -Uri "https://bunk3r-ia.onrender.com/api/system/register-brain" -Body $body -ContentType "application/json"; >> reg_brain.ps1
+echo         $response = Invoke-RestMethod -Method Post -Uri "https://bunk3r-ia.onrender.com/api/system/register-brain" -Body $body -ContentType "application/json" -TimeoutSec 120; >> reg_brain.ps1
 echo         echo "[OK] Tu IA local esta ahora conectada a Render!"; >> reg_brain.ps1
 echo     } catch { >> reg_brain.ps1
-echo         echo "[X] Error al registrar. Hazlo manualmente: $url"; >> reg_brain.ps1
+echo         echo "[X] Error al registrar. Revisa si la URL de Render es correcta o intentalo de nuevo."; >> reg_brain.ps1
+echo         echo "[DEBUG] Detalle: $_"; >> reg_brain.ps1
 echo     } >> reg_brain.ps1
 echo } else { echo "[!] No se pudo capturar la URL automaticamente."; } >> reg_brain.ps1
 echo while ($true) { Start-Sleep -s 60; } >> reg_brain.ps1
