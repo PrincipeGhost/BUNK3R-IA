@@ -32,15 +32,17 @@ echo.
 echo [3] Iniciando Puente de Comunicacion y Registro...
 
 :: Create a temporary PS1 script for registration
+if exist tunnel_log.txt del /f /q tunnel_log.txt
 echo $url = ""; > reg_brain.ps1
 echo $proc = Start-Process cloudflared -ArgumentList "tunnel --url http://localhost:11434" -PassThru -NoNewWindow -RedirectStandardError "tunnel_log.txt"; >> reg_brain.ps1
 echo echo "Esperando a que Cloudflare genere la URL (max 20s)..."; >> reg_brain.ps1
 echo $timeout = Get-Date; $timeout = $timeout.AddSeconds(20); >> reg_brain.ps1
 echo while ($(Get-Date) -lt $timeout) { >> reg_brain.ps1
 echo     if (Test-Path "tunnel_log.txt") { >> reg_brain.ps1
-echo         $content = Get-Content "tunnel_log.txt"; >> reg_brain.ps1
+echo         $content = Get-Content "tunnel_log.txt" -Raw; >> reg_brain.ps1
 echo         if ($content -match "https://[a-zA-Z0-9-]+\.trycloudflare\.com") { >> reg_brain.ps1
-echo             $url = $matches[0]; break; >> reg_brain.ps1
+echo             $url = $matches[0]; >> reg_brain.ps1
+echo             if ($url) { break; } >> reg_brain.ps1
 echo         } >> reg_brain.ps1
 echo     } >> reg_brain.ps1
 echo     Start-Sleep -s 1; >> reg_brain.ps1
