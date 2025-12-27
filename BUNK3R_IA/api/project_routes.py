@@ -140,7 +140,7 @@ def manage_file_content():
         return jsonify({"success": False, "error": f"File not found: {file_path}"}), 404
 
     # Seguridad: asegurar que el archivo está dentro de la raíz permitida
-    if not full_path.startswith('/home/runner/'):
+    if not full_path.startswith(project_root):
          return jsonify({"success": False, "error": "Access denied"}), 403
 
     if request.method == 'GET':
