@@ -539,9 +539,11 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
     def __init__(self, db_manager=None):
         from BUNK3R_IA.core.ai_toolkit import AIFileToolkit, AICommandExecutor
         
+        logger.info(f"AIService starting init with db_manager={'available' if db_manager else 'None'}")
         self.db_manager = db_manager
         self.providers: List[AIProvider] = []
         self.conversations: Dict[str, List[Dict]] = {}
+
         
         # Inicializar Toolkits
         self.file_toolkit = AIFileToolkit()

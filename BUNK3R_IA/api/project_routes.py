@@ -177,6 +177,7 @@ def run_command():
         
     try:
         # Ejecutar comando de forma segura
+        logger.info(f"Terminal: Executing command: {command}")
         result = subprocess.run(
             command,
             shell=True,
@@ -185,6 +186,10 @@ def run_command():
             timeout=timeout,
             cwd=os.getcwd()
         )
+        logger.info(f"Terminal: Command finished with exit code {result.returncode}")
+        if result.stderr:
+            logger.warning(f"Terminal stderr: {result.stderr}")
+
         
         return jsonify({
             "success": True,

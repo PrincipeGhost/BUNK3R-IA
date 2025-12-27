@@ -824,15 +824,23 @@ const AIChat = {
                 headers = { ...headers, ...App.getAuthHeaders() };
             }
 
+            console.log('[CONSOLE-FETCH] Sending request to /api/projects/command/run');
             const response = await fetch('/api/projects/command/run', {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ command, timeout: 30 })
             });
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            console.log('[CONSOLE-FETCH] Response received:', response.status, response.statusText);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[CONSOLE-FETCH] Error response text:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+            }
 
             const data = await response.json();
+            console.log('[CONSOLE-FETCH] Data:', data);
+
             loadingLine.remove();
 
             if (data.success) {
