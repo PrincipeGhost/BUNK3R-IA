@@ -1,22 +1,22 @@
-2025-12-27T13:08:54Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
-2025-12-27T13:08:54Z INF Requesting new quick Tunnel on trycloudflare.com...
-2025-12-27T13:08:58Z INF +--------------------------------------------------------------------------------------------+
-2025-12-27T13:08:58Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
-2025-12-27T13:08:58Z INF |  https://apparently-anymore-noon-sensitivity.trycloudflare.com                             |
-2025-12-27T13:08:58Z INF +--------------------------------------------------------------------------------------------+
-2025-12-27T13:08:58Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]
-2025-12-27T13:08:58Z INF Version 2025.8.1 (Checksum b5d598b00cc3a28cabc5812d9f762819334614bae452db4e7f23eefe7b081556)
-2025-12-27T13:08:58Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
-2025-12-27T13:08:58Z INF Settings: map[ha-connections:1 protocol:quic url:http://localhost:11434]
-2025-12-27T13:08:58Z INF cloudflared will not automatically update on Windows systems.
-2025-12-27T13:08:58Z INF Generated Connector ID: 19001bd0-7421-4d73-9434-4a310d203754
-2025-12-27T13:08:58Z INF Initial protocol quic
-2025-12-27T13:08:58Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
-2025-12-27T13:08:59Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
-2025-12-27T13:08:59Z ERR Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]. You need to specify the origin certificate path by specifying the origincert option in the configuration file, or set TUNNEL_ORIGIN_CERT environment variable originCertPath=
-2025-12-27T13:08:59Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
-2025-12-27T13:08:59Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
-2025-12-27T13:08:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.33
-2025-12-27T13:08:59Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
-2025-12-27T13:08:59Z INF Starting metrics server on 127.0.0.1:20241/metrics
-2025-12-27T13:08:59Z INF Registered tunnel connection connIndex=0 connection=55879b82-9208-4b0c-8a7c-24e1af1136af event=0 ip=198.41.200.33 location=waw02 protocol=quic
+2025-12-27T13:21:02Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2025-12-27T13:21:02Z INF Requesting new quick Tunnel on trycloudflare.com...
+2025-12-27T13:21:07Z INF +--------------------------------------------------------------------------------------------+
+2025-12-27T13:21:07Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2025-12-27T13:21:07Z INF |  https://pas-garden-alt-daughters.trycloudflare.com                                        |
+2025-12-27T13:21:07Z INF +--------------------------------------------------------------------------------------------+
+2025-12-27T13:21:07Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]
+2025-12-27T13:21:07Z INF Version 2025.8.1 (Checksum b5d598b00cc3a28cabc5812d9f762819334614bae452db4e7f23eefe7b081556)
+2025-12-27T13:21:07Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-12-27T13:21:07Z INF Settings: map[ha-connections:1 protocol:quic url:http://localhost:11434]
+2025-12-27T13:21:07Z INF cloudflared will not automatically update on Windows systems.
+2025-12-27T13:21:07Z INF Generated Connector ID: c3afc49c-ec66-4a40-b3fe-da8a6e50296d
+2025-12-27T13:21:07Z INF Initial protocol quic
+2025-12-27T13:21:07Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
+2025-12-27T13:21:07Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
+2025-12-27T13:21:07Z ERR Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp]. You need to specify the origin certificate path by specifying the origincert option in the configuration file, or set TUNNEL_ORIGIN_CERT environment variable originCertPath=
+2025-12-27T13:21:07Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-12-27T13:21:08Z INF ICMP proxy will use 172.20.10.14 as source for IPv4
+2025-12-27T13:21:08Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.33
+2025-12-27T13:21:08Z INF ICMP proxy will use fe80::d9b3:331a:cdc5:8500 in zone Wi-Fi as source for IPv6
+2025-12-27T13:21:08Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-12-27T13:21:08Z INF Registered tunnel connection connIndex=0 connection=d32e58c1-1a13-4148-8030-1887a84941cc event=0 ip=198.41.200.33 location=waw05 protocol=quic

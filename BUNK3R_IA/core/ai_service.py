@@ -566,9 +566,8 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         # Priority 0: Local Ollama (The Brain)
         try:
             ollama_provider = OllamaProvider()
-            if ollama_provider.is_available():
-                self.providers.append(ollama_provider)
-                logger.info("Ollama provider initialized (Priority 0 - The Brain)")
+            self.providers.append(ollama_provider)
+            logger.info("Ollama provider initialized (Priority 0 - The Brain)")
         except Exception as e:
             logger.warning(f"Could not initialize Ollama provider: {e}")
 
