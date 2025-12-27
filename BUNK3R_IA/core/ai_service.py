@@ -547,7 +547,8 @@ Mi objetivo es ser el colaborador más preciso, actuando siempre sobre la realid
         self.file_toolkit = AIFileToolkit()
         self.command_executor = AICommandExecutor()
         
-        self._initialize_providers()
+        # Providers will be initialized below in __init__
+
     
         # Priority 0: Local Ollama (The Brain)
         try:
@@ -1305,5 +1306,14 @@ def get_ai_service(db_manager=None) -> AIService:
     """Get or create the global AI service instance"""
     global ai_service
     if ai_service is None:
-        ai_service = AIService(db_manager)
+        logger.info("Initializing global AIService...")
+        try:
+            ai_service = AIService(db_manager)
+            logger.info("AIService successfully initialized.")
+        except Exception as e:
+            logger.error(f"CRITICAL: Failed to initialize AIService: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # We don't catch it here to let it propagate, but we log it
+            raise
     return ai_service

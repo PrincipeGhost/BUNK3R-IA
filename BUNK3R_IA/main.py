@@ -241,34 +241,60 @@ def create_app(config_class=None):
     return app
 
 def init_database(database_url=None):
-    """Inicializar conexión a base de datos (opcional)"""
+    """Inicializar conexión a base de datos"""
+    from BUNK3R_IA.api.routes import set_db_manager
+    
     if database_url is None:
         database_url = os.getenv('DATABASE_URL')
     
-    if not database_url:
-        logger.warning("No DATABASE_URL configured - running without database")
-        return None
-    
+    # Intento con PostgreSQL si hay URL
+    if database_url:
+        try:
+            import psycopg2
+            from psycopg2 import pool
+            
+            class PostgresDBManager:
+                def __init__(self, url):
+                    self.pool = pool.SimpleConnectionPool(1, 10, url)
+                
+                def get_connection(self):
+                    return self.pool.getconn()
+                
+                def release_connection(self, conn):
+                    self.pool.putconn(conn)
+            
+            db_manager = PostgresDBManager(database_url)
+            set_db_manager(db_manager)
+            logger.info("Database connection established (PostgreSQL)")
+            return db_manager
+        except Exception as e:
+            logger.error(f"Failed to connect to PostgreSQL: {e}. Falling back to SQLite.")
+
+    # Fallback o default: SQLite (Nuestra propia base de datos)
     try:
-        import psycopg2
-        from psycopg2 import pool
+        from BUNK3R_IA.core.database.manager import manager as sqlite_manager
         
-        class SimpleDBManager:
-            def __init__(self, url):
-                self.pool = pool.SimpleConnectionPool(1, 10, url)
+        # Necesitamos que el manager tenga get_connection para ser compatible con el código que espera pools
+        if not hasattr(sqlite_manager, 'get_connection'):
+            # El manager original tiene _get_connection(path), vamos a envolverlo
+            class SQLiteAdapter:
+                def __init__(self, mgr):
+                    self.mgr = mgr
+                def get_connection(self):
+                    # Retorna la conexión central por defecto
+                    return self.mgr._get_connection(self.mgr.central_db_path)
+                def release_connection(self, conn):
+                    pass # SQLite no suele usar pools de la misma forma aquí
             
-            def get_connection(self):
-                return self.pool.getconn()
+            adapted_manager = SQLiteAdapter(sqlite_manager)
+            set_db_manager(adapted_manager)
+        else:
+            set_db_manager(sqlite_manager)
             
-            def release_connection(self, conn):
-                self.pool.putconn(conn)
-        
-        db_manager = SimpleDBManager(database_url)
-        set_db_manager(db_manager)
-        logger.info("Database connection established")
-        return db_manager
+        logger.info("Database connection established (internal SQLite)")
+        return sqlite_manager
     except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
+        logger.error(f"Critical Error: Failed to initialize any database: {e}")
         return None
 
 def main():

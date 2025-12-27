@@ -1621,15 +1621,35 @@ class AIConstructorService:
         self.project_analyzer: Optional[Any] = None
         
         if TOOLKIT_AVAILABLE and AIFileToolkit and AICommandExecutor and AIErrorDetector and AIProjectAnalyzer:
-            self.file_toolkit = AIFileToolkit(self.project_root)
-            self.command_executor = AICommandExecutor(self.project_root)
-            self.error_detector = AIErrorDetector()
-            self.project_analyzer = AIProjectAnalyzer(self.project_root)
-            logger.info("AIConstructorService initialized with AIToolkit (full capabilities)")
+            try:
+                self.file_toolkit = AIFileToolkit(self.project_root)
+                logger.info("AIConstructorService: AIFileToolkit initialized.")
+            except Exception as e:
+                logger.error(f"AIConstructorService: Failed to initialize AIFileToolkit: {e}")
+                
+            try:
+                self.command_executor = AICommandExecutor(self.project_root)
+                logger.info("AIConstructorService: AICommandExecutor initialized.")
+            except Exception as e:
+                logger.error(f"AIConstructorService: Failed to initialize AICommandExecutor: {e}")
+                
+            try:
+                self.error_detector = AIErrorDetector()
+                logger.info("AIConstructorService: AIErrorDetector initialized.")
+            except Exception as e:
+                logger.error(f"AIConstructorService: Failed to initialize AIErrorDetector: {e}")
+                
+            try:
+                self.project_analyzer = AIProjectAnalyzer(self.project_root)
+                logger.info("AIConstructorService: AIProjectAnalyzer initialized.")
+            except Exception as e:
+                logger.error(f"AIConstructorService: Failed to initialize AIProjectAnalyzer: {e}")
+                
+            logger.info("AIConstructorService toolkit initialization attempt finished.")
         else:
-            logger.warning("AIConstructorService initialized WITHOUT AIToolkit (limited capabilities)")
+            logger.warning("AIConstructorService initialized WITHOUT AIToolkit (limited capabilities or import failed)")
         
-        logger.info(f"AIConstructorService initialized - Toolkit: {self.toolkit_enabled}")
+        logger.info(f"AIConstructorService initialization complete.")
     
     def get_or_create_session(self, user_id: str) -> ConstructorSession:
         """Obtiene o crea una sesión para el usuario"""

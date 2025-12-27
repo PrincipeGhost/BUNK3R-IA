@@ -113,7 +113,7 @@
             background: rgba(240, 185, 11, 0.05) !important;
             cursor: col-resize !important;
             transition: background 0.2s !important;
-            z-index: 99999 !important;
+            z-index: 100 !important;
             flex-shrink: 0 !important;
             position: relative !important;
         }
@@ -237,7 +237,7 @@
         flex-direction: column;
         justify-content: space-between;
         padding: 10px 0;
-        z-index: 10;
+        z-index: 1000;
     }
 
     .activity-btn {
@@ -279,6 +279,7 @@
         /* Hidden by default */
         flex-direction: column;
         overflow: hidden;
+        z-index: 900;
         /* Ensure container doesn't overflow */
     }
 
@@ -455,8 +456,7 @@
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
-        z-index: 35000 !important;
-        /* Aún más alto */
+        z-index: 85 !important;
     }
 
     #ai-preview-panel {
@@ -467,7 +467,7 @@
         left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        z-index: 35000 !important;
+        z-index: 80 !important;
     }
 
     #editor-wrapper {
@@ -478,7 +478,7 @@
         left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        z-index: 35000 !important;
+        z-index: 50 !important;
     }
 
     #ai-console-output {
@@ -513,14 +513,13 @@
     #ai-console.active-panel,
     #ai-preview-panel.active-panel,
     #editor-wrapper.active-panel {
-        position: fixed !important;
-        top: 50px !important;
+        position: absolute !important;
+        top: 0 !important;
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        width: 100vw !important;
-        height: calc(100vh - 50px) !important;
-        z-index: 2147483647 !important;
+        width: 100% !important;
+        height: 100% !important;
         opacity: 1 !important;
         visibility: visible !important;
         display: flex !important;
@@ -544,7 +543,7 @@
 
     .ai-tabs {
         position: relative;
-        z-index: 2147483647 !important;
+        z-index: 100 !important;
         background: #161b22;
         height: 50px;
         display: flex;
@@ -558,7 +557,7 @@
         color: #8b949e;
         border-bottom: 2px solid transparent;
         transition: all 0.2s;
-        z-index: 2147483647 !important;
+        z-index: 101 !important;
     }
 
     .ai-tab.active {
@@ -964,7 +963,7 @@
         </div>
     </main>
 
-    <script src="/static/ai-chat.js"></script>
+    <script src="/static/ai-chat.js?v=20251227"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Inicializar AIChat
@@ -1517,7 +1516,7 @@
                 container.innerHTML = '';
 
                 if (tab.type === 'image') {
-                    container.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; padding:20px;"><img src="${tab.content}" style="max-width:100%; max-height:100%; box-shadow: 0 0 10px rgba(0,0,0,0.5);" alt="${tab.name}"></div>`;
+                    container.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100%; padding:20px;"><img src="' + tab.content + '" style="max-width:100%; max-height:100%; box-shadow: 0 0 10px rgba(0,0,0,0.5);" alt="' + tab.name + '"></div>';
                 } else {
                     // Code Editor (Simple Textarea)
                     const textarea = document.createElement('textarea');

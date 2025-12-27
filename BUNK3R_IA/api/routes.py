@@ -35,12 +35,19 @@ def get_ai_constructor():
     
     if ai_constructor_service is None:
         db_manager = get_db_manager()
+        # No bloqueamos si no hay database, permitimos que el servicio intente inicializarse
         if db_manager is None:
-            raise ValueError("Database not available")
-        ai_service = get_ai_service(db_manager)
+            logger.warning("Database manager not available for AI Constructor - proceeding without it")
+            
+        try:
+            ai_service = get_ai_service(db_manager)
+        except Exception as e:
+            logger.error(f"Error calling get_ai_service from get_ai_constructor: {e}")
+            raise ValueError(f"AI service initialization failed: {str(e)}")
+            
         if ai_service is None:
-            raise ValueError("AI service not available")
-        ai_constructor_service = AIConstructorService(ai_service)
+            raise ValueError("AI service not available (get_ai_service returned None)")
+        ai_constructor_service = AIConstructorService(ai_service, db_manager=db_manager)
     return ai_constructor_service
 
 def sanitize_constructor_response(result):

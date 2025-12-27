@@ -368,77 +368,8 @@ const AIChat = {
         });
     },
 
-    async runConsoleCommand(command) {
-        const output = document.getElementById('ai-console-output');
-        if (!output) return;
+    // escapeHtml consolidated at line 870
 
-        this.consoleHistory.push(command);
-        this.consoleHistoryIndex = -1;
-
-        const cmdLine = document.createElement('div');
-        cmdLine.className = 'console-line command';
-        cmdLine.innerHTML = `<span class="console-prompt-display">$</span>${this.escapeHtml(command)}`;
-        output.appendChild(cmdLine);
-
-        const loadingLine = document.createElement('div');
-        loadingLine.className = 'console-loading';
-        loadingLine.textContent = 'Ejecutando...';
-        output.appendChild(loadingLine);
-        output.scrollTop = output.scrollHeight;
-
-        try {
-            const headers = App.getAuthHeaders ? App.getAuthHeaders() : { 'Content-Type': 'application/json' };
-
-            const response = await fetch('/api/projects/command/run', {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ command, timeout: 30 })
-            });
-
-            const data = await response.json();
-            loadingLine.remove();
-
-            if (data.success) {
-                if (data.stdout) {
-                    const outLine = document.createElement('div');
-                    outLine.className = 'console-line output';
-                    outLine.textContent = data.stdout;
-                    output.appendChild(outLine);
-                }
-                if (data.stderr) {
-                    const errLine = document.createElement('div');
-                    errLine.className = 'console-line error';
-                    errLine.textContent = data.stderr;
-                    output.appendChild(errLine);
-                }
-                if (!data.stdout && !data.stderr) {
-                    const okLine = document.createElement('div');
-                    okLine.className = 'console-line success';
-                    okLine.textContent = 'Comando ejecutado correctamente';
-                    output.appendChild(okLine);
-                }
-            } else {
-                const errLine = document.createElement('div');
-                errLine.className = 'console-line error';
-                errLine.textContent = data.error || 'Error al ejecutar comando';
-                output.appendChild(errLine);
-            }
-        } catch (error) {
-            loadingLine.remove();
-            const errLine = document.createElement('div');
-            errLine.className = 'console-line error';
-            errLine.textContent = `Error: ${error.message}`;
-            output.appendChild(errLine);
-        }
-
-        output.scrollTop = output.scrollHeight;
-    },
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    },
 
     bindQuickActions() {
         document.querySelectorAll('.ai-quick-btn').forEach(btn => {
@@ -867,9 +798,86 @@ const AIChat = {
         return formatted;
     },
 
+    async runConsoleCommand(command) {
+        console.log('[CONSOLE] Running command:', command);
+        const output = document.getElementById('ai-console-output');
+        if (!output) return;
+
+        this.consoleHistory.push(command);
+        this.consoleHistoryIndex = -1;
+
+        const cmdLine = document.createElement('div');
+        cmdLine.className = 'console-line command';
+        cmdLine.innerHTML = `<span class="console-prompt-display">$</span>${this.escapeHtml(command)}`;
+        output.appendChild(cmdLine);
+
+        const loadingLine = document.createElement('div');
+        loadingLine.className = 'console-loading';
+        loadingLine.textContent = '... ejecutando comando ...';
+        output.appendChild(loadingLine);
+        output.scrollTop = output.scrollHeight;
+
+        try {
+            // Robust auth headers
+            let headers = { 'Content-Type': 'application/json' };
+            if (typeof App !== 'undefined' && App.getAuthHeaders) {
+                headers = { ...headers, ...App.getAuthHeaders() };
+            }
+
+            const response = await fetch('/api/projects/command/run', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ command, timeout: 30 })
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            loadingLine.remove();
+
+            if (data.success) {
+                if (data.stdout) {
+                    const outLine = document.createElement('div');
+                    outLine.className = 'console-line output';
+                    outLine.style.whiteSpace = 'pre-wrap';
+                    outLine.textContent = data.stdout;
+                    output.appendChild(outLine);
+                }
+                if (data.stderr) {
+                    const errLine = document.createElement('div');
+                    errLine.className = 'console-line error';
+                    errLine.style.color = '#ff6b6b';
+                    errLine.textContent = data.stderr;
+                    output.appendChild(errLine);
+                }
+                if (!data.stdout && !data.stderr) {
+                    const okLine = document.createElement('div');
+                    okLine.className = 'console-line success';
+                    okLine.style.color = '#51cf66';
+                    okLine.textContent = '✓ Ejecutado.';
+                    output.appendChild(okLine);
+                }
+            } else {
+                const errLine = document.createElement('div');
+                errLine.className = 'console-line error';
+                errLine.textContent = 'FALLO: ' + (data.error || 'Error desconocido');
+                output.appendChild(errLine);
+            }
+        } catch (error) {
+            if (loadingLine) loadingLine.remove();
+            console.error('[CONSOLE-ERROR]', error);
+            const errLine = document.createElement('div');
+            errLine.className = 'console-line error';
+            errLine.textContent = `CRITICAL: ${error.message}`;
+            output.appendChild(errLine);
+        }
+        output.scrollTop = output.scrollHeight;
+    },
+
     escapeHtml(text) {
+        if (!text) return "";
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = String(text);
         return div.innerHTML;
     },
 
@@ -1502,3 +1510,8 @@ AIChat.sendQuickStreamMessage = async function (message) {
     this.appendMessage('user', message);
     await this.sendStreamingMessage(message);
 };
+// Exportar para que sea accesible desde otros scripts
+if (typeof window !== 'undefined') {
+    window.AIChat = AIChat;
+    console.log('[AI-LOG] AIChat exported to window');
+}
