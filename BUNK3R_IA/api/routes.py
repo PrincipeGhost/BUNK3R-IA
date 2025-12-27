@@ -210,16 +210,60 @@ def ai_constructor_session():
 def ai_constructor_reset():
     """Reset AI Constructor session"""
     try:
-        data = request.json
-        user_id = data.get('user_id', 'anonymous')
+        user_id = get_user_id()
         constructor = get_ai_constructor()
-        constructor.reset_session(user_id)
-        
-        return jsonify({'success': True, 'message': 'Session reset successfully'})
-    except ValueError as e:
-        return jsonify({'success': False, 'error': sanitize_error(e, 'ai_constructor_reset')}), 503
+        session = constructor.reset_session(user_id)
+        return jsonify({
+            'success': True,
+            'session': sanitize_constructor_response(session)
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': sanitize_error(e, 'ai_constructor_reset')}), 500
+
+# --- BRAIN AUTO-DISCOVERY SYSTEM ---
+
+@ai_bp.route('/system/register-brain', methods=['POST'])
+def register_brain():
+    """Register a local Ollama tunnel URL automatically"""
+    try:
+        data = request.json
+        tunnel_url = data.get('url')
+        secret = data.get('secret') # Optional security
+        
+        if not tunnel_url:
+            return jsonify({'success': False, 'error': 'No URL provided'}), 400
+            
+        # Update environment variable for the current process
+        os.environ['OLLAMA_BASE_URL'] = tunnel_url
+        
+        # Also update the AIService if already initialized
+        from BUNK3R_IA.core.ai_service import get_ai_service
+        ai = get_ai_service()
+        
+        # Propagate to Ollama providers
+        for p in ai.providers:
+            if p.name == "ollama":
+                p.base_url = tunnel_url.rstrip('/') + '/api/chat'
+                logger.info(f"Ollama provider updated with new tunnel: {tunnel_url}")
+        
+        logger.info(f"Brain Registered: {tunnel_url}")
+        return jsonify({'success': True, 'message': 'Brain URL updated successfully'})
+    except Exception as e:
+        logger.error(f"Error registering brain: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@ai_bp.route('/system/status', methods=['GET'])
+def system_status():
+    """Check AI and System status"""
+    from BUNK3R_IA.core.ai_service import get_ai_service
+    ai = get_ai_service()
+    
+    return jsonify({
+        'status': 'online',
+        'database': 'online' if get_db_manager() else 'offline',
+        'ollama_url': os.environ.get('OLLAMA_BASE_URL', 'Not configured'),
+        'available_providers': ai.get_available_providers()
+    })
 
 @ai_bp.route('/ai-constructor/files', methods=['GET'])
 def ai_constructor_files():
