@@ -40,8 +40,9 @@ echo $timeout = Get-Date; $timeout = $timeout.AddSeconds(20); >> reg_brain.ps1
 echo while ($(Get-Date) -lt $timeout) { >> reg_brain.ps1
 echo     if (Test-Path "tunnel_log.txt") { >> reg_brain.ps1
 echo         $content = Get-Content "tunnel_log.txt" -Raw; >> reg_brain.ps1
-echo         if ($content -match "https://[a-zA-Z0-9-]+\.trycloudflare\.com") { >> reg_brain.ps1
-echo             $url = $matches[0]; >> reg_brain.ps1
+echo         $matches = [regex]::Matches($content, "https://[a-zA-Z0-9-]+\.trycloudflare\.com"); >> reg_brain.ps1
+echo         if ($matches.Count -gt 0) { >> reg_brain.ps1
+echo             $url = $matches[$matches.Count - 1].Value; >> reg_brain.ps1
 echo             if ($url) { break; } >> reg_brain.ps1
 echo         } >> reg_brain.ps1
 echo     } >> reg_brain.ps1
@@ -53,7 +54,7 @@ echo     echo "[+] Registrando en Render (esto puede tardar 1 min si el server e
 echo     try { >> reg_brain.ps1
 echo         $body = @{ url = $url } ^| ConvertTo-Json; >> reg_brain.ps1
 echo         $response = Invoke-RestMethod -Method Post -Uri "https://bunk3r-ia.onrender.com/api/system/register-brain" -Body $body -ContentType "application/json" -TimeoutSec 120; >> reg_brain.ps1
-echo         echo "[OK] Tu IA local esta ahora conectada a Render!"; >> reg_brain.ps1
+echo         echo "[OK] Tu IA local ($url) esta ahora conectada a Render!"; >> reg_brain.ps1
 echo     } catch { >> reg_brain.ps1
 echo         echo "[X] Error al registrar. Revisa si la URL de Render es correcta o intentalo de nuevo."; >> reg_brain.ps1
 echo         echo "[DEBUG] Detalle: $_"; >> reg_brain.ps1

@@ -468,16 +468,25 @@ class OllamaProvider(AIProvider):
             try:
                 from BUNK3R_IA.models import GlobalSetting
                 db_url = GlobalSetting.get('OLLAMA_BASE_URL')
-                if db_url and db_url not in self.base_url:
-                    self.base_url = db_url.rstrip('/') + '/api/chat'
-                    logger.info(f"OllamaProvider updated from DB: {self.base_url}")
+                if db_url:
+                    new_base = db_url.rstrip('/') + '/api/chat'
+                    if new_base != self.base_url:
+                        self.base_url = new_base
+                        logger.info(f"OllamaProvider dynamic URL update: {self.base_url}")
             except Exception as e:
                 logger.debug(f"Could not check DB for Ollama URL: {e}")
 
             # Simple check to see if the server is up
-            response = requests.get(self.base_url.replace("/api/chat", "/api/tags"), timeout=2)
-            return response.status_code == 200
-        except:
+            check_url = self.base_url.replace("/api/chat", "/api/tags")
+            logger.debug(f"Checking Ollama health at: {check_url}")
+            
+            response = requests.get(check_url, timeout=5)
+            is_up = response.status_code == 200
+            if not is_up:
+                logger.warning(f"Ollama health check returned {response.status_code} for {check_url}")
+            return is_up
+        except Exception as e:
+            logger.debug(f"Ollama health check failed: {e}")
             return False
 
     def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:

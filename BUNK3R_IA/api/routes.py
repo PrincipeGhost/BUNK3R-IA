@@ -252,10 +252,10 @@ def register_brain():
         for p in ai.providers:
             if p.name == "ollama":
                 p.base_url = tunnel_url.rstrip('/') + '/api/chat'
-                logger.info(f"Ollama provider updated with new tunnel: {tunnel_url}")
+                logger.info(f"Ollama provider instance updated: {tunnel_url}")
         
-        logger.info(f"Brain Registered: {tunnel_url}")
-        return jsonify({'success': True, 'message': 'Brain URL updated successfully'})
+        logger.info(f"BRAIN SYNC SUCCESS: {tunnel_url}")
+        return jsonify({'success': True, 'message': f'Brain URL {tunnel_url} updated successfully'})
     except Exception as e:
         logger.error(f"Error registering brain: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
