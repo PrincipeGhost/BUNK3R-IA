@@ -476,20 +476,28 @@ class OllamaProvider(AIProvider):
             except Exception as e:
                 logger.debug(f"Could not check DB for Ollama URL: {e}")
 
-            # Simple check to see if the server is up
-            check_url = self.base_url.replace("/api/chat", "/api/tags")
+            # Simple check to see if the server is up - using root to avoid 403 on API endpoints
+            check_url = self.base_url.replace("/api/chat", "/")
             logger.debug(f"Checking Ollama health at: {check_url}")
             
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "Accept": "*/*"
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+                "Upgrade-Insecure-Requests": "1"
             }
             
-            response = requests.get(check_url, timeout=5, headers=headers)
-            is_up = response.status_code == 200
-            if not is_up:
-                logger.warning(f"Ollama health check returned {response.status_code} for {check_url}")
-            return is_up
+            try:
+                response = requests.get(check_url, timeout=5, headers=headers)
+                is_up = response.status_code in [200, 404] # 404 is still "up" (Ollama returns 404 on root)
+                if not is_up:
+                    logger.warning(f"Ollama health check returned {response.status_code} for {check_url}")
+                return is_up
+            except Exception as e:
+                logger.debug(f"Ollama health check failed: {e}")
+                return False
         except Exception as e:
             logger.debug(f"Ollama health check failed: {e}")
             return False
