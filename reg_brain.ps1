@@ -4,9 +4,10 @@ echo "Esperando a que Cloudflare genere la URL (max 20s)...";
 $timeout = Get-Date; $timeout = $timeout.AddSeconds(20); 
 while ($(Get-Date) -lt $timeout) { 
     if (Test-Path "tunnel_log.txt") { 
-        $content = Get-Content "tunnel_log.txt"; 
+        $content = Get-Content "tunnel_log.txt" -Raw; 
         if ($content -match "https://[a-zA-Z0-9-]+\.trycloudflare\.com") { 
-            $url = $matches[0]; break; 
+            $url = $matches[0]; 
+            if ($url) { break; } 
         } 
     } 
     Start-Sleep -s 1; 
