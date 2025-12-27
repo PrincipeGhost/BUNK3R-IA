@@ -46,8 +46,11 @@ def create_app(config_class=None):
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-    # Database
+    # Database Flask-SQLAlchemy
     db.init_app(app)
+    
+    # Initialize our custom DB Manager for AI Service/Constructor
+    init_database()
     
     # GitHub Auth setup
     from BUNK3R_IA.replit_auth import setup_github_auth

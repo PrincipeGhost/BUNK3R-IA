@@ -480,7 +480,12 @@ class OllamaProvider(AIProvider):
             check_url = self.base_url.replace("/api/chat", "/api/tags")
             logger.debug(f"Checking Ollama health at: {check_url}")
             
-            response = requests.get(check_url, timeout=5)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "*/*"
+            }
+            
+            response = requests.get(check_url, timeout=5, headers=headers)
             is_up = response.status_code == 200
             if not is_up:
                 logger.warning(f"Ollama health check returned {response.status_code} for {check_url}")
