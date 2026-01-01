@@ -53,6 +53,11 @@ def create_app(config_class=None):
     # Database Flask-SQLAlchemy
     db.init_app(app)
     
+    # Initialize SINGULARITY CORE (Gravity Core v3)
+    from BUNK3R_IA.core.gravity_core import gravity_core
+    gravity_core.init_app(app)
+    gravity_core.start_autonomy()
+    
     # Initialize our custom DB Manager for AI Service/Constructor
     init_database()
     

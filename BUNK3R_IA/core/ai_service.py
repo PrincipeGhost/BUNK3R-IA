@@ -9,16 +9,23 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Union
 from abc import ABC, abstractmethod
+from BUNK3R_IA.models import db, ModelBenchmark # Import db for bench
 
 logger = logging.getLogger(__name__)
 
 # Global variable to store database manager
 db_manager = None
 
+# NÚCLEO SINGULARIDAD (Gravity v3)
+from BUNK3R_IA.core.singularity import singularity
+from BUNK3R_IA.core.nervous_system import nervous_system
+from BUNK3R_IA.core.gravity_core import gravity_core
+
 try:
-    from BUNK3R_IA.core.ai_flow_logger import flow_logger
+    # Intento de cargar legacy if needed, but primary is Singularity
+    from BUNK3R_IA.core.legacy_v1_archive.ai_flow_logger import flow_logger
 except ImportError:
     flow_logger = None
 
@@ -582,19 +589,13 @@ Soy BUNK3R AI, un agente diseñado para ENTENDER y OPERAR sobre el código fuent
 Mi objetivo es ser el colaborador más preciso."""
 
     def __init__(self, db_manager=None):
-        from BUNK3R_IA.core.ai_toolkit import AIFileToolkit, AICommandExecutor
-        
         logger.info(f"AIService starting init with db_manager={'available' if db_manager else 'None'}")
         self.db_manager = db_manager
         self.providers: List[AIProvider] = []
         self.conversations: Dict[str, List[Dict]] = {}
-
         
-        # Inicializar Toolkits
-        self.file_toolkit = AIFileToolkit()
-        self.command_executor = AICommandExecutor()
-        
-        # Providers will be initialized below in __init__
+        # Vincular con la Singularidad (Gravity v3)
+        singularity.ai = self
 
     
         # Priority 0: Local Ollama (The Brain)
@@ -666,6 +667,55 @@ Mi objetivo es ser el colaborador más preciso."""
         if not self.providers:
             logger.warning("No AI providers configured. Set API keys in environment variables.")
     
+    def record_benchmark(self, provider_name: str, latency_ms: int, success: bool, task_type: str = "chat"):
+        """Registra el rendimiento de una petición."""
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                bench = ModelBenchmark(
+                    provider=provider_name,
+                    latency_ms=latency_ms,
+                    success=success,
+                    task_type=task_type
+                )
+                db.session.add(bench)
+                db.session.commit()
+        except Exception as e:
+            logger.error(f"Error recording benchmark: {e}")
+
+    def council_query(self, message: str, system_prompt: str, providers_count: int = 2) -> str:
+        """
+        Duelo de Modelos: Consulta a múltiples modelos y sintetiza la mejor respuesta.
+        Ideal para decisiones críticas.
+        """
+        logger.info(f"🧠 CONSEJO TÉCNICO ACTIVADO: Consultando a {providers_count} modelos...")
+        
+        # Seleccionar los mejores proveedores disponibles (excluyendo ollama que es el coordinador)
+        top_providers = [p for p in self.providers if p.name != "ollama" and p.is_available()][:providers_count]
+        
+        responses = []
+        for p in top_providers:
+            start = time.time()
+            res = p.chat([{"role": "user", "content": message}], system_prompt)
+            latency = int((time.time() - start) * 1000)
+            
+            if res.get("success"):
+                responses.append(f"--- Respuesta de {p.name} ---\n{res.get('response')}")
+                self.record_benchmark(p.name, latency, True, "council")
+            else:
+                self.record_benchmark(p.name, latency, False, "council")
+        
+        if not responses:
+            return "El consejo técnico falló: ningún modelo respondió."
+            
+        # Sintetizar con el Cerebro (Ollama) o el mejor disponible
+        synthesis_prompt = f"Actúa como el Árbitro Maestro BUNK3R. Tienes estas respuestas de diferentes modelos de IA sobre: '{message}'. Genera una solución técnica unificada, más robusta y sin errores, tomando lo mejor de cada una.\n\n" + "\n\n".join(responses)
+        
+        brain = next((p for p in self.providers if p.name == "ollama"), self.providers[0])
+        final_res = brain.chat([{"role": "user", "content": "Sintetiza el consejo técnico."}], synthesis_prompt)
+        
+        return final_res.get("response", responses[0]) # Fallback a la primera respuesta si falla la síntesis
+
     def get_available_providers(self) -> List[str]:
         """Get list of available provider names"""
         return [p.name for p in self.providers if p.is_available()]
@@ -750,185 +800,116 @@ Mi objetivo es ser el colaborador más preciso."""
             return False
 
     def _call_tool(self, tool_name: str, args: Dict) -> str:
-        """Ejecuta una herramienta localmente"""
+        """Puente hacia el Nervous System (Cuerpo Único)"""
         try:
-            logger.info(f"Ejecutando herramienta: {tool_name} con args: {args}")
-            
-            result = {}
-            modified_fs = False
+            logger.info(f"Singularity: Pulsando herramienta -> {tool_name}")
             
             if tool_name == "read_file":
-                result = self.file_toolkit.read_file(**args)
+                result = nervous_system.read(args.get("path"))
             elif tool_name == "write_file":
-                result = self.file_toolkit.write_file(**args)
-                modified_fs = True
-            elif tool_name == "edit_file":
-                result = self.file_toolkit.edit_file(**args)
-                modified_fs = True
+                result = nervous_system.write(args.get("path"), args.get("content"))
             elif tool_name == "list_dir":
-                result = self.file_toolkit.list_directory(**args)
-            elif tool_name == "delete_file":
-                result = self.file_toolkit.delete_file(**args)
-                modified_fs = True
+                result = nervous_system.list(args.get("path", "."))
             elif tool_name == "run_command":
-                result = self.command_executor.run_command(**args)
-            elif tool_name == "install_package":
-                result = self.command_executor.install_package(**args)
+                result = nervous_system.execute(args.get("command"))
+            elif tool_name == "web_search":
+                result = nervous_system.research(args.get("query"))
             else:
-                return f"Error: Herramienta '{tool_name}' no encontrada."
+                return f"Error: '{tool_name}' no existe en el NervousSystem."
             
+            # Memoria de Preferencias (Gravity Core)
+            if tool_name == "write_file" and result["success"]:
+                gravity_core.update_preference("quote_style", "single" if "'" in args.get("content") else "double")
+
             if result.get("success"):
-                output_msg = f"[TOOL OUTPUT SUCCESS]\n{json.dumps(result, indent=2)}"
-                
-                # Auto-Push si hubo cambios en archivos
-                if modified_fs:
-                    push_success = self._auto_git_push(f"{tool_name} on {args.get('path', 'unknown')}")
-                    if push_success:
-                        output_msg += "\n[GIT] Cambios sincronizados con GitHub correctamente."
-                    else:
-                        output_msg += "\n[GIT WARNING] No se pudo sincronizar con GitHub."
-                
-                return output_msg
+                return f"[TOOL SUCCESS]\n{json.dumps(result, indent=2)}"
             else:
-                return f"[TOOL OUTPUT ERROR]\n{result.get('error')}"
+                return f"[TOOL FAILED]\n{result.get('error')}"
                 
         except Exception as e:
-            return f"[TOOL EXECUTION EXCEPTION] {str(e)}"
-        
-        return {}
+            return f"[SINGULARITY EXCEPTION] {str(e)}"
 
     def chat(self, user_id: str, message: str, system_prompt: Optional[str] = None, 
              preferred_provider: Optional[str] = None, user_context: Optional[Dict] = None,
              enable_auto_rectify: bool = True) -> Dict[str, Any]:
         """
-        Flujo de Chat: El Cerebro (Ollama) analiza y delega.
+        Entrada Principal unificada bajo el NÚCLEO SINGULARIDAD.
+        Inicia un ciclo Reflexivo (Inner Monologue) y evaluación de riesgo (Sandbox).
         """
         if not self.providers:
-            return {
-                "success": False,
-                "error": "No hay proveedores de IA configurados. Configura las claves API.",
-                "provider": None
-            }
-        
-        # 1. Obtener historial
-        conversation = self._get_conversation(user_id)
-        conversation.append({"role": "user", "content": message})
-        
-        # 2. El Cerebro (Ollama) analiza la petición (Prioridad 0)
-        brain = next((p for p in self.providers if p.name == "ollama"), None)
-        
-        # Inyectar contexto del Arquitecto (CWD, Comandos, Metas)
-        architect_context = ""
-        try:
-            from flask_login import current_user
-            from BUNK3R_IA.core.context_manager import ContextManager
-            
-            user_id = "anonymous"
-            if current_user and current_user.is_authenticated:
-                user_id = str(current_user.id)
-            
-            ctx = ContextManager(user_id)
-            architect_context = ctx.get_summarized_context()
-        except Exception as e:
-            logger.error(f"Error obteniendo contexto del arquitecto: {e}")
+            return {"success": False, "error": "No hay proveedores configurados.", "provider": None}
 
+        # 1. Obtener Historial y Contexto
+        conversation = self._get_conversation(user_id)
+        
         system = system_prompt or self.DEFAULT_SYSTEM_PROMPT
-        if architect_context:
-            system = f"{system}\n\n{architect_context}"
-        
-        if brain and brain.is_available():
-            logger.info("🧠 Cerebro (Ollama) activado para analizar la petición...")
-        
         if user_context:
-            context_info = self._build_user_context(user_context)
-            system = system + context_info
-        
-        providers_to_try = self.providers.copy()
-        if preferred_provider:
-            providers_to_try.sort(key=lambda p: 0 if p.name == preferred_provider else 1)
-        
-        # Bucle de Agente (Max 5 pasos para evitar loops infinitos)
+            system += self._build_user_context(user_context)
+
+        # 2. El Salto a la Singularidad (Gravity v3)
+        try:
+            # Singularity maneja el monólogo interno y decide si activar el Sandbox.
+            # Luego ejecuta el loop agéntico vía _internal_chat_loop.
+            result = singularity.solve(message, user_id, conversation, system)
+            
+            # Guardar la respuesta final en el historial
+            if result.get("success"):
+                conversation.append({"role": "user", "content": message})
+                conversation.append({"role": "assistant", "content": result.get("response")})
+                self._save_conversation(user_id, conversation)
+                
+            return result
+        except Exception as e:
+            logger.error(f"Error en el Pulso de la Singularidad: {e}")
+            # Fallback a chat estándar si la singularidad falla por alguna razón
+            conversation.append({"role": "user", "content": message})
+            response = self._internal_chat_loop(conversation, system)
+            return {"success": True, "response": response, "provider": "fallback"}
+
+    def _internal_chat_loop(self, conversation: List[Dict], system: str) -> str:
+        """Loop de ejecución agéntica interna. Reemplaza el antiguo bucle de AIService."""
         MAX_TOOL_STEPS = 5
         final_response = ""
-        provider_used = "unknown"
+        
+        providers_to_try = self.providers.copy()
         
         for step in range(MAX_TOOL_STEPS + 1):
-            # 1. Obtener respuesta de la IA
             response_success = False
             current_response_text = ""
             
             for provider in providers_to_try:
-                if not provider.is_available():
-                    continue
-                
+                if not provider.is_available(): continue
                 try:
-                    logger.info(f"Using provider: {provider.name} (Step {step})")
                     result = provider.chat(conversation, system)
-                    
                     if result.get("success") and result.get("response", "").strip():
                         current_response_text = result.get("response", "")
-                        provider_used = provider.name
                         response_success = True
                         break
-                    else:
-                        logger.warning(f"Provider {provider.name} returned empty response, trying next...")
                 except Exception as e:
-                    logger.error(f"Provider {provider.name} failed: {e}")
+                    logger.debug(f"Provider {provider.name} fail in internal loop: {e}")
             
-            if not response_success:
-                 return {
-                    "success": False,
-                    "error": "Todos los proveedores fallaron.",
-                    "provider": None
-                }
+            if not response_success: return "Error: Todos los proveedores fallaron en el loop agéntico."
             
-            # 2. Detectar si la IA quiere usar una herramienta
+            # Detectar herramientas vía regex unificado
             import re
             tool_match = re.search(r'<TOOL>(.*?)</TOOL>', current_response_text, re.DOTALL)
             
             if tool_match and step < MAX_TOOL_STEPS:
-                # 2a. Ejecutar herramienta
                 tool_json_str = tool_match.group(1).strip()
-                tool_output = ""
+                if "```" in tool_json_str: tool_json_str = tool_json_str.replace("```json", "").replace("```", "")
                 
                 try:
-                    if "```" in tool_json_str:
-                         tool_json_str = tool_json_str.replace("```json", "").replace("```", "")
-                    
                     tool_call = json.loads(tool_json_str)
-                    tool_name = tool_call.get("name")
-                    tool_args = tool_call.get("args", {})
-                    
-                    # Ejecutar
-                    tool_output = self._call_tool(tool_name, tool_args)
-                    
+                    tool_output = self._call_tool(tool_call.get("name"), tool_call.get("args", {}))
                 except Exception as e:
-                    tool_output = f"[SYSTEM ERROR] JSON inválido en <TOOL>: {e}"
+                    tool_output = f"[SYSTEM ERROR] JSON inválido: {e}"
                 
-                # 2b. Añadir al historial y continuar el bucle
                 conversation.append({"role": "assistant", "content": current_response_text})
-                self._save_conversation(user_id, conversation)
-                
-                tool_feedback_msg = f"[SISTEMA] Resultado de la herramienta:\n{tool_output}\n\nContinúa tu tarea."
-                conversation.append({"role": "user", "content": tool_feedback_msg})
-                
-                logger.info(f"Tool Loop Feedback sent. Output len: {len(tool_output)}")
+                conversation.append({"role": "user", "content": f"[SISTEMA] Resultado de herramienta: {tool_output}"})
                 continue 
-            
             else:
-                # 3. Respuesta final
-                final_response = current_response_text
-                
-                conversation.append({"role": "assistant", "content": final_response})
-                self._save_conversation(user_id, conversation)
-                
-                return {
-                    "success": True,
-                    "response": final_response,
-                    "provider": provider_used,
-                    "conversation_length": len(conversation),
-                    "steps_taken": step
-                }
+                return current_response_text
+        return "Max steps reached."
     
     def _build_user_context(self, user_context: Dict) -> str:
         """Build context string based on user information"""
