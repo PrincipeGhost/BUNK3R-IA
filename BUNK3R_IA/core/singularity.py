@@ -30,8 +30,14 @@ class Singularity:
         
         # 2. EVALUACIÓN DE RIESGO & SANDBOX
         # Si la reflexión detecta peligro, activamos el Sandbox.
-        risk_keywords = ["crash", "delete", "format", "rm -rf", "db migration", "main.py"]
-        high_risk = any(k in reflection.lower() for k in risk_keywords)
+        risk_keywords = [
+            "crash", "delete", "format", "rm -rf", "db migration", "main.py",
+            "exploit", "vulnerabilit", "security hole", "break into", "hacker",
+            "malware", "virus", "shell script", "root access", "sandbox"
+        ]
+        # Búsqueda robusta e insensible a mayúsculas
+        reflection_lower = reflection.lower()
+        high_risk = any(k in reflection_lower for k in risk_keywords)
         nervous_system.sandbox_mode = high_risk
         
         if high_risk:
@@ -57,11 +63,25 @@ class Singularity:
 
     def _run_agent_loop(self, message: str, conversation: list, system: str, reflection: str) -> str:
         """Loop de ejecución unificado con el Nervous System."""
-        # Inyectamos la reflexión en el contexto para que la IA sepa en qué pensó
+        
+        # 1. ¿Hay herramientas en la reflexión inicial? (Caso de uso del usuario)
+        import re
+        tool_match = re.search(r'<TOOL>(.*?)</TOOL>', reflection, re.DOTALL)
+        if tool_match:
+            tool_json_str = tool_match.group(1).strip()
+            try:
+                # Si la reflexión ya trae una herramienta, la ejecutamos antes del loop
+                logger.info(f"Singularity: Detectada herramienta en REFLEXIÓN: {tool_json_str[:50]}...")
+                tool_call = json.loads(tool_json_str)
+                tool_output = self.ai._call_tool(tool_call.get("name"), tool_call.get("args", {}))
+                reflection += f"\n[SISTEMA] Resultado de herramienta en reflexión: {tool_output}"
+            except Exception as e:
+                logger.error(f"Error procesando herramienta en reflexión: {e}")
+
+        # Inyectamos la reflexión (posiblemente con resultado de tool) en el contexto
         enhanced_system = f"{system}\n\nTU REFLEXIÓN INTERNA:\n{reflection}\n\nSi necesitas actuar, usa <TOOL>{{'name': '...', 'args': {{...}}}}</TOOL>."
         
-        # Delegamos de vuelta al chat del AIService para manejar los pasos de herramientas
-        # Este es el punto de conexión final
+        # 2. Delegamos al loop interactivo para pasos adicionales
         res = self.ai._internal_chat_loop(conversation, enhanced_system)
         return res
 

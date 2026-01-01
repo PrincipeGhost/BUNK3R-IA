@@ -975,7 +975,7 @@ const AIChat = {
             `;
         } else {
             msgDiv.innerHTML = `
-                <div class="ai-bubble">${this.escapeHtml(content)}</div>
+                <div class="ai-bubble">${this.formatMessage(content)}</div>
             `;
         }
 
@@ -1103,11 +1103,25 @@ const AIChat = {
     },
 
     formatMessage(text) {
+        if (!text) return "";
         let formatted = this.escapeHtml(text);
-        formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-        formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // Code blocks
+        formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="ai-code-block"><div class="code-header">$1</div><code>$2</code></pre>');
+
+        // Inline code
+        formatted = formatted.replace(/`([^`]+)`/g, '<code class="ai-inline-code">$1</code>');
+
+        // Bold and Italic
         formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
         formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+        // Emojis (Simple map for common ones and auto-conversion if needed, 
+        // though modern fonts handle them, we can wrap them for styling)
+        const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
+        formatted = formatted.replace(emojiRegex, '<span class="ai-emoji">$1</span>');
+
+        // Line breaks
         formatted = formatted.replace(/\n/g, '<br>');
         return formatted;
     },

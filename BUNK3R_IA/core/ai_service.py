@@ -877,6 +877,8 @@ Mi objetivo es ser el colaborador más preciso."""
             response_success = False
             current_response_text = ""
             
+            logger.debug(f"Singularity: Loop agéntico paso {step}")
+            
             for provider in providers_to_try:
                 if not provider.is_available(): continue
                 try:
@@ -898,16 +900,21 @@ Mi objetivo es ser el colaborador más preciso."""
                 tool_json_str = tool_match.group(1).strip()
                 if "```" in tool_json_str: tool_json_str = tool_json_str.replace("```json", "").replace("```", "")
                 
+                logger.info(f"Singularity: Detectada herramienta en paso {step}: {tool_json_str[:100]}...")
+                
                 try:
                     tool_call = json.loads(tool_json_str)
                     tool_output = self._call_tool(tool_call.get("name"), tool_call.get("args", {}))
                 except Exception as e:
-                    tool_output = f"[SYSTEM ERROR] JSON inválido: {e}"
+                    tool_output = f"[SYSTEM ERROR] JSON o Tool inválido: {e}"
                 
                 conversation.append({"role": "assistant", "content": current_response_text})
                 conversation.append({"role": "user", "content": f"[SISTEMA] Resultado de herramienta: {tool_output}"})
+                # Volvemos a empezar el loop con la nueva info
                 continue 
             else:
+                # Si no hay herramientas o llegamos al límite, devolvemos el texto final
+                logger.debug("Singularity: Fin del loop (no más herramientas o límite alcanzado).")
                 return current_response_text
         return "Max steps reached."
     
