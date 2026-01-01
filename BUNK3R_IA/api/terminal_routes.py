@@ -4,7 +4,7 @@ import shlex
 import logging
 from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_required
-from BUNK3R_IA.core.context_manager import ContextManager
+from BUNK3R_IA.core.legacy_v1_archive.context_manager import ContextManager
 
 logger = logging.getLogger(__name__)
 terminal_bp = Blueprint('terminal', __name__, url_prefix='/api/terminal')

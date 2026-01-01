@@ -152,6 +152,7 @@ class GravityCore:
             for bug in open_bugs:
                 # 2. ACTIVAR PROTECCIÓN MÁXIMA (Sandbox forzado para autonomía)
                 nervous_system.sandbox_mode = True
+                logger.info(f"🛡️ GRAVITY PROTECT: MODO SANDBOX ACTIVADO para {bug.error_pattern}")
                 
                 # 3. Pedir a la Singularidad que resuelva el bug
                 prompt = f"MODO AUTÓNOMO: Analiza y propón una solución real para este error registrado:\nPATTERN: {bug.error_pattern}\nCONTEXT: {bug.error_context}"

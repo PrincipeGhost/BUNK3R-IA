@@ -1,77 +1,36 @@
-# BUNK3R IA Core - Motor principal de IA
+# BUNK3R IA Core - Motor de Singularidad Unificado (Gravity v3)
+import sys
+import importlib
 
-# Servicios principales
+# --- PUENTE DE COMPATIBILIDAD GHOST (Gravity v2 -> v3) ---
+# Redirigir módulos antiguos internos al archivo para no romper imports absolutos.
+legacy_modules = [
+    'database', 'workers', 'automation', 'gravity', 'ai_constructor', 
+    'ai_core_engine', 'ai_flow_logger', 'ai_project_context', 'ai_toolkit',
+    'web_search_service', 'live_preview', 'context_manager'
+]
+
+for mod in legacy_modules:
+    old_path = f"BUNK3R_IA.core.{mod}"
+    new_path = f"BUNK3R_IA.core.legacy_v1_archive.{mod}"
+    if old_path not in sys.modules:
+        try:
+            # Alias dinámico en el registro de módulos de Python
+            sys.modules[old_path] = importlib.import_module(new_path)
+        except Exception:
+            pass
+
+# LOS 3 NÚCLEOS MAESTROS
+from .singularity import singularity, Singularity
+from .nervous_system import nervous_system, NervousSystem
+from .gravity_core import gravity_core, GravityCore
+
+# Interfaz de Servicio
 from .ai_service import AIService, get_ai_service
-from .ai_constructor import AIConstructorService
-from .ai_core_engine import AICoreOrchestrator, AIDecisionEngine, IntentType, Intent
-from .ai_flow_logger import AIFlowLogger, flow_logger
-from .ai_project_context import AIProjectContext
-from .ai_toolkit import AIFileToolkit, AICommandExecutor, AIErrorDetector, AIProjectAnalyzer
-
-# Nuevos componentes (34.3 - 34.19)
-from .output_verifier import OutputVerifier, output_verifier, verify_code, quick_validate as quick_validate_code
-from .clarification_manager import ClarificationManager, clarification_manager, needs_clarification, generate_clarification_questions
-from .plan_presenter import PlanPresenter, plan_presenter, create_plan, format_plan
-from .smart_retry import SmartRetrySystem, smart_retry, RetryConfig, RetryStrategy
-from .pre_execution_validator import PreExecutionValidator, pre_execution_validator, validate_action
-
-# Integración LLM (34.7)
-from .llm_phase_integrator import LLMPhaseIntegrator, llm_integrator, execute_phase, run_pipeline, ConstructorPhase, PhaseResult
-
-# Búsqueda Web (34.A.1)
-from .web_search_service import WebSearchService, web_search_service, SearchType, ContentFilter, SearchResult, SearchResponse
 
 __all__ = [
-    # Servicios principales
-    'AIService',
-    'get_ai_service',
-    'AIConstructorService',
-    'AICoreOrchestrator',
-    'AIDecisionEngine',
-    'IntentType',
-    'Intent',
-    'AIFlowLogger',
-    'flow_logger',
-    'AIProjectContext',
-    'AIFileToolkit',
-    'AICommandExecutor',
-    'AIErrorDetector',
-    'AIProjectAnalyzer',
-    
-    # Nuevos componentes
-    'OutputVerifier',
-    'output_verifier',
-    'verify_code',
-    'quick_validate_code',
-    'ClarificationManager',
-    'clarification_manager',
-    'needs_clarification',
-    'generate_clarification_questions',
-    'PlanPresenter',
-    'plan_presenter',
-    'create_plan',
-    'format_plan',
-    'SmartRetrySystem',
-    'smart_retry',
-    'RetryConfig',
-    'RetryStrategy',
-    'PreExecutionValidator',
-    'pre_execution_validator',
-    'validate_action',
-    
-    # Integración LLM (34.7)
-    'LLMPhaseIntegrator',
-    'llm_integrator',
-    'execute_phase',
-    'run_pipeline',
-    'ConstructorPhase',
-    'PhaseResult',
-    
-    # Búsqueda Web (34.A.1)
-    'WebSearchService',
-    'web_search_service',
-    'SearchType',
-    'ContentFilter',
-    'SearchResult',
-    'SearchResponse',
+    'singularity', 'Singularity',
+    'nervous_system', 'NervousSystem',
+    'gravity_core', 'GravityCore',
+    'AIService', 'get_ai_service'
 ]

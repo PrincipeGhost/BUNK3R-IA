@@ -148,7 +148,7 @@ def create_app(config_class=None):
     @app.route('/preview/<session_id>')
     def serve_preview(session_id):
         """Serve generated HTML preview"""
-        from BUNK3R_IA.core.live_preview import live_preview
+        from BUNK3R_IA.core.legacy_v1_archive.live_preview import live_preview
         
         safe_session = ''.join(c for c in session_id if c.isalnum() or c in '-_')
         

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 import os
-from BUNK3R_IA.core.database.manager import manager
-from BUNK3R_IA.core.workers.queue_manager import queue_manager
+from BUNK3R_IA.core.legacy_v1_archive.database.manager import manager
+from BUNK3R_IA.core.legacy_v1_archive.workers.queue_manager import queue_manager
 
 projects_bp = Blueprint('projects', __name__, url_prefix='/api/projects')
 
