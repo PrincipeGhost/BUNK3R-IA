@@ -1715,6 +1715,14 @@ AIChat.hookNavigation = function () {
 AIChat.streamingEnabled = true;
 AIChat.currentEventSource = null;
 
+// ========================
+// REEMPLAZO: STREAMING POR WEBSOCKET (Fase 1)
+// Reemplaza desde `AIChat.streamingEnabled = true;` hasta el final del archivo
+// ========================
+
+AIChat.streamingEnabled = true;
+AIChat.currentEventSource = null; // ahora guardará el WebSocket
+
 AIChat.sendStreamingMessage = async function (message) {
     if (!this.streamingEnabled) {
         return this.sendConstructorMessage(message);
@@ -1749,26 +1757,46 @@ AIChat.sendStreamingMessage = async function (message) {
     let fullContent = '';
 
     try {
-        const userId = 'anonymous';
-        const url = `/api/ai/chat/stream?user_id=${encodeURIComponent(userId)}&message=${encodeURIComponent(message)}`;
+        const userId = this.currentSession?.user_id || 'anonymous';
+        // Ajusta el puerto si tu backend corre en otro puerto
+        const wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const host = location.hostname || 'localhost';
+        const port = '8000'; // <- CAMBIA SI NECESITAS OTRO PUERTO
+        const wsUrl = `${wsProto}${host}:${port}/api/ai/stream`;
 
-        this.currentEventSource = new EventSource(url);
+        this.devLog('[AI-WS] Conectando a', wsUrl);
 
-        this.currentEventSource.onmessage = (event) => {
+        // Si ya hay una conexión previa abierta, ciérrala
+        if (this.currentEventSource) {
+            try { this.closeEventSource(); } catch (_) { /* ignore */ }
+        }
+
+        const ws = new WebSocket(wsUrl);
+        this.currentEventSource = ws; // guardamos la WebSocket para cierre desde otras partes
+
+        ws.addEventListener('open', () => {
+            this.devLog('[AI-WS] conectado, enviando payload...');
+            const payload = {
+                messages: [{ role: 'user', content: message }],
+                session_id: this.currentSession ? (this.currentSession.id || null) : null
+            };
+            ws.send(JSON.stringify(payload));
+        });
+
+        ws.addEventListener('message', (ev) => {
             try {
-                const data = JSON.parse(event.data);
-
-                switch (data.type) {
+                const obj = JSON.parse(ev.data);
+                switch (obj.type) {
                     case 'start':
-                        this.devLog('Streaming started:', data.metadata);
-                        const indicator = this.getProviderIndicator();
-                        if (indicator && data.metadata?.provider) {
-                            indicator.innerHTML = `<span class="provider-label">${data.metadata.provider}</span>`;
+                        this.devLog('Streaming started:', obj);
+                        if (obj.metadata && obj.metadata.provider) {
+                            const indicator = this.getProviderIndicator();
+                            if (indicator) indicator.innerHTML = `<span class="provider-label">${this.escapeHtml(obj.metadata.provider)}</span>`;
                         }
                         break;
 
                     case 'token':
-                        fullContent += data.data;
+                        fullContent += obj.data;
                         contentEl.innerHTML = this.formatMessage(fullContent) + '<span class="ai-cursor"></span>';
                         container.scrollTop = container.scrollHeight;
                         break;
@@ -1778,42 +1806,56 @@ AIChat.sendStreamingMessage = async function (message) {
                         msgDiv.classList.remove('ai-streaming');
                         msgDiv.id = '';
                         this.messages.push({ role: 'assistant', content: fullContent });
-                        this.closeEventSource();
+                        try { ws.close(); } catch (_) {}
+                        this.currentEventSource = null;
                         this.finishStreamingUI();
                         break;
 
                     case 'error':
-                        contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(data.data)}</span>`;
+                        contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(obj.data || 'Error')}</span>`;
                         msgDiv.classList.remove('ai-streaming');
-                        this.closeEventSource();
+                        try { ws.close(); } catch (_) {}
+                        this.currentEventSource = null;
                         this.finishStreamingUI();
                         break;
 
                     case 'metadata':
-                        this.devLog('Streaming metadata:', data);
+                        this.devLog('Streaming metadata:', obj);
+                        break;
+
+                    default:
+                        this.devLog('Unrecognized WS message type:', obj);
                         break;
                 }
             } catch (e) {
-                console.error('Error parsing SSE:', e);
+                console.error('Error parsing WS message:', e, ev.data);
             }
-        };
+        });
 
-        this.currentEventSource.onerror = (error) => {
-            console.error('SSE error:', error);
-            if (fullContent) {
+        ws.addEventListener('close', (ev) => {
+            this.devLog('[AI-WS] cerrado', ev);
+            if (fullContent && msgDiv.classList.contains('ai-streaming')) {
                 contentEl.innerHTML = this.formatMessage(fullContent);
                 this.messages.push({ role: 'assistant', content: fullContent });
+                this.finishStreamingUI();
             } else {
-                contentEl.innerHTML = '<span class="ai-error">Error de conexion</span>';
+                this.finishStreamingUI();
             }
+            this.currentEventSource = null;
+        });
+
+        ws.addEventListener('error', (err) => {
+            console.error('[AI-WS] error', err);
+            contentEl.innerHTML = `<span class="ai-error">Error de conexión</span>`;
             msgDiv.classList.remove('ai-streaming');
-            this.closeEventSource();
+            try { ws.close(); } catch (_) {}
+            this.currentEventSource = null;
             this.finishStreamingUI();
-        };
+        });
 
     } catch (error) {
         console.error('Streaming error:', error);
-        contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(error.message)}</span>`;
+        contentEl.innerHTML = `<span class="ai-error">Error: ${this.escapeHtml(error.message || String(error))}</span>`;
         msgDiv.classList.remove('ai-streaming');
         this.isLoading = false;
         const send = this.getSendButton();
@@ -1822,8 +1864,24 @@ AIChat.sendStreamingMessage = async function (message) {
 };
 
 AIChat.closeEventSource = function () {
-    if (this.currentEventSource) {
-        this.currentEventSource.close();
+    try {
+        const es = this.currentEventSource;
+        if (!es) return;
+
+        // Si es WebSocket
+        if (typeof WebSocket !== 'undefined' && es instanceof WebSocket) {
+            try {
+                if (es.readyState === WebSocket.OPEN || es.readyState === WebSocket.CONNECTING) {
+                    es.close();
+                }
+            } catch (e) { /* ignore */ }
+        } else {
+            // Fallback: si era EventSource
+            try {
+                if (typeof es.close === 'function') es.close();
+            } catch (e) { /* ignore */ }
+        }
+    } finally {
         this.currentEventSource = null;
     }
 };
@@ -1866,8 +1924,9 @@ AIChat.sendQuickStreamMessage = async function (message) {
     this.appendMessage('user', message);
     await this.sendStreamingMessage(message);
 };
+
 // Exportar para que sea accesible desde otros scripts
 if (typeof window !== 'undefined') {
     window.AIChat = AIChat;
-    console.log('[AI-LOG] AIChat exported to window');
+    console.log('[AI-LOG] AIChat exported to window (WS)');
 }
