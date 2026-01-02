@@ -27,6 +27,8 @@ from BUNK3R_IA.api.terminal_routes import terminal_bp
 from BUNK3R_IA.api.repo_manager import repo_mgr_bp
 from BUNK3R_IA.api.preview_routes import preview_bp
 from BUNK3R_IA.api.extension_routes import extension_bp
+from BUNK3R_IA.api.ide_routes import ide_bp
+from BUNK3R_IA.api.github_sync_routes import github_sync_bp
 from BUNK3R_IA.models import db
 from BUNK3R_IA.replit_auth import login_manager, require_login
 
@@ -73,6 +75,8 @@ def create_app(config_class=None):
     app.register_blueprint(repo_mgr_bp)
     app.register_blueprint(preview_bp)
     app.register_blueprint(extension_bp)
+    app.register_blueprint(ide_bp)
+    app.register_blueprint(github_sync_bp)
     
     @app.before_request
     def make_session_permanent():
@@ -118,6 +122,11 @@ def create_app(config_class=None):
         if not current_user.is_authenticated:
             return render_template('login.html')
         return render_template('workspace.html')
+    
+    @app.route('/ide')
+    def ide():
+        """Premium IDE interface"""
+        return render_template('ide.html')
     
     @app.route('/quick-login', methods=['POST'])
     def quick_login():

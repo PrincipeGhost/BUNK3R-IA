@@ -122,3 +122,19 @@ class ProjectGraph(db.Model):
     imports = db.Column(db.JSON) # Lista de archivos que importa
     exports = db.Column(db.JSON) # Funciones/Clases que exporta
     last_scanned = db.Column(db.DateTime, default=datetime.utcnow)
+
+class GitHubRepo(db.Model):
+    """Repositorios de GitHub sincronizados del usuario."""
+    __tablename__ = 'github_repos'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey(User.id), nullable=False)
+    repo_name = db.Column(db.String(255), nullable=False)  # ej: "PrincipeGhost/tracking_correos"
+    local_path = db.Column(db.String(500), nullable=False)
+    last_synced = db.Column(db.DateTime, nullable=True)
+    sync_status = db.Column(db.String(20), default='pending')  # pending, syncing, ready, error
+    commit_hash = db.Column(db.String(40), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship(User, backref='github_repos')
+    
+    __table_args__ = (UniqueConstraint('user_id', 'repo_name', name='uq_user_repo'),)
