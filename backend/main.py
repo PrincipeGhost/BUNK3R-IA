@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import asyncio
-from core.ai_service import AiService
+from backend.core.ai_service import AiService
 
 app = FastAPI(title="BUNK3R-IA - Minimal AI Backend (Phase 1)")
 
