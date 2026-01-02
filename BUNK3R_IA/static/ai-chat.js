@@ -1712,12 +1712,8 @@ AIChat.hookNavigation = function () {
     }
 };
 
-AIChat.streamingEnabled = true;
-AIChat.currentEventSource = null;
-
 // ========================
 // REEMPLAZO: STREAMING POR WEBSOCKET (Fase 1)
-// Reemplaza desde `AIChat.streamingEnabled = true;` hasta el final del archivo
 // ========================
 
 AIChat.streamingEnabled = true;
@@ -1757,7 +1753,6 @@ AIChat.sendStreamingMessage = async function (message) {
     let fullContent = '';
 
     try {
-        const userId = this.currentSession?.user_id || 'anonymous';
         // Ajusta el puerto si tu backend corre en otro puerto
         const wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
         const host = location.hostname || 'localhost';
@@ -1837,11 +1832,9 @@ AIChat.sendStreamingMessage = async function (message) {
             if (fullContent && msgDiv.classList.contains('ai-streaming')) {
                 contentEl.innerHTML = this.formatMessage(fullContent);
                 this.messages.push({ role: 'assistant', content: fullContent });
-                this.finishStreamingUI();
-            } else {
-                this.finishStreamingUI();
             }
             this.currentEventSource = null;
+            this.finishStreamingUI();
         });
 
         ws.addEventListener('error', (err) => {
@@ -1868,7 +1861,6 @@ AIChat.closeEventSource = function () {
         const es = this.currentEventSource;
         if (!es) return;
 
-        // Si es WebSocket
         if (typeof WebSocket !== 'undefined' && es instanceof WebSocket) {
             try {
                 if (es.readyState === WebSocket.OPEN || es.readyState === WebSocket.CONNECTING) {
@@ -1876,7 +1868,6 @@ AIChat.closeEventSource = function () {
                 }
             } catch (e) { /* ignore */ }
         } else {
-            // Fallback: si era EventSource
             try {
                 if (typeof es.close === 'function') es.close();
             } catch (e) { /* ignore */ }
