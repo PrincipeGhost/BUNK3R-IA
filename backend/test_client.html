@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>BUNK3R Phase1 - Test WS Client</title>
+  <style>
+    body{background:#0f1720;color:#cbd5e1;font-family:sans-serif;padding:20px}
+    #log{white-space:pre-wrap;border:1px solid #263240;padding:10px;background:#071122;min-height:200px}
+    button{padding:8px 12px;margin-top:8px}
+  </style>
+</head>
+<body>
+  <h2>Test WS streaming - Phase 1</h2>
+  <div id="log"></div>
+  <br />
+  <button id="start">Conectar y stream</button>
+
+  <script>
+    const log = (t)=>{ document.getElementById('log').textContent += t + "\n"; }
+    document.getElementById('start').addEventListener('click', async ()=>{
+      const host = location.hostname || 'localhost';
+      const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + host + ':8000/api/ai/stream';
+      log("Conectando a " + wsUrl);
+      const ws = new WebSocket(wsUrl);
+      ws.addEventListener('open', ()=> {
+        log("Conexión abierta. Enviando mensaje inicial...");
+        ws.send(JSON.stringify({
+          messages: [
+            {role: "user", content: "Genera un resumen de la arquitectura."}
+          ],
+          session_id: "test123"
+        }));
+      });
+      ws.addEventListener('message', (ev) => {
+        try {
+          const obj = JSON.parse(ev.data);
+          if(obj.type === 'token') {
+            log("[TOKEN] " + obj.data);
+          } else if(obj.type === 'start') {
+            log("[START] " + (obj.data || ""));
+          } else if(obj.type === 'complete') {
+            log("[COMPLETE] " + (obj.data || ""));
+            ws.close();
+          } else if(obj.type === 'error') {
+            log("[ERROR] " + (obj.data || ""));
+          } else {
+            log("[MSG] " + ev.data);
+          }
+        } catch (e) {
+          log("[RAW] " + ev.data);
+        }
+      });
+      ws.addEventListener('close', ()=> log("WebSocket cerrado"));
+      ws.addEventListener('error', (e)=> log("WS error: " + e));
+    });
+  </script>
+</body>
+</html>
