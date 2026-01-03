@@ -27,3 +27,8 @@ flask-dance
 flask-login
 flask-sqlalchemy
 pyjwt
+fastapi
+uvicorn
+gunicorn
+pydantic
+playwright
