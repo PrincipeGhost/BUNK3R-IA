@@ -1,0 +1,199 @@
+.
+├── .gitignore
+├── BUNK3R_IA
+│   ├── BUNK3R_IA
+│   │   └── core
+│   │       └── database
+│   │           └── central.db
+│   ├── README.md
+│   ├── __init__.py
+│   ├── api
+│   │   ├── __init__.py
+│   │   ├── automation_routes.py
+│   │   ├── extension_routes.py
+│   │   ├── github_routes.py
+│   │   ├── github_sync.py
+│   │   ├── github_sync_routes.py
+│   │   ├── ide_routes.py
+│   │   ├── preview_routes.py
+│   │   ├── project_routes.py
+│   │   ├── repo_manager.py
+│   │   ├── routes.py
+│   │   └── terminal_routes.py
+│   ├── app_desktop.py
+│   ├── config.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── ai_service.py
+│   │   ├── antigravity_client.py
+│   │   ├── database
+│   │   │   └── central.db
+│   │   ├── gravity_core.py
+│   │   ├── legacy_v1_archive
+│   │   │   ├── ai_constructor.py
+│   │   │   ├── ai_core_engine.py
+│   │   │   ├── ai_flow_logger.py
+│   │   │   ├── ai_project_context.py
+│   │   │   ├── ai_toolkit.py
+│   │   │   ├── automation
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_bot.py
+│   │   │   │   ├── github_bot.py
+│   │   │   │   └── render_bot.py
+│   │   │   ├── clarification_manager.py
+│   │   │   ├── context_manager.py
+│   │   │   ├── database
+│   │   │   │   ├── central.db
+│   │   │   │   └── manager.py
+│   │   │   ├── graph.py
+│   │   │   ├── live_preview.py
+│   │   │   ├── llm_phase_integrator.py
+│   │   │   ├── memory.py
+│   │   │   ├── monitor.py
+│   │   │   ├── output_verifier.py
+│   │   │   ├── plan_presenter.py
+│   │   │   ├── pre_execution_validator.py
+│   │   │   ├── preferences.py
+│   │   │   ├── smart_retry.py
+│   │   │   ├── streaming_service.py
+│   │   │   ├── web_search_service.py
+│   │   │   └── workers
+│   │   │       ├── __init__.py
+│   │   │       ├── engine.py
+│   │   │       └── queue_manager.py
+│   │   ├── nervous_system.py
+│   │   ├── repo_indexer.py
+│   │   └── singularity.py
+│   ├── docs
+│   │   ├── BUNK3R_MASTER_PROMPT.md
+│   │   ├── PROMPT_PENDIENTES_BUNK3R.md
+│   │   ├── PROMPT_PENDIENTES_IA.md
+│   │   ├── analisis
+│   │   │   ├── ANALISIS_COMPLETO_IA.txt
+│   │   │   ├── ANALISIS_COMPLETO_IA_v2.txt
+│   │   │   ├── ARQUITECTURA_IA_FLUJO_COMPLETO.txt
+│   │   │   ├── AUDITORIA_IA.txt
+│   │   │   ├── CUESTIONARIO_DIAGNOSTICO_IA.txt
+│   │   │   ├── DIAGNOSTICO_IA.txt
+│   │   │   ├── FLUJO_ACTUAL_IA_PARTE1.txt
+│   │   │   ├── PRUEBAS_AI_CONSTRUCTOR.txt
+│   │   │   ├── RESUMEN_EJECUTIVO.txt
+│   │   │   └── SECCION_34_COMPONENTES_AVANZADOS.txt
+│   │   ├── arquitectura
+│   │   │   ├── ARQUITECTURA_IA_CONSTRUCTORA.txt
+│   │   │   ├── COMPONENTES_AVANZADOS_IA.txt
+│   │   │   └── FLUJO_ACTUAL_IA.txt
+│   │   ├── instrucciones
+│   │   │   ├── COMO_FUNCIONA_IA.txt
+│   │   │   ├── TAREAS_IA.txt
+│   │   │   └── TAREAS_PROMPT_INTERNO.txt
+│   │   ├── legacy
+│   │   │   ├── database_ai_tables.py
+│   │   │   └── models_ai_sql.py
+│   │   └── problemas
+│   │       ├── PROBLEMAS_MEJORAS_1.txt
+│   │       ├── PROBLEMAS_MEJORAS_2.txt
+│   │       └── PROBLEMAS_MEJORAS_3.txt
+│   ├── frontend
+│   │   ├── ai-chat.css
+│   │   └── ai-chat.js
+│   ├── instance
+│   │   └── central.db
+│   ├── main.py
+│   ├── models.py
+│   ├── prompts
+│   │   ├── bunkr_ai_v10_business_1765063771244.txt
+│   │   ├── bunkr_ai_v11_ux_1765063771244.txt
+│   │   ├── bunkr_ai_v12_hardware_1765063771243.txt
+│   │   ├── bunkr_ai_v13_quantum_1765063771242.txt
+│   │   ├── bunkr_ai_v14_education_1765063771241.txt
+│   │   ├── bunkr_ai_v15_singularity_1765063771238.txt
+│   │   ├── bunkr_ai_v3_expansion_1765063771249.txt
+│   │   ├── bunkr_ai_v4_expansion_1765063771249.txt
+│   │   ├── bunkr_ai_v5_expansion_1765063771248.txt
+│   │   ├── bunkr_ai_v6_metacognition_1765063771247.txt
+│   │   ├── bunkr_ai_v7_reasoning_1765063771247.txt
+│   │   ├── bunkr_ai_v8_team_1765063771246.txt
+│   │   ├── bunkr_ai_v9_datascience_1765063771245.txt
+│   │   ├── prompt_principal_1.txt
+│   │   ├── prompt_principal_2.txt
+│   │   └── prompt_principal_3.txt
+│   ├── replit_auth.py
+│   ├── requirements.txt
+│   ├── static
+│   │   ├── ai-chat.css
+│   │   ├── ai-chat.js
+│   │   ├── ai-chat.js.bak
+│   │   ├── debug-editor.css
+│   │   ├── ide.css
+│   │   └── ide.js
+│   ├── templates
+│   │   ├── ide.html
+│   │   ├── login.html
+│   │   └── workspace.html
+│   ├── test_ws.py
+│   ├── tests
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_integration.py
+│   │   ├── test_intent_parser.py
+│   │   ├── test_llm_phase_integrator.py
+│   │   ├── test_output_verifier.py
+│   │   ├── test_smart_retry.py
+│   │   ├── test_streaming_service.py
+│   │   └── test_web_search_service.py
+│   └── workspaces
+│       └── test_user_verification
+│           └── context_memory.json
+├── Dockerfile
+├── Procfile
+├── antigravity_bridge.py
+├── attached_assets
+│   ├── Pasted-PS-C-Users-Asus-cd-C-Users-Asus-Documents-Proyectos-Ant_1766007732486.txt
+│   ├── Pasted-PS-C-Users-Asus-cloudflared-tunnel-url-http-localhost-8_1766006988576.txt
+│   ├── Pasted-PS-C-Users-Asus-cloudflared-tunnel-url-http-localhost-8_1766008516962.txt
+│   ├── Pasted-PS-C-Users-Asus-pip-install-flask-flask-cors-pyautogui-_1766005231627.txt
+│   ├── Pasted-PS-C-Users-Asus-pip-install-flask-flask-cors-pyautogui-_1766005293169.txt
+│   ├── image_1765832605721.png
+│   ├── image_1765832734740.png
+│   ├── image_1765832925233.png
+│   ├── image_1765832956958.png
+│   ├── image_1766001373426.png
+│   ├── image_1766001729665.png
+│   ├── image_1766001806298.png
+│   ├── image_1766001869360.png
+│   ├── image_1766002036124.png
+│   ├── image_1766003561433.png
+│   ├── image_1766007508030.png
+│   ├── image_1766007590192.png
+│   ├── image_1766008665538.png
+│   ├── image_1766008737167.png
+│   ├── image_1766008982111.png
+│   └── image_1766009304399.png
+├── backend
+│   ├── core
+│   │   └── ai_service.py
+│   ├── main.py
+│   ├── requirements.txt
+│   └── test_client.html
+├── docs
+│   ├── BIBLIA_BUNK3R_IA.md
+│   ├── GRAVITY-CONNECT.md
+│   ├── ollama_guide.md
+│   ├── ollama_persistent_setup.md
+│   └── replit.md
+├── entrypoint.sh
+├── estructura.txt
+├── instance
+│   └── central.db
+├── logs
+├── pyproject.toml
+├── reg_brain.ps1
+├── render.yaml
+├── requirements.txt
+├── runtime.txt
+├── scripts
+├── tunnel_log.txt
+└── uv.lock
+
+31 directories, 166 files
