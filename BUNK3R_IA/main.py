@@ -322,6 +322,10 @@ def init_database(database_url=None):
         logger.error(f"Critical Error: Failed to initialize any database: {e}")
         return None
 
+# Gunicorn entrypoint (WSGI)
+app = create_app()
+
+
 def main():
     """Punto de entrada principal"""
     config = get_config()
@@ -344,5 +348,7 @@ def main():
     
     app.run(host=host, port=port, debug=debug)
 
+
 if __name__ == '__main__':
     main()
+

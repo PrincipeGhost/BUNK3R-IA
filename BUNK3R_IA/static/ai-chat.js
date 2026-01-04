@@ -1720,44 +1720,13 @@ AIChat.streamingEnabled = true;
 AIChat.currentEventSource = null; // ahora guardará el WebSocket
 
 AIChat.sendStreamingMessage = async function (message) {
-    if (!this.streamingEnabled) {
-        return this.sendConstructorMessage(message);
-    }
-
-    let container = this.getMessagesContainer();
-    if (!container) {
-        container = document.getElementById('ai-chat-messages');
-        if (!container) {
-            this.devLog('Streaming: No message container, falling back to constructor');
-            return this.sendConstructorMessage(message);
-        }
-    }
-
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'ai-message ai-message-assistant ai-streaming';
-    msgDiv.id = 'ai-streaming-response';
-    msgDiv.innerHTML = `
-        <div class="ai-avatar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20">
-                <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-1v1a4 4 0 0 1-8 0v-1H7a3 3 0 0 1-3-3v-2a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"></path>
-            </svg>
-        </div>
-        <div class="ai-bubble ai-streaming-content">
-            <span class="ai-cursor"></span>
-        </div>
-    `;
-    container.appendChild(msgDiv);
-    container.scrollTop = container.scrollHeight;
-
+    const msgDiv = this.appendMessage('assistant', '');
     const contentEl = msgDiv.querySelector('.ai-streaming-content');
     let fullContent = '';
 
     try {
-        // Ajusta el puerto si tu backend corre en otro puerto
-        const wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const host = location.hostname || 'localhost';
-        const port = '8000'; // <- CAMBIA SI NECESITAS OTRO PUERTO
-        const wsUrl = `${wsProto}${host}:${port}/api/ai/stream`;
+        // URL de tu backend en Render
+        const wsUrl = `wss://bunk3r-ia.onrender.com/api/ai/stream`;
 
         this.devLog('[AI-WS] Conectando a', wsUrl);
 
@@ -1793,7 +1762,7 @@ AIChat.sendStreamingMessage = async function (message) {
                     case 'token':
                         fullContent += obj.data;
                         contentEl.innerHTML = this.formatMessage(fullContent) + '<span class="ai-cursor"></span>';
-                        container.scrollTop = container.scrollHeight;
+                        contentEl.parentElement.scrollTop = contentEl.parentElement.scrollHeight;
                         break;
 
                     case 'complete':
@@ -1855,69 +1824,3 @@ AIChat.sendStreamingMessage = async function (message) {
         if (send) send.disabled = false;
     }
 };
-
-AIChat.closeEventSource = function () {
-    try {
-        const es = this.currentEventSource;
-        if (!es) return;
-
-        if (typeof WebSocket !== 'undefined' && es instanceof WebSocket) {
-            try {
-                if (es.readyState === WebSocket.OPEN || es.readyState === WebSocket.CONNECTING) {
-                    es.close();
-                }
-            } catch (e) { /* ignore */ }
-        } else {
-            try {
-                if (typeof es.close === 'function') es.close();
-            } catch (e) { /* ignore */ }
-        }
-    } finally {
-        this.currentEventSource = null;
-    }
-};
-
-AIChat.finishStreamingUI = function () {
-    this.isLoading = false;
-
-    const send = this.getSendButton();
-    if (send) send.disabled = false;
-
-    const input = this.getInput();
-    if (input) {
-        input.disabled = false;
-        input.focus();
-    }
-
-    const indicator = this.getProviderIndicator();
-    if (indicator) {
-        indicator.innerHTML = '';
-    }
-
-    this.devLog('Streaming finished, UI reset');
-};
-
-AIChat.toggleStreaming = function (enabled) {
-    this.streamingEnabled = enabled;
-    this.devLog('Streaming', enabled ? 'enabled' : 'disabled');
-};
-
-AIChat.sendQuickStreamMessage = async function (message) {
-    const input = this.getInput();
-    const send = this.getSendButton();
-
-    if (this.isLoading) return;
-
-    this.isLoading = true;
-    if (input) input.value = '';
-    if (send) send.disabled = true;
-
-    this.appendMessage('user', message);
-    await this.sendStreamingMessage(message);
-};
-
-// Exportar para que sea accesible desde otros scripts
-if (typeof window !== 'undefined') {
-    window.AIChat = AIChat;
-    console.log('[AI-LOG] AIChat exported to window (WS)');
-}
