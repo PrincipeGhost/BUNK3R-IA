@@ -1,0 +1,1360 @@
+"""
+AI Service - Multi-provider AI chat service with automatic fallback
+Supports: DeepSeek, Groq, Google Gemini, Cerebras, Hugging Face
+All providers offer free tiers
+"""
+
+import os
+import json
+import logging
+import time
+from datetime import datetime
+from typing import Optional, Dict, List, Any, Union
+from abc import ABC, abstractmethod
+from backend.models import db, ModelBenchmark # Import db for bench
+
+logger = logging.getLogger(__name__)
+
+# Global variable to store database manager
+db_manager = None
+
+# NÚCLEO SINGULARIDAD (Gravity v3)
+from core.singularity import singularity
+from core.nervous_system import nervous_system
+from core.gravity_core import gravity_core
+
+try:
+    # Intento de cargar legacy if needed, but primary is Singularity
+    from core.legacy_v1_archive.ai_flow_logger import flow_logger
+except ImportError:
+    flow_logger = None
+
+class AIProvider(ABC):
+    """Base class for AI providers"""
+    
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.name = "base"
+        self.available = bool(api_key)
+    
+    @abstractmethod
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        """Send chat request and return response"""
+        pass
+    
+    def is_available(self) -> bool:
+        return self.available
+
+
+class DeepSeekV32Provider(AIProvider):
+    """DeepSeek V3.2 via Hugging Face - Main AI Model"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "deepseek-v3.2"
+        self.model = "deepseek-ai/DeepSeek-V3.2"
+        self.base_url = "https://router.huggingface.co/hf"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            prompt = ""
+            if system_prompt:
+                prompt = f"<|system|>\n{system_prompt}<|end|>\n"
+            
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "user":
+                    prompt += f"<|user|>\n{content}<|end|>\n"
+                elif role == "assistant":
+                    prompt += f"<|assistant|>\n{content}<|end|>\n"
+            
+            prompt += "<|assistant|>\n"
+            
+            response = requests.post(
+                f"{self.base_url}/{self.model}",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json={
+                    "inputs": prompt,
+                    "parameters": {
+                        "max_new_tokens": 4096,
+                        "temperature": 0.75,
+                        "top_p": 0.92,
+                        "return_full_text": False,
+                        "do_sample": True,
+                        "repetition_penalty": 1.1
+                    }
+                },
+                timeout=180
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    text = result[0].get("generated_text", "")
+                    return {"success": True, "response": text, "provider": self.name}
+                return {"success": False, "error": "Invalid response format", "provider": self.name}
+            elif response.status_code == 503:
+                return {"success": False, "error": "Model is loading, please wait", "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}: {response.text}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"DeepSeek V3.2 error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class HuggingFaceProvider(AIProvider):
+    """Hugging Face Inference API - Free tier ~1000 req/day"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "huggingface"
+        self.model = "meta-llama/Meta-Llama-3-8B-Instruct"
+        self.base_url = "https://router.huggingface.co/hf"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            prompt = ""
+            if system_prompt:
+                prompt = f"<|system|>\n{system_prompt}</s>\n"
+            
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "user":
+                    prompt += f"<|user|>\n{content}</s>\n"
+                elif role == "assistant":
+                    prompt += f"<|assistant|>\n{content}</s>\n"
+            
+            prompt += "<|assistant|>\n"
+            
+            response = requests.post(
+                f"{self.base_url}/{self.model}",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json={
+                    "inputs": prompt,
+                    "parameters": {
+                        "max_new_tokens": 1024,
+                        "temperature": 0.7,
+                        "return_full_text": False
+                    }
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    text = result[0].get("generated_text", "")
+                    return {"success": True, "response": text, "provider": self.name}
+                return {"success": False, "error": "Invalid response format", "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"HuggingFace error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class GroqProvider(AIProvider):
+    """Groq API - Free tier, very fast inference - Using Llama 3.3 70B"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "groq"
+        self.model = "llama-3.3-70b-versatile"
+        self.base_url = "https://api.groq.com/openai/v1/chat/completions"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            chat_messages.extend(messages)
+            
+            response = requests.post(
+                self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "temperature": 0.7,
+                    "max_tokens": 8192
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Groq error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class GeminiProvider(AIProvider):
+    """Google Gemini API - Using Gemini 2.0 Flash for speed and quality"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "gemini"
+        self.model = "gemini-2.0-flash"
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            contents = []
+            for msg in messages:
+                role = "user" if msg.get("role") == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": msg.get("content", "")}]
+                })
+            
+            payload = {"contents": contents}
+            
+            if system_prompt:
+                payload["systemInstruction"] = {"parts": [{"text": system_prompt}]}
+            
+            payload["generationConfig"] = {
+                "temperature": 0.7,
+                "maxOutputTokens": 8192
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/{self.model}:generateContent?key={self.api_key}",
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                logger.info(f"Gemini raw response: {result}")
+                candidates = result.get("candidates", [])
+                if candidates:
+                    text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    return {"success": True, "response": text, "provider": self.name}
+                return {"success": False, "error": "No candidates in response", "provider": self.name}
+            else:
+                error_text = response.text
+                logger.error(f"Gemini HTTP {response.status_code}: {error_text}")
+                return {"success": False, "error": f"HTTP {response.status_code}: {error_text}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Gemini error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class CerebrasProvider(AIProvider):
+    """Cerebras API - Using Llama 3.3 70B for best reasoning"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "cerebras"
+        self.model = "llama-3.3-70b"
+        self.base_url = "https://api.cerebras.ai/v1/chat/completions"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            chat_messages.extend(messages)
+            
+            response = requests.post(
+                self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "temperature": 0.7,
+                    "max_tokens": 8192
+                },
+                timeout=90
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Cerebras error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class OpenAIProvider(AIProvider):
+    """OpenAI GPT API"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "openai"
+        self.model = "gpt-4o-mini"
+        self.base_url = "https://api.openai.com/v1/chat/completions"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            chat_messages.extend(messages)
+            
+            response = requests.post(
+                self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "temperature": 0.7,
+                    "max_tokens": 8192
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"OpenAI error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class BaiduProvider(AIProvider):
+    """Baidu Qianfan API"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "baidu"
+        self.model = "ernie-3.5-8k"
+        self.base_url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-3.5-8k"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            for msg in messages:
+                role = "user" if msg.get("role") == "user" else "assistant"
+                chat_messages.append({"role": role, "content": msg.get("content", "")})
+            
+            payload = {"messages": chat_messages}
+            
+            response = requests.post(
+                f"{self.base_url}?access_token={self.api_key}",
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("result", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Baidu error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class DeepSeekProvider(AIProvider):
+    """DeepSeek API - UPGRADED for better reasoning with more tokens"""
+    
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.name = "deepseek"
+        self.model = "deepseek-chat"
+        self.base_url = "https://api.deepseek.com/chat/completions"
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            chat_messages.extend(messages)
+            
+            response = requests.post(
+                self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "temperature": 0.7,
+                    "max_tokens": 8192
+                },
+                timeout=120
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"DeepSeek error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class AntigravityBridgeProvider:
+    """Antigravity via Bridge - Uses Google Antigravity on user's PC"""
+    
+    def __init__(self):
+        from .antigravity_client import AntigravityProvider
+        self._provider = AntigravityProvider()
+        self.name = "antigravity"
+    
+    @property
+    def available(self) -> bool:
+        return self._provider.available
+    
+    def is_available(self) -> bool:
+        return self._provider.is_available()
+    
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        return self._provider.chat(messages, system_prompt) # type: ignore
+    
+    def refresh(self):
+        self._provider.refresh_availability()
+
+
+class OllamaProvider(AIProvider):
+    """Local Ollama API Provider - Running on user's PC"""
+    
+    def __init__(self, model: str = None, base_url: str = None):
+        super().__init__("local-ollama")
+        self.name = "ollama"
+        from backend.config import get_config
+        conf = get_config()
+        self.model = model or getattr(conf, 'OLLAMA_MODEL', 'llama3.2')
+        self.base_url = (base_url or getattr(conf, 'OLLAMA_BASE_URL', 'http://localhost:11434')).rstrip('/') + '/api/chat'
+        self.available = True # We check availability via health check
+    
+    def is_available(self) -> bool:
+        try:
+            import requests
+            
+            # Check for updated URL in DB (for multi-worker sync)
+            try:
+                from backend.models import GlobalSetting
+                db_url = GlobalSetting.get('OLLAMA_BASE_URL')
+                if db_url:
+                    new_base = db_url.rstrip('/') + '/api/chat'
+                    if new_base != self.base_url:
+                        self.base_url = new_base
+                        logger.info(f"OllamaProvider dynamic URL update: {self.base_url}")
+            except Exception as e:
+                logger.debug(f"Could not check DB for Ollama URL: {e}")
+
+            # Simple check to see if the server is up - using root to avoid 403 on API endpoints
+            check_url = self.base_url.replace("/api/chat", "/")
+            logger.debug(f"Checking Ollama health at: {check_url}")
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+                "Upgrade-Insecure-Requests": "1"
+            }
+            
+            try:
+                response = requests.get(check_url, timeout=5, headers=headers)
+                is_up = response.status_code in [200, 404] # 404 is still "up" (Ollama returns 404 on root)
+                if not is_up:
+                    logger.warning(f"Ollama health check returned {response.status_code} for {check_url}")
+                return is_up
+            except Exception as e:
+                logger.debug(f"Ollama health check failed: {e}")
+                return False
+        except Exception as e:
+            logger.debug(f"Ollama health check failed: {e}")
+            return False
+
+    def chat(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
+        try:
+            import requests
+            
+            chat_messages = []
+            if system_prompt:
+                chat_messages.append({"role": "system", "content": system_prompt})
+            
+            # Formatear mensajes para Ollama
+            for msg in messages:
+                chat_messages.append({
+                    "role": msg.get("role", "user"),
+                    "content": msg.get("content", "")
+                })
+            
+            response = requests.post(
+                self.base_url,
+                json={
+                    "model": self.model,
+                    "messages": chat_messages,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.7,
+                        "num_predict": 4096
+                    }
+                },
+                timeout=180
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                text = result.get("message", {}).get("content", "")
+                return {"success": True, "response": text, "provider": self.name}
+            else:
+                return {"success": False, "error": f"Ollama HTTP {response.status_code}", "provider": self.name}
+                
+        except Exception as e:
+            logger.error(f"Ollama error: {e}")
+            return {"success": False, "error": str(e), "provider": self.name}
+
+
+class AIService:
+    """
+    Multi-provider AI service with automatic fallback
+    Manages conversation history and persistence
+    BUNK3R AI - Sistema de IA Avanzado con Capacidades de los 15 Volumenes
+    """
+    
+    DEFAULT_SYSTEM_PROMPT = """# BUNK3R AI - Agente de Análisis de Código & Explorador de Repositorios
+
+Soy BUNK3R AI, un agente diseñado para ENTENDER y OPERAR sobre el código fuente real.
+
+## CAPACIDADES EXTENDIDAS
+- **Análisis de Código**: Leo y entiendo archivos locales.
+- **Gestión de Repositorios**: Puedo solicitar la clonación de repositorios de GitHub.
+- **Telemetría en Vivo**: Tengo acceso a los ojos del navegador (Extension).
+  - Los errores de consola y red aparecen en `context_memory`.
+  - Si el usuario dice "No funciona", REVISO PRIMERO la telemetría.
+  - Si el usuario usa "Ask BUNK3R" (Click Derecho), analizo el elemento HTML en `focus_item`.
+
+## PROTOCOLO DE ANÁLISIS DINÁMICO
+1. **LOCALIZACIÓN**: Si no sé dónde está la lógica, uso `search_code`.
+2. **EXPLORACIÓN**: Uso `list_dir` para ver estructuras.
+3. **CLONADO (NUEVO)**: Si el usuario menciona un repositorio de GitHub (ej: "analiza mi repo usuario/proyecto"), DEBO iniciar la clonación/apertura.
+   - **COMANDO**: Para clonar, respondo con el tag: `[CLONE=usuario/repositorio]`
+   - Ejemplo: "Entendido. Iniciando clonado... [CLONE=torvalds/linux]"
+4. **LECTURA CRÍTICA**: Leo archivos con `read_file`.
+5. **EJECUCIÓN**: Edito con `edit_file`.
+
+## REGLAS DE ORO
+- **No adivino**: Busco y leo primero.
+- **Tag de Clonado**: Si necesito un repo externo, USO EL TAG `[CLONE=user/repo]`.
+- **Contexto Real**: Baso mis respuestas en lo que leo.
+
+Mi objetivo es ser el colaborador más preciso."""
+
+    def __init__(self, db_manager=None):
+        logger.info(f"AIService starting init with db_manager={'available' if db_manager else 'None'}")
+        self.db_manager = db_manager
+        self.providers: List[AIProvider] = []
+        self.conversations: Dict[str, List[Dict]] = {}
+        
+        # Vincular con la Singularidad (Gravity v3)
+        singularity.ai = self
+
+    
+        # Priority 0: Local Ollama (The Brain)
+        try:
+            ollama_provider = OllamaProvider()
+            self.providers.append(ollama_provider)
+            logger.info("Ollama provider initialized (Priority 0 - The Brain)")
+        except Exception as e:
+            logger.warning(f"Could not initialize Ollama provider: {e}")
+
+        # Priority 1: Antigravity Bridge (free, unlimited, user's PC)
+        antigravity_url = os.environ.get('ANTIGRAVITY_BRIDGE_URL', 'http://localhost:8888')
+        if antigravity_url:
+            try:
+                antigravity_provider = AntigravityBridgeProvider()
+                if antigravity_provider.available:
+                    self.providers.append(antigravity_provider) # type: ignore
+                    logger.info("Antigravity Bridge provider initialized (Priority 1)")
+            except Exception as e:
+                logger.warning(f"Could not initialize Antigravity provider: {e}")
+        
+        # Priority 1: Groq (fast, reliable, Llama 3.3 70B)
+        groq_key = os.environ.get('GROQ_API_KEY', '')
+        if groq_key:
+            self.providers.append(GroqProvider(groq_key))
+            logger.info("Groq provider initialized (Priority 1)")
+        
+        # Priority 2: Cerebras (fast, Llama 3.3 70B)
+        cerebras_key = os.environ.get('CEREBRAS_API_KEY', '')
+        if cerebras_key:
+            self.providers.append(CerebrasProvider(cerebras_key))
+            logger.info("Cerebras provider initialized (Priority 2)")
+        
+        # Priority 3: OpenAI GPT
+        openai_key = os.environ.get('OPENAI_API_KEY', '')
+        if openai_key:
+            self.providers.append(OpenAIProvider(openai_key))
+            logger.info("OpenAI provider initialized (Priority 3)")
+
+        # Priority GitHub: GitHub Token for AI Constructor
+        github_token = os.environ.get('GITHUB_TOKEN', '')
+        if github_token:
+            logger.info("GitHub Token detected and ready for AI Constructor")
+        
+        # Priority 4: Gemini
+        gemini_key = os.environ.get('GEMINI_API_KEY', '')
+        if gemini_key:
+            self.providers.append(GeminiProvider(gemini_key))
+            logger.info("Gemini provider initialized (Priority 4)")
+        
+        # Priority 5: Baidu
+        baidu_key = os.environ.get('BAIDU_API_KEY', '')
+        if baidu_key:
+            self.providers.append(BaiduProvider(baidu_key))
+            logger.info("Baidu provider initialized (Priority 5)")
+        
+        # Fallback: DeepSeek API
+        deepseek_key = os.environ.get('DEEPSEEK_API_KEY', '')
+        if deepseek_key:
+            self.providers.append(DeepSeekProvider(deepseek_key))
+            logger.info("DeepSeek API provider initialized (Priority 6)")
+        
+        # Priority 7: HuggingFace Llama (fallback)
+        hf_key = os.environ.get('HUGGINGFACE_API_KEY', '')
+        if hf_key:
+            self.providers.append(HuggingFaceProvider(hf_key))
+            logger.info("HuggingFace Llama provider initialized (Priority 7)")
+        
+        if not self.providers:
+            logger.warning("No AI providers configured. Set API keys in environment variables.")
+    
+    def record_benchmark(self, provider_name: str, latency_ms: int, success: bool, task_type: str = "chat"):
+        """Registra el rendimiento de una petición."""
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                bench = ModelBenchmark(
+                    provider=provider_name,
+                    latency_ms=latency_ms,
+                    success=success,
+                    task_type=task_type
+                )
+                db.session.add(bench)
+                db.session.commit()
+        except Exception as e:
+            logger.error(f"Error recording benchmark: {e}")
+
+    def council_query(self, message: str, system_prompt: str, providers_count: int = 2) -> str:
+        """
+        Duelo de Modelos: Consulta a múltiples modelos y sintetiza la mejor respuesta.
+        Ideal para decisiones críticas.
+        """
+        logger.info(f"🧠 CONSEJO TÉCNICO ACTIVADO: Consultando a {providers_count} modelos...")
+        
+        # Seleccionar los mejores proveedores disponibles (excluyendo ollama que es el coordinador)
+        top_providers = [p for p in self.providers if p.name != "ollama" and p.is_available()][:providers_count]
+        
+        responses = []
+        for p in top_providers:
+            start = time.time()
+            res = p.chat([{"role": "user", "content": message}], system_prompt)
+            latency = int((time.time() - start) * 1000)
+            
+            if res.get("success"):
+                responses.append(f"--- Respuesta de {p.name} ---\n{res.get('response')}")
+                self.record_benchmark(p.name, latency, True, "council")
+            else:
+                self.record_benchmark(p.name, latency, False, "council")
+        
+        if not responses:
+            return "El consejo técnico falló: ningún modelo respondió."
+            
+        # Sintetizar con el Cerebro (Ollama) o el mejor disponible
+        synthesis_prompt = f"Actúa como el Árbitro Maestro BUNK3R. Tienes estas respuestas de diferentes modelos de IA sobre: '{message}'. Genera una solución técnica unificada, más robusta y sin errores, tomando lo mejor de cada una.\n\n" + "\n\n".join(responses)
+        
+        brain = next((p for p in self.providers if p.name == "ollama"), self.providers[0])
+        final_res = brain.chat([{"role": "user", "content": "Sintetiza el consejo técnico."}], synthesis_prompt)
+        
+        return final_res.get("response", responses[0]) # Fallback a la primera respuesta si falla la síntesis
+
+    def get_available_providers(self) -> List[str]:
+        """Get list of available provider names"""
+        return [p.name for p in self.providers if p.is_available()]
+    
+    def _detect_response_issues(self, response: str, original_message: str) -> Dict:
+        """
+        Detecta problemas en la respuesta de la IA que requieren auto-rectificación
+        
+        Returns:
+            Dict con 'needs_fix': bool y 'issues': lista de problemas detectados
+        """
+        issues = []
+        response_lower = response.lower().strip()
+        
+        if len(response) < 20:
+            issues.append("respuesta_muy_corta")
+        
+        incomplete_markers = [
+            "...", "continuará", "continua", "[continua", "(continua",
+            "etc etc", "y así", "y asi"
+        ]
+        if any(marker in response_lower[-100:] for marker in incomplete_markers):
+            issues.append("respuesta_incompleta")
+        
+        if response.count("```") % 2 != 0:
+            issues.append("codigo_sin_cerrar")
+        
+        error_phrases = [
+            "no puedo", "no tengo acceso", "como ia", "como modelo de lenguaje",
+            "no tengo la capacidad", "no me es posible"
+        ]
+        if any(phrase in response_lower[:200] for phrase in error_phrases):
+            if "?" in original_message.lower() or any(kw in original_message.lower() 
+                for kw in ["cómo", "como", "qué", "que", "ayuda", "help"]):
+                issues.append("rechazo_innecesario")
+        
+        confusion_markers = [
+            "no entiendo", "no está claro", "podrías aclarar", "podrias aclarar",
+            "no estoy seguro de qué", "no estoy seguro de que"
+        ]
+        if any(marker in response_lower for marker in confusion_markers):
+            if len(original_message) > 50:
+                issues.append("confusion_evitable")
+        
+        return {
+            "needs_fix": len(issues) > 0,
+            "issues": issues
+        }
+    
+    def _auto_git_push(self, change_desc: str):
+        """Sube cambios a GitHub automáticamente"""
+        try:
+            github_token = os.environ.get('GITHUB_TOKEN')
+            if not github_token:
+                logger.warning("Auto-Git: No GITHUB_TOKEN configured. Skipping push.")
+                return False
+                
+            repo_url = f"https://{github_token}@github.com/PrincipeGhost/BUNK3R-IA.git"
+            
+            # 1. Configurar identidad si falta (opcional, pero seguro)
+            self.command_executor.run_command("git config user.email 'bunk3r-ai@autonomous.system'")
+            self.command_executor.run_command("git config user.name 'BUNK3R AI'")
+            
+            # 2. Add
+            self.command_executor.run_command("git add .")
+            
+            # 3. Commit
+            commit_msg = f"AI Auto-Update: {change_desc} [{int(time.time())}]"
+            self.command_executor.run_command(f'git commit -m "{commit_msg}"')
+            
+            # 4. Push
+            res = self.command_executor.run_command(f"git push {repo_url} main")
+            
+            if res.get("success"):
+                logger.info("Auto-Git Push completado.")
+                return True
+            else:
+                logger.error(f"Auto-Git Push falló: {res.get('error') or res.get('stderr')}")
+                return False
+        except Exception as e:
+            logger.error(f"Excepción en Auto-Git Push: {e}")
+            return False
+
+    def _call_tool(self, tool_name: str, args: Dict) -> str:
+        """Puente hacia el Nervous System (Cuerpo Único)"""
+        try:
+            logger.info(f"Singularity: Pulsando herramienta -> {tool_name}")
+            
+            if tool_name == "read_file":
+                result = nervous_system.read(args.get("path"))
+            elif tool_name == "write_file":
+                result = nervous_system.write(args.get("path"), args.get("content"))
+            elif tool_name == "list_dir":
+                result = nervous_system.list(args.get("path", "."))
+            elif tool_name == "run_command":
+                result = nervous_system.execute(args.get("command"))
+            elif tool_name == "web_search":
+                result = nervous_system.research(args.get("query"))
+            else:
+                return f"Error: '{tool_name}' no existe en el NervousSystem."
+            
+            # Memoria de Preferencias (Gravity Core)
+            if tool_name == "write_file" and result["success"]:
+                gravity_core.update_preference("quote_style", "single" if "'" in args.get("content") else "double")
+
+            if result.get("success"):
+                return f"[TOOL SUCCESS]\n{json.dumps(result, indent=2)}"
+            else:
+                return f"[TOOL FAILED]\n{result.get('error')}"
+                
+        except Exception as e:
+            return f"[SINGULARITY EXCEPTION] {str(e)}"
+
+    def chat(self, user_id: str, message: str, system_prompt: Optional[str] = None, 
+             preferred_provider: Optional[str] = None, user_context: Optional[Dict] = None,
+             enable_auto_rectify: bool = True) -> Dict[str, Any]:
+        """
+        Entrada Principal unificada bajo el NÚCLEO SINGULARIDAD.
+        Inicia un ciclo Reflexivo (Inner Monologue) y evaluación de riesgo (Sandbox).
+        """
+        if not self.providers:
+            return {"success": False, "error": "No hay proveedores configurados.", "provider": None}
+
+        # 1. Obtener Historial y Contexto
+        conversation = self._get_conversation(user_id)
+        
+        system = system_prompt or self.DEFAULT_SYSTEM_PROMPT
+        if user_context:
+            system += self._build_user_context(user_context)
+
+        # 2. El Salto a la Singularidad (Gravity v3)
+        try:
+            # Singularity maneja el monólogo interno y decide si activar el Sandbox.
+            # Luego ejecuta el loop agéntico vía _internal_chat_loop.
+            result = singularity.solve(message, user_id, conversation, system)
+            
+            # Guardar la respuesta final en el historial
+            if result.get("success"):
+                conversation.append({"role": "user", "content": message})
+                conversation.append({"role": "assistant", "content": result.get("response")})
+                self._save_conversation(user_id, conversation)
+                
+            return result
+        except Exception as e:
+            logger.error(f"Error en el Pulso de la Singularidad: {e}")
+            # Fallback a chat estándar si la singularidad falla por alguna razón
+            conversation.append({"role": "user", "content": message})
+            response = self._internal_chat_loop(conversation, system)
+            return {"success": True, "response": response, "provider": "fallback"}
+
+    def _internal_chat_loop(self, conversation: List[Dict], system: str) -> str:
+        """Loop de ejecución agéntica interna. Reemplaza el antiguo bucle de AIService."""
+        MAX_TOOL_STEPS = 5
+        final_response = ""
+        
+        providers_to_try = self.providers.copy()
+        
+        for step in range(MAX_TOOL_STEPS + 1):
+            response_success = False
+            current_response_text = ""
+            
+            logger.debug(f"Singularity: Loop agéntico paso {step}")
+            
+            for provider in providers_to_try:
+                if not provider.is_available(): continue
+                try:
+                    result = provider.chat(conversation, system)
+                    if result.get("success") and result.get("response", "").strip():
+                        current_response_text = result.get("response", "")
+                        response_success = True
+                        break
+                except Exception as e:
+                    logger.debug(f"Provider {provider.name} fail in internal loop: {e}")
+            
+            if not response_success: return "Error: Todos los proveedores fallaron en el loop agéntico."
+            
+            # Detectar herramientas vía regex unificado
+            import re
+            tool_match = re.search(r'<TOOL>(.*?)</TOOL>', current_response_text, re.DOTALL)
+            
+            if tool_match and step < MAX_TOOL_STEPS:
+                tool_json_str = tool_match.group(1).strip()
+                if "```" in tool_json_str: tool_json_str = tool_json_str.replace("```json", "").replace("```", "")
+                
+                logger.info(f"Singularity: Detectada herramienta en paso {step}: {tool_json_str[:100]}...")
+                
+                try:
+                    tool_call = json.loads(tool_json_str)
+                    tool_output = self._call_tool(tool_call.get("name"), tool_call.get("args", {}))
+                except Exception as e:
+                    tool_output = f"[SYSTEM ERROR] JSON o Tool inválido: {e}"
+                
+                conversation.append({"role": "assistant", "content": current_response_text})
+                conversation.append({"role": "user", "content": f"[SISTEMA] Resultado de herramienta: {tool_output}"})
+                # Volvemos a empezar el loop con la nueva info
+                continue 
+            else:
+                # Si no hay herramientas o llegamos al límite, devolvemos el texto final
+                logger.debug("Singularity: Fin del loop (no más herramientas o límite alcanzado).")
+                return current_response_text
+        return "Max steps reached."
+    
+    def _build_user_context(self, user_context: Dict) -> str:
+        """Build context string based on user information"""
+        name = user_context.get("name", "Usuario")
+        is_owner = user_context.get("is_owner", False)
+        is_admin = user_context.get("is_admin", False)
+        
+        context = "\n\n[CONTEXTO DEL USUARIO]\n"
+        
+        if is_owner:
+            context += f"""Usuario: {name} (OWNER)
+Nivel: MAXIMO - Responde con detalle tecnico completo, ofrece sugerencias proactivas, tono de socio de confianza."""
+        elif is_admin:
+            context += f"""Usuario: {name} (ADMIN)
+Nivel: ALTO - Responde con detalle tecnico, enfocate en operaciones y soporte, tono profesional."""
+        else:
+            context += f"""Usuario: {name}
+Nivel: ESTANDAR - Responde claro y amigable, evita jerga tecnica, tono servicial."""
+        
+        return context + "\n"
+    
+    def _get_conversation(self, user_id: str) -> List[Dict]:
+        """Get conversation history for user"""
+        if user_id not in self.conversations:
+            if self.db_manager:
+                history = self._load_conversation_from_db(user_id)
+                self.conversations[user_id] = history
+            else:
+                self.conversations[user_id] = []
+        return self.conversations[user_id]
+    
+    def _save_conversation(self, user_id: str, conversation: List[Dict]):
+        """Save conversation to memory and database"""
+        self.conversations[user_id] = conversation
+        
+        if self.db_manager:
+            self._save_conversation_to_db(user_id, conversation)
+    
+    def _load_conversation_from_db(self, user_id: str) -> List[Dict]:
+        """Load conversation history from database"""
+        try:
+            if not self.db_manager:
+                return []
+            with self.db_manager.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT role, content FROM ai_chat_messages
+                        WHERE user_id = %s
+                        ORDER BY created_at ASC
+                        LIMIT 50
+                    """, (user_id,))
+                    rows = cur.fetchall()
+                    return [{"role": row[0], "content": row[1]} for row in rows]
+        except Exception as e:
+            logger.error(f"Error loading conversation from DB: {e}")
+            return []
+    
+    def _save_conversation_to_db(self, user_id: str, conversation: List[Dict]):
+        """Save latest messages to database"""
+        try:
+            if not self.db_manager or len(conversation) < 2:
+                return
+            
+            last_two = conversation[-2:]
+            
+            with self.db_manager.get_connection() as conn:
+                with conn.cursor() as cur:
+                    for msg in last_two:
+                        cur.execute("""
+                            INSERT INTO ai_chat_messages (user_id, role, content, created_at)
+                            VALUES (%s, %s, %s, %s)
+                        """, (user_id, msg["role"], msg["content"], datetime.now()))
+                conn.commit()
+        except Exception as e:
+            logger.error(f"Error saving conversation to DB: {e}")
+    
+    def clear_conversation(self, user_id: str) -> bool:
+        """Clear conversation history for user"""
+        try:
+            if user_id in self.conversations:
+                del self.conversations[user_id]
+            
+            if self.db_manager:
+                conn = self.db_manager.get_connection()
+                if conn:
+                    with conn as c:
+                        with c.cursor() as cur:
+                            cur.execute("DELETE FROM ai_chat_messages WHERE user_id = %s", (user_id,))
+                        c.commit()
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error clearing conversation: {e}")
+            return False
+    
+    def get_conversation_history(self, user_id: str, limit: int = 50) -> List[Dict]:
+        """Get conversation history for user"""
+        conversation = self._get_conversation(user_id)
+        return conversation[-limit:] if len(conversation) > limit else conversation
+    
+    def get_stats(self) -> Dict:
+        """Get AI service statistics"""
+        return {
+            "providers_available": self.get_available_providers(),
+            "total_providers": len(self.providers),
+            "active_conversations": len(self.conversations)
+        }
+    
+    def generate_code(self, user_id: str, message: str, current_files: Dict[str, str], 
+                      project_name: str) -> Dict:
+        """
+        Generate code for web projects based on user instructions.
+        Returns files to create/update and a response message.
+        """
+        if not self.providers:
+            return {
+                "success": False,
+                "error": "No hay proveedores de IA configurados.",
+                "provider": None
+            }
+        
+        files_context = ""
+        for filename, content in current_files.items():
+            preview = content[:500] + "..." if len(content) > 500 else content
+            files_context += f"\n--- {filename} ---\n{preview}\n"
+        
+        code_system_prompt = f"""
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                    BUNK3R CODE BUILDER - ELITE WEB ARCHITECT                  ║
+║         Generador de Interfaces Premium | Nivel Binance/Revolut/N26          ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+Eres BUNK3R Code Builder, un arquitecto de interfaces web de nivel ELITE.
+Tu trabajo es crear experiencias digitales que parezcan de startups valoradas en millones.
+Cada linea de codigo que generas debe reflejar calidad profesional Fintech/Neo-bank.
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 1: PROCESO DE PENSAMIENTO (OBLIGATORIO)
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES de generar codigo, SIEMPRE incluye un mini-blueprint en el campo "message":
+
+1. ENTIENDO: Que exactamente quiere el usuario?
+2. ESTRUCTURA: Que componentes/secciones necesito?
+3. DECISION: Por que elijo este enfoque?
+
+Esto demuestra tu proceso de razonamiento profesional.
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 2: FORMATO DE RESPUESTA OBLIGATORIO
+═══════════════════════════════════════════════════════════════════════════════
+
+Responde SIEMPRE en formato JSON valido:
+{{
+    "files": {{
+        "index.html": "<!DOCTYPE html>...",
+        "styles.css": "/* CSS completo */...",
+        "script.js": "// JS completo..."
+    }},
+    "message": "[BLUEPRINT] Entiendo que necesitas X. He creado Y componentes con Z enfoque. Justificacion: ..."
+}}
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 3: SISTEMA DE DISENO BUNK3R (OBLIGATORIO)
+═══════════════════════════════════════════════════════════════════════════════
+
+3.1 PALETA DE COLORES NEO-BANK:
+--bg-primary: #0B0E11 (fondo principal, ultra oscuro)
+--bg-secondary: #12161C (cards, modales)
+--bg-tertiary: #1E2329 (hover states)
+--bg-elevated: #2B3139 (elementos elevados)
+--accent-primary: #F0B90B (dorado principal)
+--accent-hover: #FCD535 (dorado hover)
+--accent-active: #D4A20B (dorado pressed)
+--text-primary: #FFFFFF
+--text-secondary: #848E9C
+--text-muted: #5E6673
+--success: #22C55E
+--error: #EF4444
+--warning: #F59E0B
+
+3.2 TIPOGRAFIA:
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+Headings: font-weight: 600-700, letter-spacing: -0.02em
+Body: font-weight: 400-500, line-height: 1.6
+Small: font-size: 0.875rem, line-height: 1.4
+
+3.3 EFECTOS PREMIUM (USAR SIEMPRE):
+- Glass morphism: backdrop-filter: blur(12px); background: rgba(18,22,28,0.85)
+- Sombras suaves: box-shadow: 0 8px 32px rgba(0,0,0,0.4)
+- Bordes sutiles: border: 1px solid rgba(255,255,255,0.08)
+- Transiciones: transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1)
+- Hover lift: transform: translateY(-2px)
+- Glow dorado: box-shadow: 0 0 24px rgba(240,185,11,0.25)
+- Gradientes: linear-gradient(135deg, #F0B90B 0%, #D4A20B 100%)
+
+3.4 COMPONENTES OBLIGATORIOS:
+- CARDS: border-radius: 16px; padding: 24px; hover con elevacion
+- BOTONES PRIMARIOS: background dorado, border-radius: 12px, font-weight: 600
+- BOTONES SECUNDARIOS: borde dorado, fondo transparente
+- INPUTS: fondo oscuro, borde sutil, focus con glow dorado
+- BADGES: pill shape, colores semanticos
+- ICONOS: SVG inline, stroke-width: 1.5, currentColor
+
+3.5 ANIMACIONES:
+@keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+@keyframes slideUp {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+@keyframes pulse {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.5; }} }}
+@keyframes shimmer {{ from {{ background-position: -200% 0; }} to {{ background-position: 200% 0; }} }}
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 4: ESTANDARES DE CODIGO
+═══════════════════════════════════════════════════════════════════════════════
+
+4.1 HTML5 SEMANTICO:
+- Estructura: header > nav > main > section > footer
+- Accesibilidad: aria-labels, roles, alt texts obligatorios
+- Meta tags: viewport, charset, description, theme-color
+
+4.2 CSS MODERNO:
+- Variables CSS en :root
+- Mobile-first con media queries
+- Flexbox y Grid como base
+- Animaciones con @keyframes
+- PROHIBIDO: !important, IDs para estilos, inline styles
+
+4.3 JAVASCRIPT ES6+:
+- const/let exclusivamente
+- Arrow functions
+- Template literals
+- Async/await para asincronía
+- Event delegation
+- Modulos cuando sea posible
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 5: CONTEXTO DEL PROYECTO
+═══════════════════════════════════════════════════════════════════════════════
+
+PROYECTO: {project_name}
+ARCHIVOS EXISTENTES:
+{files_context if files_context else "(Proyecto nuevo, crear desde cero)"}
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 6: REGLAS CRITICAS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. CODIGO COMPLETO: Nunca fragmentos, siempre archivos completos y funcionales
+2. CALIDAD VISUAL: Cada pixel debe parecer de app de millones de dolares
+3. RESPONSIVE: Funciona perfectamente en mobile, tablet y desktop
+4. ACCESIBLE: Navegable con teclado, screen readers compatibles
+5. PERFORMANTE: Lazy loading, optimizacion de animaciones
+6. PROFESIONAL: Sin errores de consola, sin warnings
+
+═══════════════════════════════════════════════════════════════════════════════
+SECCION 7: EJEMPLO DE RESPUESTA EXCELENTE
+═══════════════════════════════════════════════════════════════════════════════
+
+Usuario pide: "Hazme una landing page para mi app de crypto"
+
+Respuesta correcta:
+{{
+    "files": {{
+        "index.html": "<!DOCTYPE html><html lang='es'>... (HTML completo con header, hero, features, CTA, footer)...",
+        "styles.css": ":root {{ --bg-primary: #0B0E11; ... }} * {{ margin: 0; ... }} .hero {{ ... }} (CSS completo)",
+        "script.js": "// Animaciones y interacciones\\nconst initAnimations = () => {{ ... }}; (JS completo)"
+    }},
+    "message": "[BLUEPRINT] Entiendo que necesitas una landing page crypto profesional. He creado: 1) Hero section con gradiente y CTA prominente, 2) Features grid con iconos SVG y cards glass morphism, 3) Stats section con contadores animados, 4) Footer con links y redes sociales. Todo siguiendo el sistema de diseno neo-bank con palette dorada."
+}}
+
+RESPONDE SOLO CON JSON VALIDO. SIN TEXTO ADICIONAL ANTES O DESPUES."""
+
+        messages = [{"role": "user", "content": message}]
+        
+        for provider in self.providers:
+            if not provider.is_available():
+                continue
+            
+            logger.info(f"Code builder trying provider: {provider.name}")
+            result = provider.chat(messages, code_system_prompt)
+            
+            if result.get("success"):
+                response_text = result.get("response", "")
+                
+                try:
+                    json_match = None
+                    if response_text.strip().startswith('{'):
+                        json_match = response_text.strip()
+                    else:
+                        import re
+                        json_pattern = r'\{[\s\S]*\}'
+                        matches = re.findall(json_pattern, response_text)
+                        if matches:
+                            for match in matches:
+                                try:
+                                    sanitized = self._sanitize_json(match)
+                                    json.loads(sanitized)
+                                    json_match = sanitized
+                                    break
+                                except (json.JSONDecodeError, ValueError) as e:
+                                    logger.debug(f"JSON parse attempt failed: {e}")
+                                    continue
+                    
+                    if json_match:
+                        sanitized_json = self._sanitize_json(json_match)
+                        parsed = json.loads(sanitized_json)
+                        files = parsed.get("files", {})
+                        msg = parsed.get("message", "Codigo generado exitosamente")
+                        
+                        if files:
+                            return {
+                                "success": True,
+                                "files": files,
+                                "response": msg,
+                                "provider": provider.name
+                            }
+                    
+                    extracted = self._extract_code_blocks(response_text)
+                    if extracted:
+                        return {
+                            "success": True,
+                            "files": extracted,
+                            "response": "He generado el codigo solicitado.",
+                            "provider": provider.name
+                        }
+                    
+                    return {
+                        "success": False,
+                        "error": "No se pudo extraer codigo de la respuesta. Intenta de nuevo.",
+                        "provider": provider.name
+                    }
+                    
+                except json.JSONDecodeError as e:
+                    logger.warning(f"JSON parse error: {e}")
+                    extracted = self._extract_code_blocks(response_text)
+                    if extracted:
+                        return {
+                            "success": True,
+                            "files": extracted,
+                            "response": "He generado el codigo. Revisa los archivos actualizados.",
+                            "provider": provider.name
+                        }
+                    return {
+                        "success": False,
+                        "error": "No se pudo parsear la respuesta de la IA. Intenta de nuevo con instrucciones mas claras.",
+                        "provider": provider.name
+                    }
+            else:
+                logger.warning(f"Provider {provider.name} failed: {result.get('error')}")
+        
+        return {
+            "success": False,
+            "error": "No se pudo generar el codigo. Intenta de nuevo.",
+            "provider": None
+        }
+    
+    def _sanitize_json(self, json_str: str) -> str:
+        """Sanitize JSON string by escaping control characters in string values"""
+        import re
+        
+        result = []
+        in_string = False
+        escape_next = False
+        
+        for char in json_str:
+            if escape_next:
+                result.append(char)
+                escape_next = False
+                continue
+                
+            if char == '\\':
+                escape_next = True
+                result.append(char)
+                continue
+                
+            if char == '"':
+                in_string = not in_string
+                result.append(char)
+                continue
+            
+            if in_string:
+                if char == '\n':
+                    result.append('\\n')
+                elif char == '\r':
+                    result.append('\\r')
+                elif char == '\t':
+                    result.append('\\t')
+                elif ord(char) < 32:
+                    result.append(f'\\u{ord(char):04x}')
+                else:
+                    result.append(char)
+            else:
+                result.append(char)
+        
+        return ''.join(result)
+    
+    def _extract_code_blocks(self, text: str) -> Dict[str, str]:
+        """Extract code blocks from markdown-style response"""
+        import re
+        files = {}
+        
+        pattern = r'```(\w+)?\s*\n?([\s\S]*?)```'
+        matches = re.findall(pattern, text)
+        
+        lang_to_ext = {
+            'html': 'index.html',
+            'css': 'styles.css',
+            'javascript': 'script.js',
+            'js': 'script.js'
+        }
+        
+        for lang, code in matches:
+            lang = lang.lower() if lang else 'html'
+            filename = lang_to_ext.get(lang, f'file.{lang}')
+            files[filename] = code.strip()
+        
+        if not files and '<!DOCTYPE html>' in text.lower():
+            html_match = re.search(r'(<!DOCTYPE html>[\s\S]*?</html>)', text, re.IGNORECASE)
+            if html_match:
+                files['index.html'] = html_match.group(1).strip()
+        
+        return files
+
+
+ai_service: Optional[AIService] = None
+
+
+def get_ai_service(db_manager=None) -> AIService:
+    """Get or create the global AI service instance"""
+    global ai_service
+    if ai_service is None:
+        logger.info("Initializing global AIService...")
+        try:
+            ai_service = AIService(db_manager)
+            logger.info("AIService successfully initialized.")
+        except Exception as e:
+            logger.error(f"CRITICAL: Failed to initialize AIService: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # We don't catch it here to let it propagate, but we log it
+            raise
+    return ai_service

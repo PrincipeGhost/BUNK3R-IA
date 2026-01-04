@@ -1,34 +1,30 @@
-# BUNK3R_IA - Dependencias del sistema
-# Para deploy en Render
+# BUNK3R_IA - Consolidated Dependencies v2.0
 
-
-# Core Flask
+# Core Flask & Web
 flask>=2.3.0
 gunicorn>=21.0.0
 flask-cors>=4.0.0
-
-# Database
+flask-sqlalchemy
+flask-login
+flask-dance
 psycopg2-binary>=2.9.0
 
-# HTTP Clients
-requests>=2.31.0
-httpx>=0.25.0
-
-# Utilities
-python-dotenv>=1.0.0
-
-# Automation
-playwright>=1.40.0
-flask-cors
-playwright
-pyautogui
-pyperclip
-flask-dance
-flask-login
-flask-sqlalchemy
-pyjwt
+# API / Fast API
 fastapi
 uvicorn
-gunicorn
 pydantic
-playwright
+
+# AI Providers & HTTP
+requests>=2.31.0
+httpx>=0.25.0
+python-dotenv>=1.0.0
+pyjwt
+
+# Automation & Tools
+playwright>=1.40.0
+pyautogui
+pyperclip
+
+# Testing
+pytest
+websocket-client
