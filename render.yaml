@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: starter
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 'backend.main:create_app()'"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 'backend.main:app'"
     envVars:
       - key: DATABASE_URL
         value: "postgresql://neondb_owner:npg_IDhalvO17Apb@ep-wild-sea-advimph5-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
