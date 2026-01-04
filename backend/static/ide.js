@@ -1,6 +1,6 @@
 /**
- * BUNK3R IDE - Premium Development Environment
- * JavaScript Logic
+ * BUNK3R IDE - Visual Studio Code Replica
+ * Core JavaScript Logic
  */
 
 const IDE = {
@@ -9,25 +9,63 @@ const IDE = {
     activeFile: null,
     editor: null,
     terminal: null,
-    files: {},
+    fitAddon: null,
+    openFiles: [], // For tabs
 
-    // Initialize IDE
+    // Initialize
     async init() {
-        console.log('[IDE] Initializing BUNK3R IDE...');
+        console.log('[IDE] Initializing VS Code Environment...');
 
-        // Initialize components
+        this.initSidebar();
         this.initEditor();
         this.initTerminal();
         this.initEventListeners();
-        this.initTabs();
 
-        // Load sync status
+        // Load Initial Data
         await this.loadSyncStatus();
-
-        // Load repositories
         await this.loadRepositories();
 
-        console.log('[IDE] IDE initialized successfully');
+        // Check if there's a last opened repo/file in localStorage
+        const lastRepo = localStorage.getItem('bunk3r_last_repo');
+        if (lastRepo) {
+            document.getElementById('repo-selector').value = lastRepo;
+            await this.switchRepo(lastRepo);
+        }
+
+        console.log('[IDE] Ready.');
+    },
+
+    // Sidebar View Switching
+    initSidebar() {
+        const activityItems = document.querySelectorAll('.activity-item[data-sidebar]');
+        activityItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const viewName = item.dataset.sidebar;
+                this.switchSidebarView(viewName);
+
+                // Active state for icons
+                activityItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+    },
+
+    switchSidebarView(viewName) {
+        const sidebar = document.getElementById('side-bar');
+        const views = document.querySelectorAll('.sidebar-view');
+        const title = document.getElementById('sidebar-title');
+
+        views.forEach(v => v.classList.remove('active'));
+        const targetView = document.getElementById(`${viewName}-view`);
+
+        if (targetView) {
+            targetView.classList.add('active');
+            title.textContent = viewName.toUpperCase();
+            sidebar.style.display = 'flex';
+        } else {
+            // If view not found, maybe just toggle search or other built-ins
+            console.warn(`[IDE] Sidebar view ${viewName} not implemented yet`);
+        }
     },
 
     // Monaco Editor
@@ -35,286 +73,328 @@ const IDE = {
         require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
 
         require(['vs/editor/editor.main'], () => {
+            // Define a more VS Code-like theme if possible (vs-dark is standard)
             this.editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-                value: '// Selecciona un archivo para empezar',
+                value: '/* Welcome to BUNK3R IDE */\n// Select a file to start coding',
                 language: 'javascript',
                 theme: 'vs-dark',
                 automaticLayout: true,
                 fontSize: 14,
-                minimap: { enabled: true },
+                fontFamily: "'Cascadia Code', 'Consolas', 'Courier New', monospace",
+                minimap: { enabled: true, scale: 1, renderCharacters: false },
                 scrollBeyondLastLine: false,
-                wordWrap: 'on'
+                wordWrap: 'on',
+                lineHeight: 22,
+                letterSpacing: 0.5,
+                roundedSelection: true,
+                cursorStyle: 'line',
+                cursorBlinking: 'smooth',
+                renderWhitespace: 'none',
+                scrollbar: {
+                    vertical: 'visible',
+                    horizontal: 'visible',
+                    useShadows: false,
+                    verticalHasArrows: false,
+                    horizontalHasArrows: false,
+                    verticalScrollbarSize: 10,
+                    horizontalScrollbarSize: 10
+                }
             });
 
-            // Auto-save on change (debounced)
+            // Handle content changes
             let saveTimeout;
             this.editor.onDidChangeModelContent(() => {
                 clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(() => this.autoSave(), 2000);
+                saveTimeout = setTimeout(() => this.autoSave(), 3000);
             });
 
-            console.log('[IDE] Monaco Editor initialized');
+            window.addEventListener('resize', () => this.editor.layout());
         });
     },
 
-    // Xterm Terminal
+    // Terminal
     initTerminal() {
         this.terminal = new Terminal({
             cursorBlink: true,
             fontSize: 13,
-            fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+            fontFamily: "'Cascadia Code', 'Consolas', 'Courier New', monospace",
             theme: {
-                background: '#0d1117',
-                foreground: '#c9d1d9',
-                cursor: '#f0b90b',
-                selection: 'rgba(240, 185, 11, 0.3)'
-            }
+                background: '#1e1e1e',
+                foreground: '#cccccc',
+                cursor: '#aeafad',
+                selection: '#264f78',
+                black: '#000000',
+                red: '#cd3131',
+                green: '#0dbc79',
+                yellow: '#e5e510',
+                blue: '#2472c8',
+                magenta: '#bc3fbc',
+                cyan: '#11a8cd',
+                white: '#e5e5e5'
+            },
+            allowProposedApi: true
         });
 
-        const fitAddon = new FitAddon.FitAddon();
-        this.terminal.loadAddon(fitAddon);
+        this.fitAddon = new FitAddon.FitAddon();
+        this.terminal.loadAddon(this.fitAddon);
 
-        this.terminal.open(document.getElementById('terminal-container'));
-        fitAddon.fit();
+        const container = document.getElementById('terminal-container');
+        this.terminal.open(container);
+        this.fitAddon.fit();
 
-        this.terminal.writeln('\x1b[1;33m╔═══════════════════════════════════════╗\x1b[0m');
-        this.terminal.writeln('\x1b[1;33m║\x1b[0m   BUNK3R Terminal - Ready          \x1b[1;33m║\x1b[0m');
-        this.terminal.writeln('\x1b[1;33m╚═══════════════════════════════════════╝\x1b[0m');
-        this.terminal.writeln('');
+        this.terminal.writeln('\x1b[1;36mBUNK3R Terminal v2.0 - VS Code Integrated\x1b[0m');
+        this.terminal.writeln('Type \x1b[1;33mhelp\x1b[0m to see available commands.');
+        this.terminal.write('\r\n$ ');
 
-        // Handle terminal input
         let currentLine = '';
         this.terminal.onData(data => {
-            if (data === '\r') { // Enter
-                this.terminal.writeln('');
-                this.executeCommand(currentLine);
+            const code = data.charCodeAt(0);
+            if (code === 13) { // Enter
+                this.terminal.write('\r\n');
+                this.executeTerminalCommand(currentLine);
                 currentLine = '';
-            } else if (data === '\u007F') { // Backspace
+            } else if (code === 127) { // Backspace
                 if (currentLine.length > 0) {
                     currentLine = currentLine.slice(0, -1);
                     this.terminal.write('\b \b');
                 }
+            } else if (code < 32) {
+                // Ignore other control chars
             } else {
                 currentLine += data;
                 this.terminal.write(data);
             }
         });
-
-        console.log('[IDE] Terminal initialized');
     },
 
-    // Event Listeners
-    initEventListeners() {
-        // Tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
-        });
+    async executeTerminalCommand(command) {
+        const cmd = command.trim();
+        if (!cmd) {
+            this.terminal.write('$ ');
+            return;
+        }
 
-        // Chat
-        document.getElementById('send-btn').addEventListener('click', () => this.sendMessage());
-        document.getElementById('chat-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
+        if (cmd === 'clear') {
+            this.terminal.clear();
+            this.terminal.write('$ ');
+            return;
+        }
+
+        if (cmd === 'help') {
+            this.terminal.writeln('Built-in commands: clear, help, exit');
+            this.terminal.writeln('Internal API commands are proxied to the backend.');
+            this.terminal.write('$ ');
+            return;
+        }
+
+        try {
+            // Use the actual terminal API
+            const response = await fetch('/api/terminal/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    command: cmd,
+                    repo: this.activeRepo
+                })
+            });
+            const data = await response.json();
+
+            if (data.output) {
+                this.terminal.writeln(data.output);
             }
-        });
+            if (data.error) {
+                this.terminal.writeln(`\x1b[1;31mError: ${data.error}\x1b[0m`);
+            }
+        } catch (e) {
+            this.terminal.writeln(`\x1b[1;31mConnection Error: ${e.message}\x1b[0m`);
+        }
 
-        // Repo selector
+        this.terminal.write('$ ');
+    },
+
+    // UI Events
+    initEventListeners() {
+        // Repo Selection
         document.getElementById('repo-selector').addEventListener('change', (e) => {
             this.switchRepo(e.target.value);
         });
 
-        // Sync button
-        document.getElementById('sync-btn').addEventListener('click', () => this.syncRepositories());
-
-        // Settings
-        document.getElementById('settings-btn').addEventListener('click', () => this.openSettings());
-        document.querySelectorAll('.modal-close').forEach(btn => {
-            btn.addEventListener('click', () => this.closeSettings());
+        // Chat
+        document.getElementById('chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendChatMessage();
+            }
         });
-        document.getElementById('save-token-btn').addEventListener('click', () => this.saveGitHubToken());
 
-        // Save button
-        document.getElementById('save-btn').addEventListener('click', () => this.saveFile());
+        // Layout Resizing
+        const resizer = document.getElementById('horizontal-resizer');
+        const panel = document.getElementById('bottom-panel');
+        let isResizing = false;
 
-        // Preview refresh
-        document.getElementById('refresh-preview-btn').addEventListener('click', () => this.refreshPreview());
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'row-resize';
+        });
 
-        // Terminal clear
-        document.getElementById('clear-terminal-btn').addEventListener('click', () => this.terminal.clear());
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const containerHeight = document.querySelector('.editor-and-panel').offsetHeight;
+            const offsetTop = document.querySelector('.editor-and-panel').getBoundingClientRect().top;
+            const newPanelHeight = containerHeight - (e.clientY - offsetTop);
 
-        // Keyboard shortcuts
+            if (newPanelHeight > 100 && newPanelHeight < containerHeight - 100) {
+                panel.style.height = `${newPanelHeight}px`;
+                if (this.editor) this.editor.layout();
+                if (this.fitAddon) this.fitAddon.fit();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
+
+        // Global Shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
-                this.saveFile();
+                this.saveActiveFile();
             }
         });
+
+        // Settings/Modal
+        document.getElementById('save-token-btn').addEventListener('click', () => this.saveGitHubToken());
     },
 
-    // Tab Management
-    initTabs() {
-        // Default to chat tab
-        this.switchTab('chat');
-    },
-
-    switchTab(tabName) {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-        });
-
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.toggle('active', content.id === `${tabName}-tab`);
-        });
-    },
-
-    // GitHub Sync
-    async loadSyncStatus() {
-        try {
-            const response = await fetch('/api/github/sync/status');
-            const data = await response.json();
-
-            if (data.success) {
-                this.updateSyncStatus(data);
-            }
-        } catch (error) {
-            console.error('[IDE] Error loading sync status:', error);
-        }
-    },
-
-    updateSyncStatus(status) {
-        const statusDot = document.querySelector('.status-dot');
-        const statusText = document.querySelector('.status-text');
-
-        if (status.ready > 0) {
-            statusDot.className = 'status-dot synced';
-            statusText.textContent = `${status.ready} repos sincronizados`;
-        } else if (!status.has_token) {
-            statusDot.className = 'status-dot';
-            statusText.textContent = 'No sincronizado';
-        } else {
-            statusDot.className = 'status-dot syncing';
-            statusText.textContent = 'Sincronizando...';
-        }
-    },
-
-    async loadRepositories() {
-        try {
-            const response = await fetch('/api/ide/repos');
-            const data = await response.json();
-
-            if (data.success) {
-                const selector = document.getElementById('repo-selector');
-                selector.innerHTML = '<option value="">Seleccionar repositorio...</option>';
-
-                data.repos.forEach(repo => {
-                    const option = document.createElement('option');
-                    option.value = repo.name;
-                    option.textContent = repo.name;
-                    selector.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('[IDE] Error loading repositories:', error);
-        }
-    },
-
+    // Repo and Files
     async switchRepo(repoName) {
         if (!repoName) return;
-
         this.activeRepo = repoName;
-        console.log('[IDE] Switched to repo:', repoName);
+        localStorage.setItem('bunk3r_last_repo', repoName);
 
-        // Load file tree
-        await this.loadFileTree(repoName);
+        // UI updates
+        document.getElementById('loading-overlay').classList.add('active');
 
-        // Update terminal prompt
-        this.terminal.writeln(`\x1b[1;33m[${repoName}]\x1b[0m Repository loaded`);
-    },
-
-    async loadFileTree(repoName) {
         try {
-            const response = await fetch(`/api/ide/repo/index`, {
+            const response = await fetch('/api/ide/repo/index', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ repo: repoName })
             });
-
             const data = await response.json();
 
             if (data.success) {
                 this.renderFileTree(data.index.structure);
+                this.terminal.writeln(`\x1b[1;32mWorkspace loaded: ${repoName}\x1b[0m`);
             }
-        } catch (error) {
-            console.error('[IDE] Error loading file tree:', error);
+        } catch (e) {
+            console.error('Error switching repo', e);
+        } finally {
+            document.getElementById('loading-overlay').classList.remove('active');
         }
     },
 
     renderFileTree(structure) {
         const fileTree = document.getElementById('file-tree');
-        fileTree.innerHTML = '';
+        fileTree.innerHTML = `
+            <div class="sidebar-section-header">
+                <span class="arrow">▼</span>
+                <span class="title">WORKSPACE</span>
+            </div>
+            <div class="sidebar-section-header">
+                <span class="arrow">▼</span>
+                <span class="title">FILES</span>
+            </div>
+            <div id="file-list-container"></div>
+        `;
 
-        structure.forEach(item => {
+        const container = fileTree.querySelector('#file-list-container');
+
+        // Sort items: folders first, then files
+        const sorted = [...structure].sort((a, b) => {
+            if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        sorted.forEach(item => {
             if (item.type === 'file') {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.style.paddingLeft = `${item.depth * 16 + 8}px`;
-                fileItem.innerHTML = `📄 ${item.name}`;
-                fileItem.addEventListener('click', () => this.openFile(item.path));
-                fileTree.appendChild(fileItem);
+                const el = document.createElement('div');
+                el.className = 'file-item';
+                el.style.paddingLeft = `${(item.depth * 15) + 30}px`;
+
+                // Icon based on extension
+                const ext = item.name.split('.').pop().toLowerCase();
+                let icon = '📄';
+                if (ext === 'py') icon = '🐍';
+                if (ext === 'js' || ext === 'ts') icon = '📜';
+                if (ext === 'html') icon = '🌐';
+                if (ext === 'css') icon = '🎨';
+
+                el.innerHTML = `<span class="icon" style="margin-right: 6px; font-size: 14px;">${icon}</span> <span class="name">${item.name}</span>`;
+                el.addEventListener('click', () => this.openFile(item.path));
+                container.appendChild(el);
             }
         });
     },
 
-    async openFile(filePath) {
+    async openFile(path) {
         if (!this.activeRepo) return;
 
+        // Check if already open
+        if (this.activeFile === path) return;
+        this.activeFile = path;
+
+        document.getElementById('active-filename').textContent = `${path.split('/').pop()} - BUNK3R IDE`;
+
         try {
-            const response = await fetch(`/api/ide/file?repo=${this.activeRepo}&path=${encodeURIComponent(filePath)}`);
+            const response = await fetch(`/api/ide/file?repo=${this.activeRepo}&path=${encodeURIComponent(path)}`);
             const data = await response.json();
 
             if (data.success) {
-                this.activeFile = filePath;
+                // Set language
+                const ext = path.split('.').pop().toLowerCase();
+                const model = this.editor.getModel();
 
-                // Detect language
-                const ext = filePath.split('.').pop();
-                const langMap = {
-                    'js': 'javascript',
-                    'ts': 'typescript',
-                    'py': 'python',
-                    'html': 'html',
-                    'css': 'css',
-                    'json': 'json',
-                    'md': 'markdown'
-                };
-                const language = langMap[ext] || 'plaintext';
+                let lang = 'plaintext';
+                if (ext === 'py') lang = 'python';
+                if (ext === 'js') lang = 'javascript';
+                if (ext === 'ts') lang = 'typescript';
+                if (ext === 'html') lang = 'html';
+                if (ext === 'css') lang = 'css';
+                if (ext === 'json') lang = 'json';
+                if (ext === 'md') lang = 'markdown';
 
-                // Update editor
-                monaco.editor.setModelLanguage(this.editor.getModel(), language);
+                monaco.editor.setModelLanguage(model, lang);
                 this.editor.setValue(data.content);
 
-                // Update preview if HTML
-                if (ext === 'html') {
-                    this.updatePreview(data.content);
-                }
-
-                console.log('[IDE] Opened file:', filePath);
+                // Add tab if not exists
+                this.updateTabs(path);
             }
-        } catch (error) {
-            console.error('[IDE] Error opening file:', error);
+        } catch (e) {
+            console.error('Error opening file', e);
         }
     },
 
-    async saveFile() {
-        if (!this.activeRepo || !this.activeFile) {
-            console.warn('[IDE] No active file to save');
-            return;
-        }
+    updateTabs(path) {
+        const container = document.getElementById('editor-tabs');
+        const filename = path.split('/').pop();
+
+        // For now, simple single-active tab management
+        container.innerHTML = `
+            <div class="tab active">
+                <span class="tab-title">${filename}</span>
+                <span class="tab-close">&times;</span>
+            </div>
+        `;
+    },
+
+    async saveActiveFile() {
+        if (!this.activeRepo || !this.activeFile) return;
 
         const content = this.editor.getValue();
-
         try {
-            const response = await fetch('/api/ide/file', {
+            const res = await fetch('/api/ide/file', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -323,203 +403,118 @@ const IDE = {
                     content: content
                 })
             });
-
-            const data = await response.json();
-
+            const data = await res.json();
             if (data.success) {
-                console.log('[IDE] File saved:', this.activeFile);
-                this.terminal.writeln(`\x1b[1;32m✓\x1b[0m Saved: ${this.activeFile}`);
-
-                // Update preview if HTML
-                if (this.activeFile.endsWith('.html')) {
-                    this.updatePreview(content);
-                }
+                console.log('Saved successfully');
             }
-        } catch (error) {
-            console.error('[IDE] Error saving file:', error);
-            this.terminal.writeln(`\x1b[1;31m✗\x1b[0m Error saving file`);
+        } catch (e) {
+            console.error('Save failed', e);
         }
     },
 
     autoSave() {
-        if (this.activeFile) {
-            this.saveFile();
-        }
+        this.saveActiveFile();
     },
 
-    // Preview
-    updatePreview(html) {
-        const iframe = document.getElementById('preview-frame');
-        iframe.srcdoc = html;
-    },
-
-    refreshPreview() {
-        if (this.activeFile && this.activeFile.endsWith('.html')) {
-            this.updatePreview(this.editor.getValue());
-        }
-    },
-
-    // Chat with AI
-    async sendMessage() {
+    // AI Chat
+    async sendChatMessage() {
         const input = document.getElementById('chat-input');
-        const message = input.value.trim();
+        const text = input.value.trim();
+        if (!text) return;
 
-        if (!message) return;
-
-        // Add user message
-        this.addChatMessage('user', message);
+        this.addMessage('user', text);
         input.value = '';
 
-        // Show typing indicator
-        const typingId = this.addChatMessage('assistant', '...');
-
         try {
-            const response = await fetch('/api/ide/chat', {
+            const res = await fetch('/api/ide/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: message,
-                    active_repo: this.activeRepo
+                    message: text,
+                    active_repo: this.activeRepo,
+                    current_file: this.activeFile
                 })
             });
-
-            const data = await response.json();
-
-            // Remove typing indicator
-            document.getElementById(typingId).remove();
-
+            const data = await res.json();
             if (data.success) {
-                this.addChatMessage('assistant', data.response);
-            } else {
-                this.addChatMessage('assistant', `Error: ${data.error}`);
+                this.addMessage('assistant', data.response);
             }
-        } catch (error) {
-            document.getElementById(typingId).remove();
-            this.addChatMessage('assistant', 'Error de conexión. Intenta de nuevo.');
-            console.error('[IDE] Chat error:', error);
+        } catch (e) {
+            this.addMessage('assistant', 'Error connecting to Singularity.');
         }
     },
 
-    addChatMessage(role, content) {
-        const messagesContainer = document.getElementById('chat-messages');
-        const messageDiv = document.createElement('div');
-        const messageId = `msg-${Date.now()}`;
-        messageDiv.id = messageId;
-        messageDiv.className = `chat-message ${role}`;
-
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble';
-        bubble.textContent = content;
-
-        messageDiv.appendChild(bubble);
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-        return messageId;
+    addMessage(role, text) {
+        const container = document.getElementById('chat-messages');
+        const msg = document.createElement('div');
+        msg.className = `chat-message ${role}`;
+        msg.innerHTML = `
+            <div class="msg-header">${role === 'user' ? 'You' : 'BUNK3R AI'}</div>
+            <div class="msg-body">${this.escapeHtml(text).replace(/\n/g, '<br>')}</div>
+        `;
+        container.appendChild(msg);
+        container.scrollTop = container.scrollHeight;
     },
 
-    // Terminal
-    async executeCommand(command) {
-        if (!command.trim()) return;
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
 
-        this.terminal.writeln(`\x1b[1;36m>\x1b[0m ${command}`);
+    // Sync & Token
+    async loadSyncStatus() {
+        try {
+            const res = await fetch('/api/github/sync/status');
+            const data = await res.json();
+            this.updateStatusBarSync(data);
+        } catch (e) { }
+    },
 
-        // Simple built-in commands
-        if (command === 'clear') {
-            this.terminal.clear();
-            return;
+    updateStatusBarSync(data) {
+        const text = document.querySelector('#sync-status .status-text');
+        const dot = document.querySelector('#sync-status .status-dot');
+        if (data.ready > 0) {
+            text.textContent = 'Synced';
+            dot.style.background = '#00ff00';
+        } else {
+            text.textContent = 'Pending Sync';
+            dot.style.background = '#f0b90b';
         }
-
-        if (command === 'help') {
-            this.terminal.writeln('Available commands:');
-            this.terminal.writeln('  clear  - Clear terminal');
-            this.terminal.writeln('  help   - Show this help');
-            this.terminal.writeln('');
-            return;
-        }
-
-        // For now, just echo
-        this.terminal.writeln(`Command not implemented: ${command}`);
-        this.terminal.writeln('');
     },
 
-    // Settings
-    openSettings() {
-        document.getElementById('settings-modal').classList.add('active');
-    },
-
-    closeSettings() {
-        document.getElementById('settings-modal').classList.remove('active');
+    async loadRepositories() {
+        try {
+            const res = await fetch('/api/ide/repos');
+            const data = await res.json();
+            if (data.success) {
+                const sel = document.getElementById('repo-selector');
+                data.repos.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    sel.appendChild(opt);
+                });
+            }
+        } catch (e) { }
     },
 
     async saveGitHubToken() {
-        const tokenInput = document.getElementById('github-token-input');
-        const token = tokenInput.value.trim();
-
-        if (!token) {
-            alert('Por favor ingresa un token válido');
-            return;
-        }
-
-        // Show loading
-        document.getElementById('loading-overlay').classList.add('active');
-        this.closeSettings();
+        const token = document.getElementById('github-token-input').value.trim();
+        if (!token) return;
 
         try {
-            const response = await fetch('/api/github/token', {
+            const res = await fetch('/api/github/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: token })
+                body: JSON.stringify({ token })
             });
-
-            const data = await response.json();
-
+            const data = await res.json();
             if (data.success) {
-                console.log('[IDE] Token saved and repos synced:', data.sync_results);
-
-                // Reload repositories
-                await this.loadRepositories();
-                await this.loadSyncStatus();
-
-                // Clear token input
-                tokenInput.value = '';
-
-                alert(`✅ ${data.message}`);
-            } else {
-                alert(`Error: ${data.error}`);
+                location.reload();
             }
-        } catch (error) {
-            console.error('[IDE] Error saving token:', error);
-            alert('Error de conexión. Intenta de nuevo.');
-        } finally {
-            document.getElementById('loading-overlay').classList.remove('active');
-        }
-    },
-
-    async syncRepositories() {
-        document.getElementById('loading-overlay').classList.add('active');
-
-        try {
-            const response = await fetch('/api/github/sync', { method: 'POST' });
-            const data = await response.json();
-
-            if (data.success) {
-                await this.loadRepositories();
-                await this.loadSyncStatus();
-                alert('✅ Repositorios sincronizados');
-            } else {
-                alert(`Error: ${data.error}`);
-            }
-        } catch (error) {
-            console.error('[IDE] Sync error:', error);
-            alert('Error de conexión');
-        } finally {
-            document.getElementById('loading-overlay').classList.remove('active');
-        }
+        } catch (e) { }
     }
 };
 
-// Initialize on load
-window.addEventListener('DOMContentLoaded', () => {
-    IDE.init();
-});
+window.addEventListener('DOMContentLoaded', () => IDE.init());
