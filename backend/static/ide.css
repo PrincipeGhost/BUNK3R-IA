@@ -380,8 +380,118 @@ html {
     opacity: 1;
 }
 
-.monaco-editor {
-    flex: 1;
+/* SCM View */
+.scm-container {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 15px;
+}
+
+.scm-commit-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scm-commit-box textarea {
+    background: #3c3c3c;
+    border: 1px solid #555;
+    color: #eee;
+    padding: 8px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 12px;
+    resize: none;
+    min-height: 80px;
+    outline: none;
+}
+
+.scm-commit-box textarea:focus {
+    border-color: var(--vscode-accent);
+}
+
+.scm-changes-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.scm-section-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    padding: 5px 0;
+    text-transform: uppercase;
+}
+
+.scm-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 5px;
+    cursor: pointer;
+    font-size: 12px;
+    gap: 8px;
+}
+
+.scm-item:hover {
+    background-color: var(--vscode-list-hover);
+}
+
+.scm-item .status {
+    width: 14px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.scm-item.modified .status {
+    color: #e2c08d;
+}
+
+.scm-item.added .status {
+    color: #81b88b;
+}
+
+.scm-item.deleted .status {
+    color: #c74e39;
+}
+
+/* Search View */
+.search-container {
+    padding: 10px;
+}
+
+.search-results {
+    margin-top: 15px;
+    overflow-y: auto;
+}
+
+.search-match-item {
+    padding: 5px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.search-match-item:hover {
+    background-color: var(--vscode-list-hover);
+}
+
+.search-match-file {
+    font-weight: 600;
+    font-size: 12px;
+    color: #eee;
+}
+
+.search-match-line {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-match-line b {
+    color: #f0b90b;
+    background: rgba(240, 185, 11, 0.2);
 }
 
 /* Bottom Panel */
@@ -492,6 +602,64 @@ html {
 .preview-pane iframe {
     flex: 1;
     border: none;
+}
+
+/* Command Palette */
+.palette-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    justify-content: center;
+    padding-top: 10px;
+    z-index: 2000;
+}
+
+.palette-overlay.active {
+    display: flex;
+}
+
+.palette-container {
+    width: 600px;
+    max-height: 400px;
+    background-color: #252526;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+}
+
+.palette-container input {
+    background-color: #3c3c3c;
+    border: none;
+    color: #cccccc;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 4px 4px 0 0;
+    outline: none;
+}
+
+.palette-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 5px 0;
+}
+
+.palette-item {
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #cccccc;
+    display: flex;
+    justify-content: space-between;
+}
+
+.palette-item:hover,
+.palette-item.active {
+    background-color: #37373d;
+    color: #ffffff;
 }
 
 /* Modals */

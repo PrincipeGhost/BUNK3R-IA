@@ -67,6 +67,8 @@ def create_app(config_class=None):
     from backend.replit_auth import setup_github_auth
     setup_github_auth(app)
     
+    from backend.api.git_routes import git_bp
+    
     app.register_blueprint(ai_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(github_api_bp)
@@ -77,6 +79,7 @@ def create_app(config_class=None):
     app.register_blueprint(extension_bp)
     app.register_blueprint(ide_bp)
     app.register_blueprint(github_sync_bp)
+    app.register_blueprint(git_bp)
     
     @app.before_request
     def make_session_permanent():

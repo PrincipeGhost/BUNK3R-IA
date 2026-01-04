@@ -20,6 +20,7 @@ const IDE = {
         this.initEditor();
         this.initTerminal();
         this.initEventListeners();
+        this.initPalette();
 
         // Load Initial Data
         await this.loadSyncStatus();
@@ -263,6 +264,20 @@ const IDE = {
             }
         });
 
+        // Search
+        document.getElementById('global-search-input').addEventListener('input', () => {
+            clearTimeout(this.searchTimer);
+            this.searchTimer = setTimeout(() => this.searchInRepo(), 500);
+        });
+
+        // SCM Commit
+        document.getElementById('scm-commit-btn').addEventListener('click', () => this.commitChanges());
+        document.getElementById('scm-commit-message').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                this.commitChanges();
+            }
+        });
+
         // Settings/Modal
         document.getElementById('save-token-btn').addEventListener('click', () => this.saveGitHubToken());
     },
@@ -287,12 +302,239 @@ const IDE = {
             if (data.success) {
                 this.renderFileTree(data.index.structure);
                 this.terminal.writeln(`\x1b[1;32mWorkspace loaded: ${repoName}\x1b[0m`);
+
+                // Refresh Git Status
+                await this.refreshGitStatus();
             }
         } catch (e) {
             console.error('Error switching repo', e);
         } finally {
             document.getElementById('loading-overlay').classList.remove('active');
         }
+    },
+
+    // Source Control Logic
+    async refreshGitStatus() {
+        if (!this.activeRepo) return;
+        try {
+            const res = await fetch(`/api/git/status?repo=${this.activeRepo}`);
+            const data = await res.json();
+            if (data.success) {
+                this.renderGitChanges(data.changes);
+                document.getElementById('git-branch-name').textContent = `${data.branch}*`;
+            }
+        } catch (e) {
+            console.error('Git status failed', e);
+        }
+    },
+
+    renderGitChanges(changes) {
+        const container = document.getElementById('scm-changes-list');
+        container.innerHTML = '<div class="scm-section-header">Changes</div>';
+
+        if (changes.length === 0) {
+            container.innerHTML += '<div style="padding: 10px; color: #888; font-size: 11px;">No changes detected.</div>';
+            return;
+        }
+
+        changes.forEach(change => {
+            const el = document.createElement('div');
+            el.className = `scm-item ${change.status === ' M' ? 'modified' : change.status === '??' ? 'added' : ''}`;
+
+            let statusChar = 'M';
+            if (change.status === '??') statusChar = 'U';
+            if (change.status === ' D') statusChar = 'D';
+
+            el.innerHTML = `
+                <span class="status">${statusChar}</span>
+                <span class="path">${change.path}</span>
+            `;
+
+            // Interaction: Click to open
+            el.addEventListener('click', () => this.openFile(change.path));
+            container.appendChild(el);
+        });
+    },
+
+    async commitChanges() {
+        const msg = document.getElementById('scm-commit-message').value.trim();
+        if (!msg || !this.activeRepo) return;
+
+        try {
+            // First stage all (simplified for now)
+            await fetch('/api/git/stage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ repo: this.activeRepo, path: '.' })
+            });
+
+            const res = await fetch('/api/git/commit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ repo: this.activeRepo, message: msg })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('scm-commit-message').value = '';
+                this.terminal.writeln(`\x1b[1;32m✓ Committed: ${msg}\x1b[0m`);
+                await this.refreshGitStatus();
+            } else {
+                this.terminal.writeln(`\x1b[1;31m✗ Commit failed: ${data.stderr || data.error}\x1b[0m`);
+            }
+        } catch (e) {
+            console.error('Commit error', e);
+        }
+    },
+
+    // Search Logic
+    async searchInRepo() {
+        const query = document.getElementById('global-search-input').value.trim();
+        const resultsContainer = document.getElementById('search-results');
+
+        if (!query) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        if (!this.activeRepo) return;
+
+        resultsContainer.innerHTML = '<div style="color: #888; padding: 10px;">Searching...</div>';
+
+        try {
+            const res = await fetch('/api/ide/repo/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ repo: this.activeRepo, query: query })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                this.renderSearchResults(data.results);
+            } else {
+                resultsContainer.innerHTML = `<div style="color: #f48771; padding: 10px;">Error: ${data.error}</div>`;
+            }
+        } catch (e) {
+            console.error('Search error', e);
+            resultsContainer.innerHTML = '<div style="color: #f48771; padding: 10px;">Connection Error</div>';
+        }
+    },
+
+    renderSearchResults(results) {
+        const container = document.getElementById('search-results');
+        container.innerHTML = '';
+
+        if (!results || results.length === 0) {
+            container.innerHTML = '<div style="padding: 10px; color: #888; font-size: 11px;">No results found.</div>';
+            return;
+        }
+
+        // Group by file
+        const grouped = {};
+        results.forEach(m => {
+            if (!grouped[m.file]) grouped[m.file] = [];
+            grouped[m.file].push(m);
+        });
+
+        Object.keys(grouped).forEach(fileName => {
+            const fileGroup = document.createElement('div');
+            fileGroup.className = 'search-file-group';
+
+            const header = document.createElement('div');
+            header.className = 'search-match-file';
+            header.innerHTML = `Folder: ${fileName} <span style="background: #333; padding: 0 4px; border-radius: 10px; font-size: 10px;">${grouped[fileName].length}</span>`;
+            fileGroup.appendChild(header);
+
+            grouped[fileName].forEach(match => {
+                const item = document.createElement('div');
+                item.className = 'search-match-item';
+                item.innerHTML = `
+                    <div class="search-match-line">
+                        <span style="color: #666; width: 20px; display: inline-block;">${match.line_number}</span>
+                        ${this.escapeHtml(match.content).replace(new RegExp('(' + document.getElementById('global-search-input').value + ')', 'gi'), '<b>$1</b>')}
+                    </div>
+                `;
+                item.addEventListener('click', async () => {
+                    await this.openFile(fileName);
+                    this.editor.revealLine(match.line_number);
+                    this.editor.setPosition({ lineNumber: match.line_number, column: 1 });
+                });
+                fileGroup.appendChild(item);
+            });
+
+            container.appendChild(fileGroup);
+        });
+    },
+
+    // Command Palette
+    initPalette() {
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+                e.preventDefault();
+                this.togglePalette();
+            } else if (e.ctrlKey && e.key === 'P') {
+                e.preventDefault();
+                this.togglePalette('file');
+            } else if (e.key === 'Escape') {
+                document.getElementById('command-palette').classList.remove('active');
+            }
+        });
+
+        const input = document.getElementById('palette-input');
+        if (input) {
+            input.addEventListener('input', (e) => this.filterPalette(e.target.value));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') this.executePaletteCommand();
+            });
+        }
+    },
+
+    togglePalette(mode = 'command') {
+        const palette = document.getElementById('command-palette');
+        const input = document.getElementById('palette-input');
+        const prefix = mode === 'command' ? '>' : '';
+
+        palette.classList.add('active');
+        input.value = prefix;
+        input.focus();
+
+        this.renderPaletteItems(mode);
+    },
+
+    renderPaletteItems(mode) {
+        const list = document.getElementById('palette-list');
+        list.innerHTML = '';
+
+        let items = [];
+        if (mode === 'command') {
+            items = [
+                { label: 'File: Save', command: () => this.saveActiveFile() },
+                { label: 'Git: Commit', command: () => this.switchSidebarView('scm') },
+                { label: 'View: Toggle Sync', command: () => this.syncRepositories() },
+                { label: 'View: Output', command: () => this.switchTab('output') },
+                { label: 'Developer: Reload Window', command: () => location.reload() }
+            ];
+        } else {
+            // File mode (Quick Open)
+            // Ideally should filter workspace files. 
+            // For now, list open tabs or just a placeholder
+            items = [
+                { label: 'Search files by name logic not fully implemented yet' }
+            ];
+        }
+
+        items.forEach((item, index) => {
+            const el = document.createElement('div');
+            el.className = 'palette-item';
+            if (index === 0) el.classList.add('active');
+            el.textContent = item.label;
+            el.addEventListener('click', () => {
+                if (item.command) item.command();
+                document.getElementById('command-palette').classList.remove('active');
+            });
+            list.appendChild(el);
+        });
     },
 
     renderFileTree(structure) {
