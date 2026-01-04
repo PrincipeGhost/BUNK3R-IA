@@ -20,6 +20,7 @@ const IDE = {
         this.initEditor();
         this.initTerminal();
         this.initEventListeners();
+        this.initTabs();
         this.initPalette();
 
         // Load Initial Data
@@ -211,6 +212,118 @@ const IDE = {
         }
 
         this.terminal.write('$ ');
+    },
+
+    // Tab Management
+    initTabs() {
+        // Tab click handling (delegation)
+        document.getElementById('editor-tabs').addEventListener('click', (e) => {
+            const tab = e.target.closest('.tab');
+            if (!tab) return;
+
+            const path = tab.dataset.path;
+
+            if (e.target.classList.contains('tab-close')) {
+                e.stopPropagation();
+                this.closeTab(path);
+            } else {
+                this.activateTab(path);
+            }
+        });
+
+        // Horizontal Scroll for tabs
+        document.getElementById('editor-tabs').addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                document.getElementById('editor-tabs').parentElement.scrollLeft += e.deltaY;
+            }
+        });
+    },
+
+    renderTab(file) {
+        const container = document.getElementById('editor-tabs');
+        const filename = file.path.split('/').pop();
+        const icon = this.getFileIcon(filename);
+
+        const tab = document.createElement('div');
+        tab.className = 'tab';
+        tab.dataset.path = file.path;
+        tab.innerHTML = `
+            <span class="tab-icon">${icon}</span>
+            <span class="tab-title">${filename}</span>
+            <span class="tab-close">×</span>
+        `;
+        container.appendChild(tab);
+    },
+
+    activateTab(path) {
+        // Switch Models
+        const file = this.openFiles.find(f => f.path === path);
+        if (!file) return;
+
+        // Save current view state if valid
+        if (this.activeFile && this.editor.getModel()) {
+            const prevFile = this.openFiles.find(f => f.path === this.activeFile);
+            if (prevFile) {
+                prevFile.viewState = this.editor.saveViewState();
+            }
+        }
+
+        // Set new model
+        this.editor.setModel(file.model);
+        if (file.viewState) {
+            this.editor.restoreViewState(file.viewState);
+        }
+
+        this.activeFile = path;
+
+        // Update Tab UI
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.path === path);
+        });
+
+        // Update Breadcrumb/Title
+        document.getElementById('active-filename').textContent = `${path} - BUNK3R IDE`; // Assuming element exists or handled elsewhere
+
+        // Detect language for status bar if element exists
+        const lang = file.model.getLanguageId();
+        const langStatus = document.querySelector('.status-right .status-item:nth-child(3)');
+        if (langStatus) langStatus.textContent = lang.toUpperCase();
+    },
+
+    closeTab(path) {
+        const index = this.openFiles.findIndex(f => f.path === path);
+        if (index === -1) return;
+
+        this.openFiles[index].model.dispose();
+        this.openFiles.splice(index, 1);
+
+        const tab = document.querySelector(`.tab[data-path="${path}"]`);
+        if (tab) tab.remove();
+
+        if (this.activeFile === path) {
+            this.activeFile = null;
+            if (this.openFiles.length > 0) {
+                const newIndex = Math.max(0, index - 1);
+                this.activateTab(this.openFiles[newIndex].path);
+            } else {
+                this.editor.setModel(null);
+                // document.getElementById('active-filename').textContent = 'BUNK3R IDE';
+            }
+        }
+    },
+
+    getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const iconMap = {
+            'js': '📜', 'ts': '📘', 'py': '🐍', 'html': '🌐', 'css': '🎨',
+            'json': '⚙️', 'md': '📝', 'txt': '📄', 'gitignore': '👁️'
+        };
+        return iconMap[ext] || '📄';
+    },
+
+    switchTab(tabName) {
+        // Legacy handled elsewhere or removed
     },
 
     // UI Events
@@ -583,22 +696,21 @@ const IDE = {
     async openFile(path) {
         if (!this.activeRepo) return;
 
-        // Check if already open
-        if (this.activeFile === path) return;
-        this.activeFile = path;
-
-        document.getElementById('active-filename').textContent = `${path.split('/').pop()} - BUNK3R IDE`;
+        // Multi-Tab Logic: Check if already open
+        const existingTab = this.openFiles.find(f => f.path === path);
+        if (existingTab) {
+            this.activateTab(path);
+            return;
+        }
 
         try {
             const response = await fetch(`/api/ide/file?repo=${this.activeRepo}&path=${encodeURIComponent(path)}`);
             const data = await response.json();
 
             if (data.success) {
-                // Set language
+                // Determine Language
                 const ext = path.split('.').pop().toLowerCase();
-                const model = this.editor.getModel();
-
-                let lang = 'plaintext';
+                let lang = undefined;
                 if (ext === 'py') lang = 'python';
                 if (ext === 'js') lang = 'javascript';
                 if (ext === 'ts') lang = 'typescript';
@@ -606,29 +718,42 @@ const IDE = {
                 if (ext === 'css') lang = 'css';
                 if (ext === 'json') lang = 'json';
                 if (ext === 'md') lang = 'markdown';
+                if (ext === 'sql') lang = 'sql';
+                if (ext === 'sh') lang = 'shell';
 
-                monaco.editor.setModelLanguage(model, lang);
-                this.editor.setValue(data.content);
+                // Create Monaco Model
+                const newModel = monaco.editor.createModel(
+                    data.content,
+                    lang,
+                    monaco.Uri.parse(`file:///workspace/${this.activeRepo}/${path}`)
+                );
 
-                // Add tab if not exists
-                this.updateTabs(path);
+                const fileData = {
+                    path: path,
+                    model: newModel,
+                    viewState: null
+                };
+
+                this.openFiles.push(fileData);
+                this.renderTab(fileData);
+                this.activateTab(path);
+
+                // Update preview if HTML
+                // (Assuming simple preview update method exists or we can trigger it)
+                const frame = document.getElementById('preview-frame');
+                if (ext === 'html' && frame) {
+                    frame.srcdoc = data.content;
+                }
+
+                console.log('[IDE] Opened file:', path);
             }
-        } catch (e) {
-            console.error('Error opening file', e);
+        } catch (error) {
+            console.error('[IDE] Error opening file:', error);
         }
     },
 
     updateTabs(path) {
-        const container = document.getElementById('editor-tabs');
-        const filename = path.split('/').pop();
-
-        // For now, simple single-active tab management
-        container.innerHTML = `
-            <div class="tab active">
-                <span class="tab-title">${filename}</span>
-                <span class="tab-close">&times;</span>
-            </div>
-        `;
+        // Deprecated by renderTab - kept empty for safety
     },
 
     async saveActiveFile() {
