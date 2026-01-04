@@ -1,0 +1,76 @@
+{
+    "name": "bunk3r-extension",
+    "displayName": "BUNK3R AI",
+    "description": "Premium IDE Experience with Singularity AI",
+    "version": "1.0.0",
+    "publisher": "PrincipeGhost",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "AI",
+        "Education"
+    ],
+    "activationEvents": [],
+    "main": "./out/extension.js",
+    "browser": "./out/extension.js",
+    "contributes": {
+        "viewsContainers": {
+            "secondary-sidebar": [
+                {
+                    "id": "bunk3r-ai-container",
+                    "title": "BUNK3R",
+                    "icon": "$(sparkle)"
+                }
+            ]
+        },
+        "views": {
+            "bunk3r-ai-container": [
+                {
+                    "type": "webview",
+                    "id": "bunk3r.chatView",
+                    "name": "BUNK3R Chat",
+                    "icon": "$(comment-discussion)",
+                    "contextualTitle": "AI Chat"
+                }
+            ]
+        },
+        "customEditors": [
+            {
+                "viewType": "bunk3r.preview",
+                "displayName": "BUNK3R Preview",
+                "selector": [
+                    {
+                        "filenamePattern": "*.html"
+                    }
+                ],
+                "priority": "option"
+            }
+        ],
+        "commands": [
+            {
+                "command": "bunk3r.openChat",
+                "title": "Open BUNK3R Chat",
+                "category": "BUNK3R"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.85.0",
+        "@types/mocha": "^10.0.6",
+        "@types/node": "18.x",
+        "@typescript-eslint/eslint-plugin": "^6.15.0",
+        "@typescript-eslint/parser": "^6.15.0",
+        "eslint": "^8.56.0",
+        "typescript": "^5.3.3"
+    }
+}
