@@ -121,7 +121,7 @@ def create_app(config_class=None):
         from flask_login import current_user
         if not current_user.is_authenticated:
             return render_template('login.html')
-        return render_template('workspace.html')
+        return render_template('ide.html')
     
     @app.route('/ide')
     def ide():
