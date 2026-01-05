@@ -1,5 +1,5 @@
-# Base image with Python
-FROM python:3.9-slim-buster
+# Base image with Python (Using Bullseye to avoid deprecated Buster repos)
+FROM python:3.9-slim-bullseye
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
