@@ -51,6 +51,7 @@ def create_app(config_class=None):
     
     app.config.from_object(config_class)
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # Database Flask-SQLAlchemy
