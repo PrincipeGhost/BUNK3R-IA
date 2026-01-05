@@ -127,8 +127,19 @@ def create_app(config_class=None):
         if not current_user.is_authenticated:
             return render_template('landing.html')
         
-        # If authenticated, try to launch workspace
-        return redirect(url_for('workspace_manager.launch_workspace'))
+        # If authenticated, check sync status and redirect accordingly
+        from backend.api.workspace_manager import workspace_mgr
+        user_id = str(current_user.id)
+        status = workspace_mgr.sync_status.get(user_id, {"status": "none"})
+        
+        if status.get("status") == "completed":
+            # Redirect to VS Code with user workspace
+            return redirect(f"/?folder=/workspace/{user_id}")
+        elif status.get("status") == "syncing":
+            return redirect('/syncing')
+        else:
+            # Start sync
+            return redirect(url_for('workspace_manager.launch_workspace'))
     
     @app.route('/syncing')
     def syncing():
