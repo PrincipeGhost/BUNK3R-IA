@@ -15,12 +15,33 @@ def setup_github_auth(app):
     client_secret = os.environ.get("GITHUB_CLIENT_SECRET")
     
     if client_id and client_secret:
+        # Custom Blueprint logic to FORCE redirect_uri
         github_bp = make_github_blueprint(
             client_id=client_id,
             client_secret=client_secret,
             scope="user:email,repo,workflow,read:org",
             redirect_to="index"
         )
+        
+        # MONKEY PATCH: Forcing the redirect_uri to be HTTPS string
+        # This bypasses Flask's url_for generation entirely
+        original_login = github_bp.view_functions['login']
+        
+        def secure_login():
+            # Force HTTPS redirect_uri in the session/oauth flow
+            from flask import url_for, redirect
+            from flask_dance.contrib.github import github
+            
+            # Manually construct the authorization URL with the correct redirect_uri
+            redirect_uri = "https://bunk3r-ia.onrender.com/auth/github/authorized"
+            return redirect(github.session.authorization_url(
+                "https://github.com/login/oauth/authorize",
+                redirect_uri=redirect_uri
+            )[0])
+
+        # Replace the login view with our secure version
+        github_bp.view_functions['login'] = secure_login
+        
         app.register_blueprint(github_bp, url_prefix="/auth")
     
     login_manager.init_app(app)
