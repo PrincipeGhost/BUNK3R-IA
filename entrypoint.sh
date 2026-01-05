@@ -6,8 +6,8 @@ export PYTHONPATH=$PYTHONPATH:/opt/bunk3r-ia
 
 echo "BUNK3R-IA: Preparing environment..."
 
-# 1. Configure Nginx with the dynamic PORT
-envsubst '${PORT}' < /opt/bunk3r-ia/nginx.conf.template > /etc/nginx/nginx.conf
+# 1. Configure Nginx with the dynamic PORT (Only replace $PORT)
+envsubst '$PORT' < /opt/bunk3r-ia/nginx.conf.template > /etc/nginx/nginx.conf
 
 # 2. Start Python Backend (Singularity)
 echo "Starting BUNK3R Python Backend (Port 5000)..."
