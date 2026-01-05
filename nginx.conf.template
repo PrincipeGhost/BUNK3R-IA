@@ -33,7 +33,7 @@ http {
             proxy_set_header X-Original-URI $request_uri;
         }
 
-        @landing {
+        location @landing {
             proxy_pass http://127.0.0.1:5000;
         }
 
