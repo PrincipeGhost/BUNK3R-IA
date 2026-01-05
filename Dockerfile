@@ -31,7 +31,6 @@ COPY . .
 RUN code-server --install-extension vscode-extension/bunk3r-ai-extension-0.1.0.vsix
 
 # Environment Setup
-ENV PORT=10000
 ENV PASSWORD=bunk3r_secure_access
 
 # Copy Entrypoint
