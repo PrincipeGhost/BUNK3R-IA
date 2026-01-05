@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# Start Python Backend in background
-echo "Starting BUNK3R Python Backend on port 5000..."
-gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 'backend.main:app' &
+# Ensure PORT is set (default to 10000 for local testing)
+export PORT=${PORT:-10000}
 
-# Wait for backend to be ready (simple sleep for now)
-sleep 5
+echo "Configuring Nginx with PORT $PORT..."
+# Replace $PORT in template and save to /etc/nginx/nginx.conf
+envsubst '${PORT}' < /app/nginx.conf.template > /etc/nginx/nginx.conf
 
-# Start Code-Server in foreground (this keeps container alive)
-# BIND_ADDR env var handles the port 10000 binding for Render
-echo "Starting Code-Server on port $PORT..."
-code-server --bind-addr 0.0.0.0:$PORT --auth password --disable-telemetry .
+# Start Python Backend (Singularity AI)
+echo "Starting BUNK3R Python Backend (Port 5000)..."
+gunicorn --bind 127.0.0.1:5000 --workers 2 --threads 4 'backend.main:app' &
+
+# Start Code-Server (VS Code IDE)
+echo "Starting Code-Server (Port 8080)..."
+code-server --bind-addr 127.0.0.1:8080 --auth password --disable-telemetry . &
+
+# Start Nginx as the main process (Port $PORT)
+echo "Starting Nginx Proxy (Port $PORT)..."
+nginx -g 'daemon off;'
