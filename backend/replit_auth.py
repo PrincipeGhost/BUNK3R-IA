@@ -60,26 +60,43 @@ from flask_dance.consumer import oauth_authorized
 
 @oauth_authorized.connect_via(None)
 def github_logged_in(blueprint, token):
-    if blueprint.name != "github":
-        return
+    import logging
+    logger = logging.getLogger(__name__)
     
-    resp = blueprint.session.get("/user")
-    if not resp.ok:
+    try:
+        if blueprint.name != "github":
+            return
+        
+        resp = blueprint.session.get("/user")
+        if not resp.ok:
+            logger.error(f"GitHub API Error: {resp.text}")
+            return False
+        
+        gh_user = resp.json()
+        user_id = str(gh_user["id"])
+        
+        logger.info(f"Processing login for user: {gh_user.get('login')} (ID: {user_id})")
+        
+        user = User.query.get(user_id)
+        if not user:
+            logger.info("Creating new user")
+            user = User(id=user_id)
+        
+        user.first_name = gh_user.get("name") or gh_user.get("login")
+        user.email = gh_user.get("email")
+        user.profile_image_url = gh_user.get("avatar_url")
+        
+        db.session.add(user)
+        db.session.commit()
+        logger.info("User saved to DB")
+        
+        login_user(user)
+        session['github_token'] = token.get("access_token")
+        logger.info("User logged in successfully")
+        
         return False
-
-    gh_user = resp.json()
-    user_id = str(gh_user["id"])
-    
-    user = User.query.get(user_id)
-    if not user:
-        user = User(id=user_id)
-    
-    user.first_name = gh_user.get("name") or gh_user.get("login")
-    user.email = gh_user.get("email")
-    user.profile_image_url = gh_user.get("avatar_url")
-    
-    db.session.add(user)
-    db.session.commit()
-    login_user(user)
-    session['github_token'] = token.get("access_token")
-    return False
+        
+    except Exception as e:
+        logger.error(f"LOGIN CRITICAL ERROR: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return False
