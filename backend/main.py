@@ -29,6 +29,7 @@ from backend.api.preview_routes import preview_bp
 from backend.api.extension_routes import extension_bp
 from backend.api.ide_routes import ide_bp
 from backend.api.github_sync_routes import github_sync_bp
+from backend.api.workspace_manager import workspace_bp
 from backend.models import db
 from backend.replit_auth import login_manager, require_login
 
@@ -80,6 +81,7 @@ def create_app(config_class=None):
     app.register_blueprint(ide_bp)
     app.register_blueprint(github_sync_bp)
     app.register_blueprint(git_bp)
+    app.register_blueprint(workspace_bp)
     
     @app.before_request
     def make_session_permanent():
@@ -123,12 +125,19 @@ def create_app(config_class=None):
     def index():
         from flask_login import current_user
         if not current_user.is_authenticated:
-            return render_template('login.html')
-        return render_template('ide.html')
+            return render_template('landing.html')
+        
+        # If authenticated, try to launch workspace
+        return redirect(url_for('workspace_manager.launch_workspace'))
     
+    @app.route('/syncing')
+    def syncing():
+        return render_template('sync.html')
+
     @app.route('/ide')
     def ide():
         """Premium IDE interface"""
+        # This will be proxied or handled after sync
         return render_template('ide.html')
     
     @app.route('/quick-login', methods=['POST'])
@@ -197,6 +206,14 @@ def create_app(config_class=None):
                 status=404,
                 mimetype='text/html'
             )
+    
+    @app.route('/api/auth/check')
+    def auth_check():
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            return "OK", 200
+        else:
+            return "Unauthorized", 401
     
     @app.route('/api/info')
     def api_info():

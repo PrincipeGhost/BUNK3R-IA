@@ -1,21 +1,30 @@
 #!/bin/bash
 
-# Ensure PORT is set (default to 10000 for local testing)
+# Ensure PORT is set (Render default)
 export PORT=${PORT:-10000}
+export PYTHONPATH=$PYTHONPATH:/opt/bunk3r-ia
 
-echo "Configuring Nginx with PORT $PORT..."
-# Replace $PORT in template and save to /etc/nginx/nginx.conf
-envsubst '${PORT}' < /app/nginx.conf.template > /etc/nginx/nginx.conf
+echo "BUNK3R-IA: Preparing environment..."
 
-# Start Python Backend (Singularity AI)
+# 1. Configure Nginx with the dynamic PORT
+envsubst '${PORT}' < /opt/bunk3r-ia/nginx.conf.template > /etc/nginx/nginx.conf
+
+# 2. Start Python Backend (Singularity)
 echo "Starting BUNK3R Python Backend (Port 5000)..."
+cd /opt/bunk3r-ia
 gunicorn --bind 127.0.0.1:5000 --workers 2 --threads 4 'backend.main:app' &
 
-# Start Code-Server (VS Code IDE)
+# 3. Start Code-Server (VS Code IDE)
+# We serve from /workspace. Logged in users will be redirected to /workspace/user_id
 echo "Starting Code-Server (Port 8080)..."
-# Unset PORT so code-server doesn't try to bind to Render's public port
-PORT="" code-server --bind-addr 127.0.0.1:8080 --auth password --disable-telemetry . &
+# We use a shared user-data-dir where the extension was installed during build
+PORT="" code-server \
+    --bind-addr 127.0.0.1:8080 \
+    --auth password \
+    --disable-telemetry \
+    --user-data-dir /opt/code-server-data \
+    /workspace &
 
-# Start Nginx as the main process (Port $PORT)
-echo "Starting Nginx Proxy (Port $PORT)..."
+# 4. Start Nginx Proxy as the foreground process
+echo "BUNK3R-IA is LIVE on Port $PORT"
 nginx -g 'daemon off;'

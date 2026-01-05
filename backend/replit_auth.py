@@ -79,4 +79,5 @@ def github_logged_in(blueprint, token):
     db.session.add(user)
     db.session.commit()
     login_user(user)
+    session['github_token'] = token.get("access_token")
     return False

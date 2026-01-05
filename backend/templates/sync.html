@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sincronizando | BUNK3R-IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bunk3r-gold: #F0B90B;
+            --bunk3r-black: #0B0E11;
+            --text-main: #EAECEF;
+        }
+
+        body {
+            background-color: var(--bunk3r-black);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(240, 185, 11, 0.1);
+            border-top: 4px solid var(--bunk3r-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status {
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        #progress {
+            margin-top: 20px;
+            color: var(--bunk3r-gold);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader"></div>
+    <div class="status">Sincronizando tu BUNK3R...</div>
+    <div id="progress">Preparando tus repositorios</div>
+
+    <script>
+        // Check sync status every 2 seconds
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/workspace/sync-status');
+                const data = await response.json();
+
+                if (data.status === 'completed') {
+                    // Redirect to the specific workspace folder in VS Code
+                    window.location.href = data.redirect || '/';
+                } else if (data.status === 'syncing') {
+                    document.getElementById('progress').innerText = `Clonando: ${data.current_repo || 'Generando entorno...'}`;
+                }
+            } catch (e) {
+                console.error("Sync error", e);
+            }
+        }
+
+        setInterval(checkStatus, 2000);
+        checkStatus();
+    </script>
+</body>
+
+</html>
