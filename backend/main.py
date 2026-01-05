@@ -55,9 +55,19 @@ def create_app(config_class=None):
     
     # Force HTTPS for OAuth in production (Render uses proxies)
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Allow OAuth over HTTP internally
+    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'   # Ignore scope order changes from GitHub
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # Database Flask-SQLAlchemy
+    # Check for DATABASE_URL or NEON_BRIDGE_DATABASE_URL
+    db_url = os.environ.get("DATABASE_URL") or os.environ.get("NEON_BRIDGE_DATABASE_URL") or "sqlite:///users.db"
+    
+    # Fix for generic Postgres URLs in SQLAlchemy (postgres:// -> postgresql://)
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
     
     # Initialize SINGULARITY CORE (Gravity Core v3)
