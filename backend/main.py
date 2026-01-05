@@ -102,8 +102,16 @@ def create_app(config_class=None):
         session.permanent = True
 
     with app.app_context():
-        db.create_all()
-        logger.info("Database tables created")
+        # Log which database we are actually using (masking password)
+        db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+        safe_uri = db_uri.split("@")[-1] if "@" in db_uri else "sqlite_local"
+        logging.info(f"Connecting to database: ...@{safe_uri}")
+        
+        try:
+            db.create_all()
+            logging.info("Database tables verified/created")
+        except Exception as e:
+            logging.warning(f"Database table creation skipped (schema exists or error): {e}")
     
     # CORS Configuration - Restringido a tu web principal
     CORS(app, resources={r"/*": {
