@@ -18,7 +18,8 @@ def setup_github_auth(app):
         github_bp = make_github_blueprint(
             client_id=client_id,
             client_secret=client_secret,
-            scope="user:email,repo,workflow,read:org"
+            scope="user:email,repo,workflow,read:org",
+            redirect_url="https://bunk3r-ia.onrender.com/auth/github/authorized"
         )
         app.register_blueprint(github_bp, url_prefix="/auth")
     
