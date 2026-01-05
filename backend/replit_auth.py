@@ -19,7 +19,10 @@ def setup_github_auth(app):
             client_id=client_id,
             client_secret=client_secret,
             scope="user:email,repo,workflow,read:org",
-            redirect_to="index"
+            redirect_to="index",
+            backend=None,  # Use default backend
+            hostname="bunk3r-ia.onrender.com",
+            redirect_url="https://bunk3r-ia.onrender.com/auth/github/authorized"
         )
         app.register_blueprint(github_bp, url_prefix="/auth")
     

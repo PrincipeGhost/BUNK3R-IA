@@ -56,12 +56,6 @@ def create_app(config_class=None):
     # Force HTTPS for OAuth in production (Render uses proxies)
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Allow OAuth over HTTP internally
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-    
-    # Override url_for to always use HTTPS in production
-    @app.url_defaults
-    def hinted_url_for(endpoint, values):
-        if '_external' in values or endpoint == 'github.authorized':
-            values.setdefault('_scheme', 'https')
 
     # Database Flask-SQLAlchemy
     db.init_app(app)
