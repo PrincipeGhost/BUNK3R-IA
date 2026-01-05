@@ -1,10 +1,13 @@
 #!/bin/bash
-set -e
 
-echo "--- STARTING BUNK3R IA INFRASTRUCTURE ---"
+# Start Python Backend in background
+echo "Starting BUNK3R Python Backend on port 5000..."
+gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 'backend.main:app' &
 
-echo "--- STARTING WEB SERVER ---"
+# Wait for backend to be ready (simple sleep for now)
+sleep 5
 
-# Iniciar la aplicación Flask con Gunicorn en el puerto que Render espera
-PORT=${PORT:-5000}
-exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 "backend.main:app"
+# Start Code-Server in foreground (this keeps container alive)
+# BIND_ADDR env var handles the port 10000 binding for Render
+echo "Starting Code-Server on port $PORT..."
+code-server --bind-addr 0.0.0.0:$PORT --auth password --disable-telemetry .
