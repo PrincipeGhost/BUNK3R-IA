@@ -8,7 +8,7 @@ http {
         listen $PORT;
 
         # Flask routes (Landing, Auth, API, Static)
-        location ~ ^/(api|static|login|logout|auth|syncing|$) {
+        location ~ ^/(api|static|login|logout|auth|syncing|debug-auth|$) {
             proxy_pass http://127.0.0.1:5000;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
