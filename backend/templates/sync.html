@@ -76,6 +76,12 @@
                     window.location.href = data.redirect || '/';
                 } else if (data.status === 'syncing') {
                     document.getElementById('progress').innerText = `Clonando: ${data.current_repo || 'Generando entorno...'}`;
+                } else if (data.status === 'error') {
+                    document.querySelector('.loader').style.borderColor = 'red';
+                    document.querySelector('.loader').style.borderTopColor = 'darkred';
+                    document.querySelector('.status').innerText = "Error en la sincronización";
+                    document.getElementById('progress').style.color = 'red';
+                    document.getElementById('progress').innerText = data.error || "Error desconocido";
                 }
             } catch (e) {
                 console.error("Sync error", e);

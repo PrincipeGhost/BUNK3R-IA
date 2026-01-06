@@ -182,9 +182,16 @@ def create_app(config_class=None):
         if status.get("status") == "syncing":
             return redirect('/syncing')
         
-        # If not started, start sync (but redirect to syncing page immediately)
+        # If not started, start sync internally
         if status.get("status") == "none":
-             return redirect(url_for('workspace_manager.launch_workspace'))
+             from flask import session
+             token = session.get('github_token')
+             if token:
+                 workspace_mgr.sync_user_repos(user_id, token)
+                 return redirect('/syncing')
+             else:
+                 # Token missing, force re-login
+                 return redirect(url_for('github.login'))
 
         # If completed (or any other state where we want IDE), serve IDE via Nginx
         # We use X-Accel-Redirect to tell Nginx to serve the VS Code proxy
