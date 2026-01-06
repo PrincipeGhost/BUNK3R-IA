@@ -155,13 +155,19 @@ def create_app(config_class=None):
     def index():
         from flask_login import current_user
         from flask import make_response
+        import logging
+        
+        logging.info(f"Index access. User authenticated: {current_user.is_authenticated}")
         
         if not current_user.is_authenticated:
+            logging.info("User not authenticated, rendering landing page")
             return render_template('landing.html')
         
         # If authenticated, check sync status
         from backend.api.workspace_manager import workspace_mgr
         user_id = str(current_user.id)
+        logging.info(f"User {user_id} authenticated. Checking sync status.")
+        
         status = workspace_mgr.sync_status.get(user_id, {"status": "none"})
         
         # If syncing is in progress, show sync page
