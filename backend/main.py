@@ -146,22 +146,30 @@ def create_app(config_class=None):
     @app.route('/')
     def index():
         from flask_login import current_user
+        from flask import make_response
+        
         if not current_user.is_authenticated:
             return render_template('landing.html')
         
-        # If authenticated, check sync status and redirect accordingly
+        # If authenticated, check sync status
         from backend.api.workspace_manager import workspace_mgr
         user_id = str(current_user.id)
         status = workspace_mgr.sync_status.get(user_id, {"status": "none"})
         
-        if status.get("status") == "completed":
-            # Redirect to VS Code with user workspace
-            return redirect(f"/?folder=/workspace/{user_id}")
-        elif status.get("status") == "syncing":
+        # If syncing is in progress, show sync page
+        if status.get("status") == "syncing":
             return redirect('/syncing')
-        else:
-            # Start sync
-            return redirect(url_for('workspace_manager.launch_workspace'))
+        
+        # If not started, start sync (but redirect to syncing page immediately)
+        if status.get("status") == "none":
+             return redirect(url_for('workspace_manager.launch_workspace'))
+
+        # If completed (or any other state where we want IDE), serve IDE via Nginx
+        # We use X-Accel-Redirect to tell Nginx to serve the VS Code proxy
+        response = make_response("")
+        response.headers['X-Accel-Redirect'] = '/@ide'
+        # We need to preserve query params if any? Nginx passes original URI
+        return response
     
     @app.route('/syncing')
     def syncing():

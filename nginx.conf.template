@@ -25,5 +25,15 @@ http {
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }
+
+        # Internal interaction for X-Accel-Redirect (Serving IDE from Flask Auth)
+        location /@ide {
+            internal;
+            proxy_pass http://127.0.0.1:8080/;
+            proxy_set_header Host $host;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection upgrade;
+            proxy_set_header Accept-Encoding gzip;
+        }
     }
 }
