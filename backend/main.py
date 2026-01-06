@@ -151,6 +151,14 @@ def create_app(config_class=None):
         from flask_login import current_user
         return dict(current_user=current_user)
 
+    @app.route('/reset-session')
+    def reset_session():
+        from flask import session, redirect, url_for
+        from flask_login import logout_user
+        session.clear()
+        logout_user()
+        return redirect(url_for('index'))
+
     @app.route('/')
     def index():
         from flask_login import current_user
