@@ -65,8 +65,18 @@ class WorkspaceManager:
                     
                     # Clone using git command
                     try:
+                        env = os.environ.copy()
+                        env["GIT_TERMINAL_PROMPT"] = "0" # Disable prompt for password
+                        
                         subprocess.run(["git", "clone", "--depth", "1", auth_url, target_path], 
-                                     capture_output=True, check=True)
+                                     capture_output=True, check=True, timeout=120, env=env)
+                                     
+                    except subprocess.TimeoutExpired:
+                        logger.error(f"Timeout cloning {repo_name}")
+                        # Clean up partial clone
+                        if os.path.exists(target_path):
+                            shutil.rmtree(target_path, ignore_errors=True)
+                            
                     except subprocess.CalledProcessError as e:
                         logger.error(f"Error cloning {repo_name}: {e.stderr.decode()}")
                 else:
