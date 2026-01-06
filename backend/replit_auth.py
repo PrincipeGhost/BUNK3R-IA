@@ -8,7 +8,17 @@ login_manager = LoginManager()
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(user_id)
+    import logging
+    try:
+        user = User.query.get(user_id)
+        if user:
+            logging.info(f"Loaded user {user_id} successfully")
+        else:
+            logging.warning(f"User {user_id} not found in DB")
+        return user
+    except Exception as e:
+        logging.error(f"Error loading user {user_id}: {e}")
+        return None
 
 def setup_github_auth(app):
     client_id = os.environ.get("GITHUB_CLIENT_ID")
