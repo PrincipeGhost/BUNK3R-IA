@@ -162,7 +162,7 @@ def create_app(config_class=None):
     @app.route('/')
     def index():
         from flask_login import current_user
-        from flask import make_response
+        from flask import make_response, redirect, url_for
         import logging
         
         logging.info(f"Index access. User authenticated: {current_user.is_authenticated}")
