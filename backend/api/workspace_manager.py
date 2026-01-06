@@ -57,6 +57,10 @@ class WorkspaceManager:
                 # Inject token into URL for private cloning
                 auth_url = repo_url.replace("https://", f"https://x-access-token:{token}@")
                 
+                if repo_name == "CorreosPremium":
+                    logger.warning(f"Skipping problematic repo {repo_name} by manual override")
+                    continue
+
                 target_path = os.path.join(workspace_path, repo_name)
                 
                 if not os.path.exists(target_path):
@@ -69,7 +73,7 @@ class WorkspaceManager:
                         env["GIT_TERMINAL_PROMPT"] = "0" # Disable prompt for password
                         
                         subprocess.run(["git", "clone", "--depth", "1", auth_url, target_path], 
-                                     capture_output=True, check=True, timeout=120, env=env)
+                                     capture_output=True, check=True, timeout=30, env=env)
                                      
                     except subprocess.TimeoutExpired:
                         logger.error(f"Timeout cloning {repo_name}")

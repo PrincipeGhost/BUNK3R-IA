@@ -177,6 +177,7 @@ def create_app(config_class=None):
         logging.info(f"User {user_id} authenticated. Checking sync status.")
         
         status = workspace_mgr.sync_status.get(user_id, {"status": "none"})
+        logging.info(f"Sync Status for {user_id}: {status.get('status')}")
         
         # If syncing is in progress, show sync page
         if status.get("status") == "syncing":
