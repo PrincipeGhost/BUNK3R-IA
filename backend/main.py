@@ -193,12 +193,35 @@ def create_app(config_class=None):
                  # Token missing, force re-login
                  return redirect(url_for('github.login'))
 
-        # If completed (or any other state where we want IDE), serve IDE via Nginx
-        # We use X-Accel-Redirect to tell Nginx to serve the VS Code proxy
-        response = make_response("")
-        response.headers['X-Accel-Redirect'] = '/@ide'
-        # We need to preserve query params if any? Nginx passes original URI
-        return response
+        # If completed, serve IDE directly
+        if status.get("status") == "completed":
+            # If the user is requesting root and we have a workspace, 
+            # we should serve the IDE with the workspace folder opened.
+            # But VS Code handles the 'folder' query param on client side mostly? 
+            # No, code-server accepts ?folder=/path
+            
+            # Crucial: Nginx internal redirect to /@ide serves the IDE.
+            # We don't need to redirect the BROWSER to /?folder=... if we are already at / ?
+            # Actually, if we are at /, we serve IDE.
+            # If we want to open a folder, we can pass query params, but X-Accel-Redirect ignores query params usually?
+            # Wait, Nginx "proxy_pass" includes query string if not strictly specified.
+            
+            # The previous logic was: return redirect(f'/?folder=...')
+            # This causes a loop because / goes to index() which redirects to /?folder=... which goes to index() ...
+            
+            # Fix: If we are already at / (with or without params), just serve the IDE.
+            response = make_response("")
+            response.headers['X-Accel-Redirect'] = '/@ide'
+            
+            # Ensure we pass the folder param if it's meant to be default
+            # But for now, let's just open the IDE. The user can open folders manually if needed, 
+            # or we rely on code-server to remember the last folder.
+            # Or better: We can set a cookie or just let the user be happy they are in.
+            
+            return response
+            
+        # If not authenticated, or sync not started/completed, render landing page
+        return render_template('landing.html')
     
     @app.route('/syncing')
     def syncing():
