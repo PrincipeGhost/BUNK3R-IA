@@ -17,6 +17,11 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String, nullable=True)
     last_name = db.Column(db.String, nullable=True)
     profile_image_url = db.Column(db.String, nullable=True)
+    
+    # Synchronization State (Persistent across Gunicorn workers)
+    sync_status = db.Column(db.String(20), default='none') # none, syncing, completed, error
+    current_sync_repo = db.Column(db.String(255), nullable=True)
+    sync_error = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

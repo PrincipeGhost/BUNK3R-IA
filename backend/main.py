@@ -176,26 +176,25 @@ def create_app(config_class=None):
         user_id = str(current_user.id)
         logging.info(f"User {user_id} authenticated. Checking sync status.")
         
-        status = workspace_mgr.sync_status.get(user_id, {"status": "none"})
-        logging.info(f"Sync Status for {user_id}: {status.get('status')}")
+        logging.info(f"Sync Status for {user_id}: {current_user.sync_status}")
         
         # If syncing is in progress, show sync page
-        if status.get("status") == "syncing":
+        if current_user.sync_status == "syncing":
             return redirect('/syncing')
         
         # If not started, start sync internally
-        if status.get("status") == "none":
-             from flask import session
+        if not current_user.sync_status or current_user.sync_status == "none":
+             from flask import session, current_app
              token = session.get('github_token')
              if token:
-                 workspace_mgr.sync_user_repos(user_id, token)
+                 workspace_mgr.sync_user_repos(user_id, token, current_app._get_current_object())
                  return redirect('/syncing')
              else:
                  # Token missing, force re-login
                  return redirect(url_for('github.login'))
 
         # If completed, serve IDE directly
-        if status.get("status") == "completed":
+        if current_user.sync_status == "completed":
             # If the user is requesting root and we have a workspace, 
             # we should serve the IDE with the workspace folder opened.
             # But VS Code handles the 'folder' query param on client side mostly? 
