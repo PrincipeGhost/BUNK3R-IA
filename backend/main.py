@@ -118,8 +118,20 @@ def create_app(config_class=None):
         try:
             db.create_all()
             logging.info("Database tables verified/created")
+            
+            # Manual Migration: Add sync status columns if they don't exist
+            # SQLite doesn't support 'IF NOT EXISTS' for ADD COLUMN in older versions, 
+            # but Neon (Postgres) does. We'll use a generic approach or check dialect.
+            from sqlalchemy import text
+            if "postgresql" in db_uri:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS sync_status VARCHAR(20) DEFAULT 'none'"))
+                db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS current_sync_repo VARCHAR(255)"))
+                db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS sync_error TEXT"))
+                db.session.commit()
+                logging.info("PostgreSQL schema migration completed.")
         except Exception as e:
-            logging.warning(f"Database table creation skipped (schema exists or error): {e}")
+            logging.warning(f"Database table creation/migration skipped: {e}")
+            db.session.rollback()
     
     # CORS Configuration - Restringido a tu web principal
     CORS(app, resources={r"/*": {
