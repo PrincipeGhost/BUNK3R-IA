@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import logging
 import threading
+from backend.models import User, db
 from flask import session, jsonify, Blueprint
 from flask_dance.contrib.github import github
 
