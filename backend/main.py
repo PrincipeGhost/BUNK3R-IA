@@ -44,7 +44,8 @@ def create_app(config_class=None):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app = Flask(__name__, 
                 template_folder=os.path.join(base_dir, 'templates'),
-                static_folder=os.path.join(base_dir, 'static'))
+                static_folder=os.path.join(base_dir, 'static'),
+                static_url_path='/bunk3r-static')
     
     if config_class is None:
         config_class = get_config()

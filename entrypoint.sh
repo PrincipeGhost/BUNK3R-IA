@@ -20,7 +20,7 @@ echo "Starting Code-Server (Port 8080)..."
 # We use a shared user-data-dir where the extension was installed during build
 PORT="" code-server \
     --bind-addr 127.0.0.1:8080 \
-    --auth password \
+    --auth none \
     --disable-telemetry \
     --user-data-dir /opt/code-server-data \
     /workspace &
