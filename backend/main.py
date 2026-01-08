@@ -165,10 +165,18 @@ def create_app(config_class=None):
         from flask_login import current_user
         return dict(current_user=current_user)
 
-    @app.route('/reset-session')
-    def reset_session():
+    @app.route('/reset-all')
+    def reset_all():
         from flask import session, redirect, url_for, make_response
-        from flask_login import logout_user
+        from flask_login import logout_user, current_user
+        
+        if current_user.is_authenticated:
+            # Hard reset sync status in DB
+            from backend.models import db
+            current_user.sync_status = 'none'
+            current_user.sync_error = None
+            db.session.commit()
+            
         session.clear()
         logout_user()
         response = make_response(redirect(url_for('index')))
