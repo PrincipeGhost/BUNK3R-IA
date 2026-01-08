@@ -104,8 +104,11 @@ def setup_github_auth(app):
 
     @app.route("/logout")
     def logout():
+        from flask import make_response, redirect, url_for
         logout_user()
-        return redirect(url_for("index"))
+        response = make_response(redirect(url_for("index")))
+        response.delete_cookie('bunk3r_ready', path='/')
+        return response
 
 def require_login(f):
     from functools import wraps

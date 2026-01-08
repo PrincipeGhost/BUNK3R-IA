@@ -167,19 +167,22 @@ def create_app(config_class=None):
 
     @app.route('/reset-session')
     def reset_session():
-        from flask import session, redirect, url_for
+        from flask import session, redirect, url_for, make_response
         from flask_login import logout_user
         session.clear()
         logout_user()
-        return redirect(url_for('index'))
+        response = make_response(redirect(url_for('index')))
+        response.delete_cookie('bunk3r_ready', path='/')
+        return response
 
     @app.route('/')
     def index():
         from flask_login import current_user
-        from flask import make_response, redirect, url_for
+        from flask import make_response, redirect, url_for, request
         import logging
         
         logging.info(f"Index access. User authenticated: {current_user.is_authenticated}")
+        logging.info(f"Cookies received: {list(request.cookies.keys())}")
         
         if not current_user.is_authenticated:
             logging.info("User not authenticated, rendering landing page")
@@ -209,17 +212,11 @@ def create_app(config_class=None):
 
         # If completed, serve IDE directly and set the "Bypass" cookie for Nginx
         if current_user.sync_status == "completed":
-            # This causes a loop because / goes to index() which redirects to /?folder=... which goes to index() ...
-            
-            # Fix: If we are already at / (with or without params), just serve the IDE.
+            logging.info(f"Sync complete for {user_id}. Serving IDE via X-Accel-Redirect and setting bypass cookie.")
             response = make_response("")
             response.headers['X-Accel-Redirect'] = '/@ide'
-            
-            # Ensure we pass the folder param if it's meant to be default
-            # But for now, let's just open the IDE. The user can open folders manually if needed, 
-            # or we rely on code-server to remember the last folder.
-            # Or better: We can set a cookie or just let the user be happy they are in.
-            
+            # Set bypass cookie for Nginx. Max age 24h.
+            response.set_cookie('bunk3r_ready', '1', max_age=3600*24, path='/', samesite='Lax')
             return response
             
         # If not authenticated, or sync not started/completed, render landing page
