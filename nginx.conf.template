@@ -7,8 +7,8 @@ http {
     server {
         listen $PORT;
 
-        # Flask routes (Landing, Auth, API, Bunk3r-Static)
-        location ~ ^/(api|bunk3r-static|login|logout|auth|syncing|debug-auth|$) {
+        # Flask routes (API, Bunk3r-Static, etc. - always to Flask)
+        location ~ ^/(api|bunk3r-static|login|logout|auth|syncing|debug-auth|reset-session) {
             proxy_pass http://127.0.0.1:5000;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -16,7 +16,24 @@ http {
             proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
         }
 
-        # VS Code IDE (everything else)
+        # ROOT URL Switch: Routes to IDE if sync is ready, otherwise to Flask App
+        location = / {
+            set $upstream_target "http://127.0.0.1:5000";
+            if ($cookie_bunk3r_ready = "1") {
+                set $upstream_target "http://127.0.0.1:8080";
+            }
+            
+            proxy_pass $upstream_target;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+            # IDE support
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+
+        # VS Code IDE (Catch-all for IDE assets like /static, /vscode-remote-resource, etc.)
         location / {
             proxy_pass http://127.0.0.1:8080;
             proxy_http_version 1.1;
@@ -24,6 +41,7 @@ http {
             proxy_set_header Connection "upgrade";
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
         }
 
         # Internal interaction for X-Accel-Redirect (Serving IDE from Flask Auth)

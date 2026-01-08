@@ -53,6 +53,7 @@ def create_app(config_class=None):
     app.config.from_object(config_class)
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
     app.config['PREFERRED_URL_SCHEME'] = 'https'
+    app.config['SESSION_COOKIE_NAME'] = 'bunk3r_session' # Prevent collision with code-server
     
     # Force HTTPS for OAuth in production (Render uses proxies)
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Allow OAuth over HTTP internally
@@ -206,20 +207,8 @@ def create_app(config_class=None):
                  # Token missing, force re-login
                  return redirect(url_for('github.login'))
 
-        # If completed, serve IDE directly
+        # If completed, serve IDE directly and set the "Bypass" cookie for Nginx
         if current_user.sync_status == "completed":
-            # If the user is requesting root and we have a workspace, 
-            # we should serve the IDE with the workspace folder opened.
-            # But VS Code handles the 'folder' query param on client side mostly? 
-            # No, code-server accepts ?folder=/path
-            
-            # Crucial: Nginx internal redirect to /@ide serves the IDE.
-            # We don't need to redirect the BROWSER to /?folder=... if we are already at / ?
-            # Actually, if we are at /, we serve IDE.
-            # If we want to open a folder, we can pass query params, but X-Accel-Redirect ignores query params usually?
-            # Wait, Nginx "proxy_pass" includes query string if not strictly specified.
-            
-            # The previous logic was: return redirect(f'/?folder=...')
             # This causes a loop because / goes to index() which redirects to /?folder=... which goes to index() ...
             
             # Fix: If we are already at / (with or without params), just serve the IDE.
