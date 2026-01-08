@@ -212,10 +212,32 @@ def create_app(config_class=None):
 
         # If completed, serve IDE directly and set the "Bypass" cookie for Nginx
         if current_user.sync_status == "completed":
-            logging.info(f"Sync complete for {user_id}. Serving IDE via X-Accel-Redirect and setting bypass cookie.")
+            import os
+            workspace_path = workspace_mgr.get_user_workspace(user_id)
+            
+            # 1. Stale Check: If folder is empty, re-sync.
+            if not os.path.exists(workspace_path) or not os.listdir(workspace_path):
+                logging.info(f"Workspace for {user_id} is empty despite 'completed' status. Re-syncing.")
+                from flask import session, current_app
+                token = session.get('github_token')
+                if token:
+                    workspace_mgr.sync_user_repos(user_id, token, current_app._get_current_object())
+                    return redirect('/syncing')
+                else:
+                    logging.warning(f"No GitHub token in session for {user_id}. Forcing login.")
+                    return redirect(url_for('github.login'))
+
+            # 2. Folder Redirection: Ensure the IDE opens the correct user folder
+            if not request.args.get('folder'):
+                logging.info(f"Redirecting user {user_id} to folder-specific IDE URL.")
+                response = make_response(redirect(f"/?folder=/workspace/{current_user.id}"))
+                response.set_cookie('bunk3r_ready', '1', max_age=3600*24, path='/', samesite='Lax')
+                return response
+
+            # 3. Serve IDE: Fallback if Nginx haven't bypassed yet
+            logging.info(f"Sync complete for {user_id}. Serving IDE via X-Accel-Redirect.")
             response = make_response("")
             response.headers['X-Accel-Redirect'] = '/@ide'
-            # Set bypass cookie for Nginx. Max age 24h.
             response.set_cookie('bunk3r_ready', '1', max_age=3600*24, path='/', samesite='Lax')
             return response
             
