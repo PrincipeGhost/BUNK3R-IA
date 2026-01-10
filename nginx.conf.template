@@ -7,8 +7,8 @@ http {
     server {
         listen $PORT;
 
-        # Flask routes (API, Bunk3r-Static, etc. - always to Flask)
-        location ~ ^/(api|bunk3r-static|login|logout|auth|syncing|debug-auth|reset-session) {
+        # Flask routes (API, Bunk3r-Static, Auth, etc. - always to Flask)
+        location ~ ^/(api|bunk3r-static|login|logout|auth|syncing|debug-auth|reset-all|reset-session|github) {
             proxy_pass http://127.0.0.1:5000;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
