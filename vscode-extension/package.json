@@ -17,17 +17,8 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "bunk3r-sidebar",
-                    "title": "BUNK3R AI",
-                    "icon": "resources/bunk3r-icon.svg"
-                }
-            ]
-        },
         "views": {
-            "bunk3r-sidebar": [
+            "chat": [
                 {
                     "id": "bunk3r-sidebar-view",
                     "name": "BUNK3R Chat",

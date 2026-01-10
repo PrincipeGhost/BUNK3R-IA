@@ -71,10 +71,10 @@ def create_app(config_class=None):
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
-    # Session Security Config
+    # Session Security Config - SameSite=None required for iframe context (Extension)
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
     app.config['REMEMBER_COOKIE_SECURE'] = True
     app.config['REMEMBER_COOKIE_HTTPONLY'] = True
     
