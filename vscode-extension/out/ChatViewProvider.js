@@ -28,12 +28,12 @@ class ChatViewProvider {
         webviewView.webview.onDidReceiveMessage((data) => __awaiter(this, void 0, void 0, function* () {
             switch (data.type) {
                 case 'askAI':
-                    yield this.processUserMessage(data.message);
+                    yield this.processUserMessage(data.message, data.userId);
                     break;
             }
         }));
     }
-    processUserMessage(message) {
+    processUserMessage(message, userId = 'vscode-user') {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this._view) {
                 return;
@@ -44,22 +44,26 @@ class ChatViewProvider {
             let activeContext = "";
             const editor = vscode.window.activeTextEditor;
             if (editor) {
-                activeContext = `\n\n[Active File: ${editor.document.fileName}]\n${editor.document.getText()}`;
+                const fileName = editor.document.fileName;
+                const text = editor.document.getText();
+                activeContext = `\n\n[Active File: ${fileName}]\n${text}`;
             }
             try {
-                // Call BUNK3R Python Backend
-                // Assuming backend is running on localhost:5000
+                // Call BUNK3R Python Backend (Inside the container)
                 const response = yield (0, node_fetch_1.default)('http://127.0.0.1:5000/api/ide/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-User-ID': 'vscode-user' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
                     body: JSON.stringify({
-                        message: message + (activeContext ? activeContext.substring(0, 5000) : ""),
-                        active_repo: "vscode-workspace"
+                        message: message + (activeContext ? activeContext.substring(0, 10000) : ""),
+                        active_repo: "workspace"
                     })
                 });
                 const data = yield response.json();
                 if (data.success) {
-                    this._view.webview.postMessage({ type: 'addMessage', role: 'ai', content: data.reply });
+                    this._view.webview.postMessage({ type: 'addMessage', role: 'ai', content: data.response || data.reply });
                 }
                 else {
                     this._view.webview.postMessage({ type: 'addMessage', role: 'error', content: data.error || "Unknown error" });
@@ -83,24 +87,28 @@ class ChatViewProvider {
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<title>BUNK3R Chat</title>
 				<style>
-					body { font-family: var(--vscode-font-family); padding: 10px; color: var(--vscode-editor-foreground); }
-					.chat-container { display: flex; flex-direction: column; gap: 10px; height: 90vh; }
-					.messages { flex: 1; overflow-y: auto; padding-bottom: 50px; }
-					.message { padding: 8px; border-radius: 4px; margin-bottom: 8px; max-width: 90%; }
+					body { font-family: var(--vscode-font-family); padding: 10px; color: var(--vscode-editor-foreground); background-color: var(--vscode-sideBar-background); }
+					.chat-container { display: flex; flex-direction: column; gap: 10px; height: 95vh; }
+					.messages { flex: 1; overflow-y: auto; padding-bottom: 20px; scroll-behavior: smooth; }
+					.message { padding: 10px; border-radius: 8px; margin-bottom: 12px; max-width: 90%; line-height: 1.5; font-size: 0.95em; }
 					.message.user { background: var(--vscode-button-background); color: var(--vscode-button-foreground); align-self: flex-end; margin-left: auto; }
 					.message.ai { background: var(--vscode-editor-background); border: 1px solid var(--vscode-widget-border); align-self: flex-start; }
-					.message.error { color: var(--vscode-errorForeground); border: 1px solid var(--vscode-errorForeground); }
-					.input-area { position: fixed; bottom: 10px; left: 10px; right: 10px; display: flex; gap: 5px; }
-					input { flex: 1; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); }
-					button { padding: 8px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; cursor: pointer; }
+					.message.error { color: var(--vscode-errorForeground); border: 1px solid var(--vscode-errorForeground); background: rgba(255,0,0,0.1); }
+					.input-area { position: sticky; bottom: 0; background: var(--vscode-sideBar-background); padding: 10px 0; display: flex; gap: 8px; border-top: 1px solid var(--vscode-widget-border); }
+					input { flex: 1; padding: 10px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; outline: none; }
+					input:focus { border-color: var(--vscode-focusBorder); }
+					button { padding: 10px 16px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+					button:hover { background: var(--vscode-button-hoverBackground); }
 				</style>
 			</head>
 			<body>
 				<div class="chat-container">
-					<div class="messages" id="messages"></div>
+					<div class="messages" id="messages">
+                        <div class="message ai">Hola, soy BUNK3R-IA. ¿En qué podemos trabajar hoy?</div>
+                    </div>
 					<div class="input-area">
-						<input type="text" id="chatInput" placeholder="Ask BUNK3R..." />
-						<button id="sendBtn">Send</button>
+						<input type="text" id="chatInput" placeholder="Escribe a BUNK3R..." />
+						<button id="sendBtn">Enviar</button>
 					</div>
 				</div>
 				<script>
@@ -108,30 +116,43 @@ class ChatViewProvider {
 					const messagesDiv = document.getElementById('messages');
 					const input = document.getElementById('chatInput');
 					const sendBtn = document.getElementById('sendBtn');
+                    let currentUserId = 'unknown';
+
+                    // Fetch User ID upon load
+                    async function initAuth() {
+                        try {
+                            const res = await fetch('/api/auth/me');
+                            const data = await res.json();
+                            if (data.id) {
+                                currentUserId = data.id;
+                                console.log('BUNK3R Auth: Identified user ' + currentUserId);
+                            }
+                        } catch (e) {
+                            console.error('BUNK3R Auth: Failed to identify user', e);
+                        }
+                    }
+                    initAuth();
 
 					function addMessage(role, content) {
 						const div = document.createElement('div');
 						div.className = 'message ' + role;
-						div.innerText = content; // Simple text for now, could act HTML/Markdown later
+						div.innerText = content;
 						messagesDiv.appendChild(div);
 						messagesDiv.scrollTop = messagesDiv.scrollHeight;
 					}
 
-					sendBtn.addEventListener('click', () => {
+					function sendMessage() {
 						const text = input.value;
 						if (text) {
-							vscode.postMessage({ type: 'askAI', message: text });
+							vscode.postMessage({ type: 'askAI', message: text, userId: currentUserId });
 							input.value = '';
 						}
-					});
+					}
 
+					sendBtn.addEventListener('click', sendMessage);
 					input.addEventListener('keydown', (e) => {
 						if (e.key === 'Enter') {
-							const text = input.value;
-							if (text) {
-								vscode.postMessage({ type: 'askAI', message: text });
-								input.value = '';
-							}
+							sendMessage();
 						}
 					});
 

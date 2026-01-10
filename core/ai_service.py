@@ -800,18 +800,39 @@ Mi objetivo es ser el colaborador más preciso."""
             return False
 
     def _call_tool(self, tool_name: str, args: Dict) -> str:
-        """Puente hacia el Nervous System (Cuerpo Único)"""
+        """Puente hacia el Nervous System (Cuerpo Único) con aislamiento de usuario."""
         try:
-            logger.info(f"Singularity: Pulsando herramienta -> {tool_name}")
+            from flask_login import current_user
+            import os
+            
+            # Determinar el root del usuario (SaaS Aislamiento)
+            user_workspace = "/workspace"
+            if current_user and current_user.is_authenticated:
+                user_workspace = os.path.join("/workspace", str(current_user.id))
+            
+            # Función para normalizar paths según el usuario
+            def resolve_path(p):
+                if not p: return p
+                # Si es absoluto, verificar que esté en el workspace o sea del core permitido
+                if os.path.isabs(p):
+                    return p
+                # Si es relativo, rootearlo en el workspace del usuario
+                return os.path.join(user_workspace, p)
+
+            logger.info(f"Singularity: Pulsando herramienta -> {tool_name} (User: {current_user.id if current_user.is_authenticated else 'anon'})")
+            
+            path = resolve_path(args.get("path"))
             
             if tool_name == "read_file":
-                result = nervous_system.read(args.get("path"))
+                result = nervous_system.read(path)
             elif tool_name == "write_file":
-                result = nervous_system.write(args.get("path"), args.get("content"))
+                result = nervous_system.write(path, args.get("content"))
             elif tool_name == "list_dir":
-                result = nervous_system.list(args.get("path", "."))
+                result = nervous_system.list(path or user_workspace)
             elif tool_name == "run_command":
-                result = nervous_system.execute(args.get("command"))
+                # Para comandos, intentamos ejecutar en el workspace del usuario
+                cmd = args.get("command")
+                result = nervous_system.execute(f"cd {user_workspace} && {cmd}")
             elif tool_name == "web_search":
                 result = nervous_system.research(args.get("query"))
             else:
@@ -827,6 +848,7 @@ Mi objetivo es ser el colaborador más preciso."""
                 return f"[TOOL FAILED]\n{result.get('error')}"
                 
         except Exception as e:
+            logger.error(f"Error en tool call BUNK3R: {e}")
             return f"[SINGULARITY EXCEPTION] {str(e)}"
 
     def chat(self, user_id: str, message: str, system_prompt: Optional[str] = None, 

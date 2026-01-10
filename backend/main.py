@@ -183,6 +183,18 @@ def create_app(config_class=None):
         response.delete_cookie('bunk3r_ready', path='/')
         return response
 
+    @app.route('/api/auth/me')
+    def auth_me():
+        from flask_login import current_user
+        from flask import jsonify
+        if current_user.is_authenticated:
+            return jsonify({
+                "id": current_user.id,
+                "username": current_user.github_login,
+                "sync_status": current_user.sync_status
+            })
+        return jsonify({"error": "Not authenticated"}), 401
+
     @app.route('/')
     def index():
         from flask_login import current_user

@@ -49,8 +49,13 @@ class NervousSystem:
         """Validación de seguridad para acceso a archivos."""
         try:
             full_path = (self.project_root / path).resolve()
-            if not str(full_path).startswith(str(self.project_root)):
-                return False, "Fuera del directorio del proyecto"
+            
+            # Allow access to project root OR /workspace (multi-tenant)
+            is_in_root = str(full_path).startswith(str(self.project_root))
+            is_in_workspace = str(full_path).startswith("/workspace")
+            
+            if not (is_in_root or is_in_workspace):
+                return False, "Fuera del directorio del proyecto o workspace"
             
             parts = Path(path).parts
             if any(b in parts for b in self.BLOCKED_PATHS):
