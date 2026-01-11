@@ -18,10 +18,10 @@
     "main": "./out/extension.js",
     "contributes": {
         "viewsContainers": {
-            "activitybar": [
+            "auxiliarybar": [
                 {
                     "id": "chat",
-                    "title": "Chat",
+                    "title": "BUNK3R AI",
                     "icon": "$(comment-discussion)"
                 }
             ]

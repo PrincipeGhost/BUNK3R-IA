@@ -15,13 +15,17 @@ cd /opt/bunk3r-ia
 gunicorn --bind 127.0.0.1:5000 --workers 2 --threads 4 'backend.main:app' &
 
 # 3. Start Code-Server (VS Code IDE)
-# We serve from /workspace. Logged in users will be redirected to /workspace/user_id
 echo "Starting Code-Server (Port 8080)..."
-# We use a shared user-data-dir where the extension was installed during build
+# Create default settings to open BUNK3R chat by default
+mkdir -p /opt/code-server-data/User
+echo '{"workbench.auxiliaryBar.visible": true, "workbench.view.extension.chat": true}' > /opt/code-server-data/User/settings.json
+
 PORT="" code-server \
     --bind-addr 127.0.0.1:8080 \
     --auth none \
     --disable-telemetry \
+    --disable-extension vscode.chat \
+    --disable-extension vscode.interactive \
     --user-data-dir /opt/code-server-data \
     /workspace &
 
