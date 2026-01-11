@@ -9,14 +9,23 @@
     },
     "categories": [
         "AI",
-        "Chat",
-        "Productivity"
+        "Productivity",
+        "Other"
     ],
     "activationEvents": [
         "onView:bunk3r-sidebar-view"
     ],
     "main": "./out/extension.js",
     "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "chat",
+                    "title": "Chat",
+                    "icon": "$(comment-discussion)"
+                }
+            ]
+        },
         "views": {
             "chat": [
                 {
@@ -30,7 +39,8 @@
             {
                 "command": "bunk3r.refreshChat",
                 "title": "Refresh BUNK3R Chat",
-                "category": "BUNK3R"
+                "category": "BUNK3R",
+                "icon": "$(refresh)"
             }
         ]
     },
